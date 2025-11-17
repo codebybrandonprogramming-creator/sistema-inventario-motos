@@ -1,0 +1,897 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Métricas y Reportes{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+    
+    .dashboard-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: fadeInDown 0.6s ease;
+    }
+    
+    .dashboard-title {
+        color: #ffffff;
+        font-size: 3rem;
+        font-weight: 900;
+        text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .dashboard-title i {
+        font-size: 3.5rem;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* TARJETAS DE MÉTRICAS */
+    .metricas-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+        animation: fadeInUp 0.7s ease;
+    }
+    
+    .metrica-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .metrica-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+    
+    .metrica-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .metrica-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    }
+    
+    .metrica-icon {
+        font-size: 3rem;
+        color: #ffd700;
+        margin-bottom: 1rem;
+        display: block;
+    }
+    
+    .metrica-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .metrica-value {
+        color: #ffffff;
+        font-size: 2.5rem;
+        font-weight: 900;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        line-height: 1;
+    }
+    
+    .metrica-subtitle {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    /* SECCIONES DE REPORTES */
+    .seccion-reporte {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        animation: fadeInUp 0.9s ease;
+    }
+    
+    .seccion-titulo {
+        color: #ffd700;
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .seccion-titulo i {
+        font-size: 2rem;
+    }
+    
+    /* TABLA PREMIUM */
+    .tabla-premium {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .tabla-premium table {
+        width: 100%;
+        color: #ffffff;
+        margin: 0;
+    }
+    
+    .tabla-premium thead {
+        background: rgba(0, 0, 0, 0.3);
+    }
+    
+    .tabla-premium thead th {
+        padding: 1rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border: none;
+        color: #ffd700;
+        font-size: 0.9rem;
+    }
+    
+    .tabla-premium tbody tr {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .tabla-premium tbody tr:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .tabla-premium tbody td {
+        padding: 1rem;
+        font-weight: 600;
+        border: none;
+    }
+    
+    /* GRÁFICAS */
+    .grafica-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    /* BADGES */
+    .badge-top {
+        background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+        color: #ffffff;
+        padding: 0.4rem 0.8rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-block;
+    }
+    
+    .badge-bajo {
+        background: linear-gradient(135deg, #ff5252 0%, #cc0000 100%);
+        color: #ffffff;
+        padding: 0.4rem 0.8rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-block;
+    }
+    
+    .badge-critico {
+        background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        color: #ffffff;
+        padding: 0.4rem 0.8rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-block;
+        animation: blink 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+    
+    /* BOTONES DE REPORTES */
+    .btn-reporte {
+        background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+        border: none;
+        border-radius: 15px;
+        padding: 0.9rem 2rem;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #333;
+        box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0.5rem;
+    }
+    
+    .btn-reporte:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(255, 215, 0, 0.6);
+        color: #333;
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 3rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.1rem;
+    }
+    
+    .no-data i {
+        font-size: 4rem;
+        opacity: 0.3;
+        display: block;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="dashboard-container">
+    <!-- HEADER -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">
+            <i class="bi bi-graph-up-arrow"></i>
+            Dashboard de Control
+            <i class="bi bi-speedometer2"></i>
+        </h1>
+    </div>
+
+    <!-- MÉTRICAS PRINCIPALES -->
+    <div class="metricas-grid">
+        <div class="metrica-card">
+            <i class="bi bi-box-seam metrica-icon"></i>
+            <div class="metrica-label">Total Productos</div>
+            <div class="metrica-value">{{ total_productos }}</div>
+            <div class="metrica-subtitle">En inventario</div>
+        </div>
+
+        <div class="metrica-card">
+            <i class="bi bi-cash-stack metrica-icon"></i>
+            <div class="metrica-label">Valor Inventario</div>
+            <div class="metrica-value">${{ "{:,.0f}".format(valor_inventario_total) }} COP</div>
+            <div class="metrica-subtitle">Total en stock</div>
+        </div>
+
+        <div class="metrica-card">
+            <i class="bi bi-exclamation-triangle metrica-icon" style="color: #ff5252;"></i>
+            <div class="metrica-label">Stock Bajo</div>
+            <div class="metrica-value" style="color: #ff5252;">{{ productos_bajo_stock }}</div>
+            <div class="metrica-subtitle">Productos críticos</div>
+        </div>
+
+        <div class="metrica-card">
+            <i class="bi bi-cart-check metrica-icon" style="color: #00ff88;"></i>
+            <div class="metrica-label">Ventas Realizadas</div>
+            <div class="metrica-value" style="color: #00ff88;">{{ total_ventas_realizadas }}</div>
+            <div class="metrica-subtitle">Total histórico</div>
+        </div>
+
+        <div class="metrica-card">
+            <i class="bi bi-currency-dollar metrica-icon" style="color: #00ff88;"></i>
+            <div class="metrica-label">Ingresos Totales</div>
+            <div class="metrica-value" style="color: #00ff88;">${{ "{:,.0f}".format(ingresos_totales) }} COP</div>
+            <div class="metrica-subtitle">Por ventas</div>
+        </div>
+    </div>
+
+    <!-- PRODUCTOS MÁS VENDIDOS -->
+    <div class="seccion-reporte">
+        <h2 class="seccion-titulo">
+            <i class="bi bi-trophy-fill"></i>
+            Top 5 Productos Más Vendidos
+        </h2>
+
+        {% if top_vendidos %}
+        <div class="tabla-premium">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Producto</th>
+                        <th>Unidades Vendidas</th>
+                        <th>Ingresos Generados</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in top_vendidos %}
+                    <tr>
+                        <td>
+                            {% if loop.index == 1 %}
+                            <span class="badge-top"> #{{ loop.index }}</span>
+                            {% elif loop.index == 2 %}
+                            <span class="badge-top"> #{{ loop.index }}</span>
+                            {% elif loop.index == 3 %}
+                            <span class="badge-top"> #{{ loop.index }}</span>
+                            {% else %}
+                            #{{ loop.index }}
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ producto.nombre }}</strong></td>
+                        <td>{{ producto.cantidad_vendida }} unidades</td>
+                        <td style="color: #00ff88; font-weight: 800;">${{ "{:,.0f}".format(producto.ingresos) }} COP</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-data">
+            <i class="bi bi-inbox"></i>
+            <p>No hay datos de ventas aún</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- VENTAS POR CATEGORÍA -->
+    <div class="seccion-reporte">
+        <h2 class="seccion-titulo">
+            <i class="bi bi-pie-chart-fill"></i>
+            Ventas por Categoría
+        </h2>
+
+        {% if ventas_por_categoria %}
+        <div class="tabla-premium">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Categoría</th>
+                        <th>Unidades Vendidas</th>
+                        <th>Ingresos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for categoria, datos in ventas_por_categoria.items() %}
+                    <tr>
+                        <td><strong>{{ categoria }}</strong></td>
+                        <td>{{ datos.cantidad }} unidades</td>
+                        <td style="color: #00ff88; font-weight: 800;">${{ "{:,.0f}".format(datos.ingresos) }} COP</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-data">
+            <i class="bi bi-inbox"></i>
+            <p>No hay datos disponibles</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- PRODUCTOS CON STOCK CRÍTICO -->
+    {% if productos_criticos %}
+    <div class="seccion-reporte">
+        <h2 class="seccion-titulo">
+            <i class="bi bi-exclamation-octagon-fill" style="color: #ff5252;"></i>
+            Productos con Stock Crítico
+        </h2>
+
+        <div class="tabla-premium">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Stock Actual</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in productos_criticos %}
+                    <tr>
+                        <td><strong>{{ p.nombre }}</strong></td>
+                        <td>{{ p.categoria }}</td>
+                        <td style="color: #ff5252; font-weight: 800;">{{ p.stock }} unidades</td>
+                        <td>
+                            {% if p.stock == 0 %}
+                            <span class="badge-critico"> AGOTADO</span>
+                            {% else %}
+                            <span class="badge-bajo"> BAJO STOCK</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- VENTAS DE LOS ÚLTIMOS 7 DÍAS - GRÁFICA DE LÍNEAS -->
+<div class="seccion-reporte">
+    <h2 class="seccion-titulo">
+        <i class="bi bi-graph-up"></i>
+        Tendencia de Ventas (Últimos 7 Días)
+    </h2>
+
+    {% if ventas_diarias %}
+    <div class="grafica-container">
+        <canvas id="ventasDiariasChart" height="80"></canvas>
+    </div>
+    {% else %}
+    <div class="no-data">
+        <i class="bi bi-inbox"></i>
+        <p>No hay ventas recientes</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- VENTAS POR CATEGORÍA - GRÁFICA DE BARRAS -->
+<div class="seccion-reporte">
+    <h2 class="seccion-titulo">
+        <i class="bi bi-bar-chart-fill"></i>
+        Ventas por Categoría (Barras)
+    </h2>
+
+    {% if ventas_por_categoria %}
+    <div class="grafica-container">
+        <canvas id="ventasCategoriasBarChart" height="80"></canvas>
+    </div>
+    {% else %}
+    <div class="no-data">
+        <i class="bi bi-inbox"></i>
+        <p>No hay datos de categorías</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- DISTRIBUCIÓN DE VENTAS - GRÁFICA DE PASTEL -->
+<div class="seccion-reporte">
+    <h2 class="seccion-titulo">
+        <i class="bi bi-pie-chart-fill"></i>
+        Distribución de Ingresos por Categoría (Pastel)
+    </h2>
+
+    {% if ventas_por_categoria %}
+    <div class="grafica-container" style="max-width: 600px; margin: 0 auto;">
+        <canvas id="ventasCategoriasPieChart" height="100"></canvas>
+    </div>
+    {% else %}
+    <div class="no-data">
+        <i class="bi bi-inbox"></i>
+        <p>No hay datos disponibles</p>
+    </div>
+    {% endif %}
+</div>
+
+    <!-- BOTONES DE REPORTES AVANZADOS -->
+    <div class="seccion-reporte">
+        <h2 class="seccion-titulo">
+            <i class="bi bi-file-earmark-bar-graph"></i>
+            Reportes Detallados
+        </h2>
+
+        <div style="text-align: center;">
+            <a href="{{ url_for('reporte_mas_vendidos') }}" class="btn-reporte">
+                <i class="bi bi-star-fill"></i>
+                Productos Más/Menos Vendidos
+            </a>
+
+            <a href="{{ url_for('reporte_ventas_periodo') }}" class="btn-reporte">
+                <i class="bi bi-calendar3"></i>
+                Ventas por Período
+            </a>
+
+            <a href="{{ url_for('historial_ventas') }}" class="btn-reporte">
+                <i class="bi bi-clock-history"></i>
+                Historial Completo
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+{% if ventas_diarias %}
+// ========== GRÁFICA DE LÍNEAS - MEJORADA ==========
+const ventasDiarias = {{ ventas_diarias | tojson }};
+const labels = ventasDiarias.map(v => v.fecha);
+const cantidades = ventasDiarias.map(v => v.cantidad);
+const ingresos = ventasDiarias.map(v => v.ingresos);
+
+const ctx = document.getElementById('ventasDiariasChart').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Unidades Vendidas',
+                data: cantidades,
+                borderColor: '#00ff88',
+                backgroundColor: 'rgba(0, 255, 136, 0.2)',
+                borderWidth: 4,
+                tension: 0.4,
+                fill: true,
+                yAxisID: 'y',
+                pointRadius: 8,
+                pointHoverRadius: 12,
+                pointBackgroundColor: '#00ff88',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 3,
+                pointHoverBackgroundColor: '#00ff88',
+                pointHoverBorderColor: '#ffffff',
+                pointHoverBorderWidth: 4
+            },
+            {
+                label: 'Ingresos ($)',
+                data: ingresos,
+                borderColor: '#ffd700',
+                backgroundColor: 'rgba(255, 215, 0, 0.2)',
+                borderWidth: 4,
+                tension: 0.4,
+                fill: true,
+                yAxisID: 'y1',
+                pointRadius: 8,
+                pointHoverRadius: 12,
+                pointBackgroundColor: '#ffd700',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 3,
+                pointHoverBackgroundColor: '#ffd700',
+                pointHoverBorderColor: '#ffffff',
+                pointHoverBorderWidth: 4
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        interaction: {
+            mode: 'index',
+            intersect: false,
+        },
+        plugins: {
+            legend: {
+                labels: {
+                    font: { size: 15, weight: 'bold' },
+                    color: '#333',
+                    padding: 15,
+                    usePointStyle: true,
+                    pointStyle: 'circle'
+                }
+            },
+            title: {
+                display: true,
+                text: 'Evolución de Ventas en el Tiempo',
+                font: { size: 20, weight: 'bold' },
+                color: '#333',
+                padding: { top: 10, bottom: 20 }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleFont: { size: 14, weight: 'bold' },
+                bodyFont: { size: 13 },
+                padding: 12,
+                cornerRadius: 8,
+                displayColors: true
+            }
+        },
+        scales: {
+            y: {
+                type: 'linear',
+                position: 'left',
+                title: {
+                    display: true,
+                    text: 'Unidades Vendidas',
+                    font: { weight: 'bold', size: 13 },
+                    color: '#00ff88'
+                },
+                ticks: {
+                    color: '#333',
+                    font: { weight: 'bold' }
+                },
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.1)',
+                    drawBorder: false
+                }
+            },
+            y1: {
+                type: 'linear',
+                position: 'right',
+                title: {
+                    display: true,
+                    text: 'Ingresos ($)',
+                    font: { weight: 'bold', size: 13 },
+                    color: '#ffd700'
+                },
+                ticks: {
+                    color: '#333',
+                    font: { weight: 'bold' },
+                    callback: function(value) {
+                        return '$' + value.toLocaleString();
+                    }
+                },
+                grid: {
+                    drawOnChartArea: false,
+                }
+            },
+            x: {
+                ticks: {
+                    color: '#333',
+                    font: { weight: 'bold', size: 12 }
+                },
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.1)',
+                    drawBorder: false
+                }
+            }
+        }
+    }
+});
+{% endif %}
+
+{% if ventas_por_categoria %}
+// ========== GRÁFICA DE BARRAS 3D ==========
+const ventasPorCategoria = {{ ventas_por_categoria | tojson }};
+const categorias = Object.keys(ventasPorCategoria);
+const cantidadesCat = categorias.map(c => ventasPorCategoria[c].cantidad);
+const ingresosCat = categorias.map(c => ventasPorCategoria[c].ingresos);
+
+const coloresBarras = [
+    'rgba(255, 99, 132, 0.85)',
+    'rgba(54, 162, 235, 0.85)',
+    'rgba(255, 206, 86, 0.85)',
+    'rgba(75, 192, 192, 0.85)',
+    'rgba(153, 102, 255, 0.85)',
+    'rgba(255, 159, 64, 0.85)',
+    'rgba(199, 199, 199, 0.85)',
+    'rgba(83, 102, 255, 0.85)'
+];
+
+const coloresBordes = [
+    'rgba(255, 99, 132, 1)',
+    'rgba(54, 162, 235, 1)',
+    'rgba(255, 206, 86, 1)',
+    'rgba(75, 192, 192, 1)',
+    'rgba(153, 102, 255, 1)',
+    'rgba(255, 159, 64, 1)',
+    'rgba(199, 199, 199, 1)',
+    'rgba(83, 102, 255, 1)'
+];
+
+const ctxBarras = document.getElementById('ventasCategoriasBarChart').getContext('2d');
+new Chart(ctxBarras, {
+    type: 'bar',
+    data: {
+        labels: categorias,
+        datasets: [{
+            label: 'Unidades Vendidas',
+            data: cantidadesCat,
+            backgroundColor: coloresBarras,
+            borderColor: coloresBordes,
+            borderWidth: 3,
+            borderRadius: 8,
+            borderSkipped: false,
+            hoverBackgroundColor: coloresBordes,
+            hoverBorderWidth: 4,
+            hoverBorderColor: '#ffffff'
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            },
+            title: {
+                display: true,
+                text: 'Comparación de Ventas por Categoría',
+                font: { size: 20, weight: 'bold' },
+                color: '#333',
+                padding: { top: 10, bottom: 20 }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                titleFont: { size: 15, weight: 'bold' },
+                bodyFont: { size: 14 },
+                padding: 15,
+                cornerRadius: 10,
+                displayColors: true,
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label + ': ' + context.parsed.y + ' unidades';
+                    }
+                }
+            },
+            // Efecto 3D con sombras
+            shadow: {
+                shadowOffsetX: 4,
+                shadowOffsetY: 4,
+                shadowBlur: 10,
+                shadowColor: 'rgba(0, 0, 0, 0.3)'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Unidades Vendidas',
+                    font: { weight: 'bold', size: 14 },
+                    color: '#333'
+                },
+                ticks: {
+                    color: '#333',
+                    font: { weight: 'bold', size: 12 }
+                },
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.1)',
+                    drawBorder: false
+                }
+            },
+            x: {
+                ticks: {
+                    color: '#333',
+                    font: { weight: 'bold', size: 12 }
+                },
+                grid: {
+                    display: false
+                }
+            }
+        },
+        animation: {
+            duration: 1500,
+            easing: 'easeOutBounce'
+        }
+    }
+});
+
+// ========== GRÁFICA DE PASTEL 3D ==========
+const coloresPastel = [
+    '#FF6384',
+    '#36A2EB',
+    '#FFCE56',
+    '#4BC0C0',
+    '#9966FF',
+    '#FF9F40',
+    '#C9CBCF',
+    '#5362FF'
+];
+
+const coloresSombra = [
+    'rgba(255, 99, 132, 0.5)',
+    'rgba(54, 162, 235, 0.5)',
+    'rgba(255, 206, 86, 0.5)',
+    'rgba(75, 192, 192, 0.5)',
+    'rgba(153, 102, 255, 0.5)',
+    'rgba(255, 159, 64, 0.5)',
+    'rgba(201, 203, 207, 0.5)',
+    'rgba(83, 98, 255, 0.5)'
+];
+
+const ctxPastel = document.getElementById('ventasCategoriasPieChart').getContext('2d');
+new Chart(ctxPastel, {
+    type: 'doughnut', // Doughnut da mejor efecto 3D que pie
+    data: {
+        labels: categorias,
+        datasets: [{
+            label: 'Ingresos',
+            data: ingresosCat,
+            backgroundColor: coloresPastel,
+            borderColor: '#ffffff',
+            borderWidth: 4,
+            hoverOffset: 25,
+            hoverBorderWidth: 5,
+            hoverBorderColor: '#ffffff',
+            offset: 5
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: 'right',
+                labels: {
+                    font: { size: 14, weight: 'bold' },
+                    color: '#333',
+                    padding: 20,
+                    boxWidth: 25,
+                    boxHeight: 25,
+                    usePointStyle: true,
+                    pointStyle: 'rectRounded'
+                }
+            },
+            title: {
+                display: true,
+                text: 'Proporción de Ingresos por Categoría',
+                font: { size: 20, weight: 'bold' },
+                color: '#333',
+                padding: { top: 15, bottom: 25 }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                titleFont: { size: 15, weight: 'bold' },
+                bodyFont: { size: 14 },
+                padding: 15,
+                cornerRadius: 10,
+                displayColors: true,
+                callbacks: {
+                    label: function(context) {
+                        let label = context.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        const value = context.parsed;
+                        label += '$' + value.toLocaleString('es-CO');
+                        
+                        // Calcular porcentaje
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        label += ' (' + percentage + '%)';
+                        
+                        return label;
+                    }
+                }
+            }
+        },
+        animation: {
+            animateRotate: true,
+            animateScale: true,
+            duration: 2000,
+            easing: 'easeInOutQuart'
+        },
+        // Efecto 3D con elevación
+        cutout: '50%', // Hace el agujero del centro (estilo donut)
+        radius: '90%',
+        rotation: -90
+    }
+});
+{% endif %}
+</script>
+
+{% endblock %}

@@ -1,0 +1,485 @@
+
+{% extends "base.html" %}
+{% block title %}Inventario Total{% endblock %}
+
+{% block content %}
+
+<style>
+    /* ========== CONTENEDOR PRINCIPAL ========== */
+    .reporte-3d-container {
+        animation: fadeInScale 0.8s ease-out;
+    }
+    
+    @keyframes fadeInScale {
+        from {
+            opacity: 0;
+            transform: scale(0.95) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+    
+    /* ========== HEADER CON BOTONES 3D ========== */
+    .header-3d {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.2) 0%, 
+            rgba(255, 255, 255, 0.1) 100%);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 
+            0 10px 30px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        animation: slideInDown 0.6s ease-out;
+    }
+    
+    @keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .header-3d h2 {
+        color: #ffffff;
+        font-size: 2.2rem;
+        font-weight: 900;
+        text-shadow: 
+            0 2px 4px rgba(0, 0, 0, 0.3),
+            0 4px 8px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 0;
+    }
+    
+    .header-3d h2 i {
+        font-size: 2.5rem;
+        filter: drop-shadow(0 2px 8px rgba(255, 215, 0, 0.5));
+    }
+    
+    /* ========== BOTONES 3D DE EXPORTACIÓN ========== */
+    .btn-export-3d {
+        padding: 0.8rem 1.8rem;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 
+            0 6px 20px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-export-3d::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, 
+            transparent, 
+            rgba(255, 255, 255, 0.3), 
+            transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .btn-export-3d:hover::before {
+        left: 100%;
+    }
+    
+    .btn-export-3d:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 
+            0 12px 35px rgba(0, 0, 0, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+    
+    .btn-export-3d:active {
+        transform: translateY(-1px) scale(1.02);
+        box-shadow: 
+            0 6px 15px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-excel-3d {
+        background: linear-gradient(135deg, #1d6f42 0%, #28a745 50%, #1d6f42 100%);
+        color: #ffffff;
+    }
+    
+    .btn-pdf-3d {
+        background: linear-gradient(135deg, #b31d1d 0%, #dc3545 50%, #b31d1d 100%);
+        color: #ffffff;
+    }
+    
+    /* ========== CUADROS SUPERIORES 3D ========== */
+    .metricas-3d-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    .metrica-card-3d {
+        background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.25) 0%, 
+            rgba(255, 255, 255, 0.15) 100%);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 
+            0 15px 40px rgba(0, 0, 0, 0.3),
+            inset 0 2px 0 rgba(255, 255, 255, 0.4),
+            inset 0 -2px 0 rgba(0, 0, 0, 0.1);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        animation: floatIn 0.8s ease-out backwards;
+    }
+    
+    @keyframes floatIn {
+        from {
+            opacity: 0;
+            transform: translateY(40px) scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    
+    .metrica-card-3d:nth-child(1) { animation-delay: 0.1s; }
+    .metrica-card-3d:nth-child(2) { animation-delay: 0.2s; }
+    .metrica-card-3d:nth-child(3) { animation-delay: 0.3s; }
+    
+    .metrica-card-3d:hover {
+        transform: translateY(-10px) scale(1.03);
+        box-shadow: 
+            0 25px 60px rgba(0, 0, 0, 0.4),
+            inset 0 2px 0 rgba(255, 255, 255, 0.5),
+            0 0 30px rgba(255, 215, 0, 0.3);
+        border-color: rgba(255, 215, 0, 0.6);
+    }
+    
+    .metrica-card-3d h5 {
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        letter-spacing: 1px;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .metrica-card-3d h3 {
+        font-size: 2.8rem;
+        font-weight: 900;
+        margin: 0;
+        position: relative;
+        z-index: 2;
+        text-shadow: 
+            0 3px 10px rgba(0, 0, 0, 0.4),
+            0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .metrica-card-3d:nth-child(1) h3 {
+        color: #64c8ff;
+        text-shadow: 
+            0 0 20px rgba(100, 200, 255, 0.6),
+            0 3px 10px rgba(0, 0, 0, 0.4);
+    }
+    
+    .metrica-card-3d:nth-child(2) h3 {
+        color: #00ff88;
+        text-shadow: 
+            0 0 20px rgba(0, 255, 136, 0.6),
+            0 3px 10px rgba(0, 0, 0, 0.4);
+    }
+    
+    .metrica-card-3d:nth-child(3) h3 {
+        color: #ffd700;
+        text-shadow: 
+            0 0 20px rgba(255, 215, 0, 0.6),
+            0 3px 10px rgba(0, 0, 0, 0.4);
+    }
+    
+    /* ========== TABLA PROFESIONAL 2D ========== */
+    .tabla-3d-container {
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        animation: slideInUp 0.8s ease-out 0.4s backwards;
+    }
+    
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Tabla profesional */
+    .table-3d {
+        width: 100%;
+        margin: 0;
+        color: #2c3e50;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    /* Encabezado con degradado azul oscuro profesional */
+    .table-3d thead {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        box-shadow: 0 4px 10px rgba(30, 60, 114, 0.3);
+    }
+    
+    .table-3d thead th {
+        padding: 1.2rem 1rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.85rem;
+        border: none;
+        vertical-align: middle;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .table-3d thead th:first-child {
+        border-top-left-radius: 12px;
+    }
+    
+    .table-3d thead th:last-child {
+        border-top-right-radius: 12px;
+    }
+    
+    /* Borde inferior dorado en el encabezado */
+    .table-3d thead th::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+    }
+    
+    /* Filas alternadas - Gris claro y blanco */
+    .table-3d tbody tr:nth-child(odd) {
+        background-color: #ffffff;
+    }
+    
+    .table-3d tbody tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+    
+    .table-3d tbody tr {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    /* Hover con efecto azul suave */
+    .table-3d tbody tr:hover {
+        background: linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%) !important;
+        transform: translateX(5px);
+        box-shadow: -3px 0 10px rgba(30, 60, 114, 0.15);
+        border-left: 4px solid #2a5298;
+    }
+    
+    .table-3d tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        font-size: 0.95rem;
+        text-align: center;
+        color: #2c3e50;
+        font-weight: 500;
+    }
+    
+    /* ID con badge */
+    .table-3d tbody td:nth-child(1) {
+        color: #2a5298;
+        font-weight: 700;
+    }
+    
+    /* Columna de producto alineada a la izquierda y destacada */
+    .table-3d tbody td:nth-child(2) {
+        text-align: left;
+        font-weight: 700;
+        color: #1e3c72;
+    }
+    
+    /* Categoría con estilo badge */
+    .table-3d tbody td:nth-child(3) {
+        color: #495057;
+        font-weight: 600;
+    }
+    
+    /* Columnas numéricas */
+    .table-3d tbody td:nth-child(4),
+    .table-3d tbody td:nth-child(5),
+    .table-3d tbody td:nth-child(6) {
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+    }
+    
+    /* Cantidad en azul */
+    .table-3d tbody td:nth-child(4) {
+        color: #2a5298;
+        font-size: 1rem;
+    }
+    
+    /* Precio en gris oscuro */
+    .table-3d tbody td:nth-child(5) {
+        color: #495057;
+        font-size: 1rem;
+    }
+    
+    /* Valor total en verde profesional destacado */
+    .table-3d tbody td:nth-child(6) {
+        color: #28a745;
+        font-size: 1.05rem;
+        font-weight: 800;
+        background: linear-gradient(90deg, transparent 0%, rgba(40, 167, 69, 0.05) 50%, transparent 100%);
+    }
+    
+    .table-3d tbody tr:last-child td:first-child {
+        border-bottom-left-radius: 12px;
+    }
+    
+    .table-3d tbody tr:last-child td:last-child {
+        border-bottom-right-radius: 12px;
+    }
+    
+    /* Responsive con scroll suave y encabezado fijo */
+    .table-responsive {
+        border-radius: 12px;
+        overflow: auto;
+        max-height: 600px;
+        position: relative;
+    }
+    
+    .table-responsive::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+        border-radius: 10px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    }
+</style>
+
+<div class="container mt-4 reporte-3d-container">
+
+    <!-- HEADER CON BOTONES 3D -->
+    <div class="header-3d">
+        <h2>
+            <i class="bi bi-folder-fill"></i>
+            Reporte de Inventario Total
+        </h2>
+
+        <div style="display: flex; gap: 1rem;">
+            <a href="/reportes/inventario-total/excel" class="btn-export-3d btn-excel-3d">
+                <i class="bi bi-file-earmark-excel"></i>
+                Exportar Excel
+            </a>
+
+            <a href="/reportes/inventario-total/pdf" class="btn-export-3d btn-pdf-3d">
+                <i class="bi bi-file-earmark-pdf"></i>
+                Exportar PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- CUADROS SUPERIORES 3D -->
+    <div class="metricas-3d-grid">
+        <div class="metrica-card-3d">
+            <h5>Total de Productos</h5>
+            <h3>{{ total_items }}</h3>
+        </div>
+
+        <div class="metrica-card-3d">
+            <h5>Total de Unidades</h5>
+            <h3>{{ total_unidades }}</h3>
+        </div>
+
+        <div class="metrica-card-3d">
+            <h5>Valor Total del Inventario</h5>
+            <h3>${{ "{:,.0f}".format(valor_total) }}</h3>
+        </div>
+    </div>
+
+    <!-- TABLA 3D -->
+    <div class="tabla-3d-container">
+        <div class="table-responsive">
+            <table class="table table-3d">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Cantidad</th>
+                        <th>Precio</th>
+                        <th>Valor Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in productos %}
+                    <tr>
+                        <td>{{ p.id }}</td>
+                        <td><strong>{{ p.nombre }}</strong></td>
+                        <td>{{ p.categoria }}</td>
+                        <td>{{ p.stock }}</td>
+                        <td>${{ "{:,.0f}".format(p.precio_unitario) }} COP</td>
+                        <td>${{ "{:,.0f}".format(p.stock * p.precio_unitario) }} COP</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

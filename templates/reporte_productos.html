@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+{% block title %}Reporte: Productos Más/Menos Vendidos{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+    
+    .reporte-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .reporte-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: fadeInDown 0.6s ease;
+    }
+    
+    .reporte-title {
+        color: #ffffff;
+        font-size: 2.8rem;
+        font-weight: 900;
+        text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .seccion-reporte {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 2.5rem;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        animation: fadeInUp 0.8s ease;
+    }
+    
+    .seccion-titulo {
+        color: #ffd700;
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid rgba(255, 215, 0, 0.3);
+    }
+    
+    .tabla-premium {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .tabla-premium table {
+        width: 100%;
+        color: #ffffff;
+        margin: 0;
+    }
+    
+    .tabla-premium thead {
+        background: rgba(0, 0, 0, 0.4);
+    }
+    
+    .tabla-premium thead th {
+        padding: 1.2rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border: none;
+        color: #ffd700;
+        font-size: 0.95rem;
+    }
+    
+    .tabla-premium tbody tr {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .tabla-premium tbody tr:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: scale(1.01);
+    }
+    
+    .tabla-premium tbody td {
+        padding: 1.2rem;
+        font-weight: 600;
+        border: none;
+        font-size: 1rem;
+    }
+    
+    .badge-top {
+        background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+        color: #ffffff;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .badge-bajo {
+        background: linear-gradient(135deg, #ff5252 0%, #cc0000 100%);
+        color: #ffffff;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-volver {
+        background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+        border: none;
+        border-radius: 15px;
+        padding: 1rem 2.5rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #333;
+        box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        margin-top: 1rem;
+    }
+    
+    .btn-volver:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(255, 215, 0, 0.6);
+        color: #333;
+    }
+    
+    .estadistica-box {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .estadistica-item {
+        text-align: center;
+    }
+    
+    .estadistica-label {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+    }
+    
+    .estadistica-value {
+        color: #ffd700;
+        font-size: 2rem;
+        font-weight: 900;
+    }
+</style>
+
+<div class="reporte-container">
+    <!-- HEADER -->
+    <div class="reporte-header">
+        <h1 class="reporte-title">
+            <i class="bi bi-bar-chart-fill"></i>
+            Análisis de Productos
+            <i class="bi bi-graph-up"></i>
+        </h1>
+    </div>
+
+    <!-- ESTADÍSTICAS GENERALES -->
+    <div class="seccion-reporte">
+        <div class="estadistica-box">
+            <div class="estadistica-item">
+                <div class="estadistica-label">Total Productos con Ventas</div>
+                <div class="estadistica-value">{{ total_productos }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOP 5 MÁS VENDIDOS -->
+    <div class="seccion-reporte">
+        <h2 class="seccion-titulo">
+            <i class="bi bi-trophy-fill"></i>
+            Top 5 Productos MÁS Vendidos
+        </h2>
+
+        {% if top_5_mas %}
+        <div class="tabla-premium">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Posición</th>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Unidades Vendidas</th>
+                        <th># Ventas</th>
+                        <th>Ingresos Totales</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in top_5_mas %}
+                    <tr>
+                        <td>
+                            {% if loop.index == 1 %}
+                            <span class="badge-top"> #{{ loop.index }}</span>
+                            {% elif loop.index == 2 %}
+                            <span class="badge-top"> #{{ loop.index }}</span>
+                            {% elif loop.index == 3 %}
+                            <span class="badge-top"> #{{ loop.index }}</span>
+                            {% else %}
+                            <span class="badge-top">#{{ loop.index }}</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ p.nombre }}</strong></td>
+                        <td>{{ p.categoria }}</td>
+                        <td style="font-size: 1.2rem; font-weight: 800;">{{ p.cantidad_vendida }}</td>
+                        <td>{{ p.num_ventas }} ventas</td>
+                        <td style="color: #00ff88; font-size: 1.2rem; font-weight: 900;">
+                        ${{ "{:,.0f}".format(p.ingresos) }} COP
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- TOP 5 MENOS VENDIDOS -->
+    <div class="seccion-reporte">
+        <h2 class="seccion-titulo">
+            <i class="bi bi-arrow-down-circle-fill" style="color: #ff5252;"></i>
+            Top 5 Productos MENOS Vendidos
+        </h2>
+
+        {% if top_5_menos %}
+        <div class="tabla-premium">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Posición</th>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Unidades Vendidas</th>
+                        <th># Ventas</th>
+                        <th>Ingresos Totales</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in top_5_menos %}
+                    <tr>
+                        <td>
+                            <span class="badge-bajo">#{{ loop.index }}</span>
+                        </td>
+                        <td><strong>{{ p.nombre }}</strong></td>
+                        <td>{{ p.categoria }}</td>
+                        <td style="font-size: 1.2rem; font-weight: 800; color: #ff5252;">
+                            {{ p.cantidad_vendida }}
+                        </td>
+                        <td>{{ p.num_ventas }} ventas</td>
+                        <td style="font-size: 1.2rem; font-weight: 800;">
+                        ${{ "{:,.0f}".format(p.ingresos) }} COP
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- TODOS LOS PRODUCTOS -->
+    <div class="seccion-reporte">
+        <h2 class="seccion-titulo">
+            <i class="bi bi-list-ul"></i>
+            Todos los Productos (Ordenados por Ventas)
+        </h2>
+
+        <div class="tabla-premium">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Unidades Vendidas</th>
+                        <th>Número de Ventas</th>
+                        <th>Ingresos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in todos_productos %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><strong>{{ p.nombre }}</strong></td>
+                        <td>{{ p.categoria }}</td>
+                        <td>{{ p.cantidad_vendida }}</td>
+                        <td>{{ p.num_ventas }}</td>
+                        <td style="color: #00ff88; font-weight: 800;">
+                        ${{ "{:,.0f}".format(p.ingresos) }} COP
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- BOTÓN VOLVER -->
+    <div style="text-align: center;">
+        <a href="{{ url_for('dashboard') }}" class="btn-volver">
+            <i class="bi bi-arrow-left-circle-fill"></i>
+            Volver al Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

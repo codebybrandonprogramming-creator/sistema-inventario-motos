@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Usuarios{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+    
+    .usuarios-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .usuarios-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+        animation: fadeInDown 0.6s ease;
+    }
+    
+    .usuarios-title {
+        color: #ffffff;
+        font-size: 2.5rem;
+        font-weight: 800;
+        text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .usuarios-title i {
+        font-size: 3rem;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .btn-nuevo {
+        background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+        border: none;
+        border-radius: 15px;
+        padding: 0.9rem 2rem;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #ffffff;
+        box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-nuevo:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 255, 136, 0.6);
+        color: #ffffff;
+    }
+    
+    .tabla-glass {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: fadeInUp 0.9s ease;
+    }
+    
+    .table-premium {
+        margin: 0;
+        color: #ffffff;
+    }
+    
+    .table-premium thead {
+        background: rgba(0, 0, 0, 0.3);
+    }
+    
+    .table-premium thead th {
+        padding: 1.2rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border: none;
+        color: #ffd700;
+    }
+    
+    .table-premium tbody tr {
+        background: rgba(255, 255, 255, 0.05);
+        transition: all 0.3s ease;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .table-premium tbody tr:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: scale(1.01);
+    }
+    
+    .table-premium tbody td {
+        padding: 1rem;
+        font-weight: 600;
+        border: none;
+        vertical-align: middle;
+    }
+    
+    .badge-rol {
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .badge-admin {
+        background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+        color: #333;
+    }
+    
+    .badge-vendedor {
+        background: linear-gradient(135deg, #00bfff 0%, #0080ff 100%);
+        color: #ffffff;
+    }
+    
+    .badge-auditor {
+        background: linear-gradient(135deg, #9966ff 0%, #6633cc 100%);
+        color: #ffffff;
+    }
+    
+    .badge-activo {
+        background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+        color: #ffffff;
+        padding: 0.4rem 0.8rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-block;
+    }
+    
+    .badge-inactivo {
+        background: linear-gradient(135deg, #ff5252 0%, #cc0000 100%);
+        color: #ffffff;
+        padding: 0.4rem 0.8rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-block;
+    }
+    
+    .btn-table {
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-weight: 700;
+        border: none;
+        transition: all 0.3s ease;
+        margin: 0 0.2rem;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-table:hover {
+        transform: translateY(-2px);
+    }
+    
+    .btn-toggle {
+        background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+        color: #333;
+    }
+    
+    .btn-danger-table {
+        background: linear-gradient(135deg, #ff5252 0%, #cc0000 100%);
+        color: #ffffff;
+    }
+
+    .btn-warning-table {
+    background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+    color: #333;
+    
+    }
+
+</style>
+
+<div class="usuarios-container">
+    <div class="usuarios-header">
+        <div class="usuarios-title">
+            <i class="bi bi-people-fill"></i>
+            Gestión de Usuarios
+        </div>
+        <a href="{{ url_for('nuevo_usuario') }}" class="btn-nuevo">
+            <i class="bi bi-person-plus-fill"></i> Crear Nuevo Usuario
+        </a>
+    </div>
+
+    <div class="tabla-glass">
+        <div class="table-responsive">
+            <table class="table table-premium table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuario</th>
+                        <th>Nombre Completo</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Fecha Creación</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in usuarios %}
+                    <tr>
+                        <td>{{ u.id }}</td>
+                        <td><strong>{{ u.username }}</strong></td>
+                        <td>{{ u.nombre_completo }}</td>
+                        <td>
+                            {% if u.rol == 'admin' %}
+                            <span class="badge-rol badge-admin">
+                                <i class="bi bi-shield-fill-check"></i> {{ roles[u.rol] }}
+                            </span>
+                            {% elif u.rol == 'vendedor' %}
+                            <span class="badge-rol badge-vendedor">
+                                <i class="bi bi-cart-fill"></i> {{ roles[u.rol] }}
+                            </span>
+                            {% else %}
+                            <span class="badge-rol badge-auditor">
+                                <i class="bi bi-eye-fill"></i> {{ roles[u.rol] }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.activo %}
+                            <span class="badge-activo">
+                                <i class="bi bi-check-circle-fill"></i> Activo
+                            </span>
+                            {% else %}
+                            <span class="badge-inactivo">
+                                <i class="bi bi-x-circle-fill"></i> Inactivo
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ u.fecha_creación }}</td>
+                        <td class="text-center">
+                            <a href="{{ url_for('resetear_password_usuario', id=u.id) }}" 
+                            class="btn btn-sm btn-table btn-warning-table"
+                            title="Resetear contraseña">
+
+                            <i class="bi bi-key-fill"></i>
+
+                        </a>
+                            <a href="{{ url_for('toggle_usuario', id=u.id) }}" 
+                            class="btn btn-sm btn-table btn-toggle"
+                            onclick="return confirm('¿Cambiar estado de este usuario?')"
+                            title="Activar/Desactivar">
+
+                        <i class="bi bi-toggle-on"></i>
+                        </a>
+
+                        <a href="{{ url_for('eliminar_usuario', id=u.id) }}" 
+                            class="btn btn-sm btn-table btn-danger-table"
+                            onclick="return confirm('¿Eliminar este usuario?')"
+                            title="Eliminar usuario">
+                        <i class="bi bi-trash-fill"></i>
+                        </a>
+
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.5;"></i>
+                            <p class="mt-2">No hay usuarios registrados</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

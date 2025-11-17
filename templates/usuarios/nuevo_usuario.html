@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% block title %}Crear Usuario{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+    
+    .usuario-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .usuario-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        animation: fadeInDown 0.6s ease;
+    }
+    
+    .usuario-header h2 {
+        color: #ffffff;
+        font-size: 2.5rem;
+        font-weight: 800;
+        text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .usuario-header .icon-user {
+        font-size: 3rem;
+        animation: bounce 2s ease-in-out infinite;
+    }
+    
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .glass-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        border-radius: 25px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 3rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: fadeInUp 0.8s ease;
+    }
+    
+    .form-label-custom {
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .form-label-custom i {
+        font-size: 1.3rem;
+        color: #ffd700;
+    }
+    
+    .form-control-custom {
+        background: rgba(255, 255, 255, 0.95);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 15px;
+        padding: 1rem 1.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .form-control-custom:focus {
+        outline: none;
+        border-color: #ffd700;
+        background: #ffffff;
+        box-shadow: 0 6px 25px rgba(255, 215, 0, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    .btn-guardar {
+        background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+        border: none;
+        border-radius: 20px;
+        padding: 1.2rem 3rem;
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #ffffff;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        box-shadow: 0 10px 30px rgba(0, 255, 136, 0.5);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin: 2rem auto 0;
+        width: 100%;
+        max-width: 400px;
+    }
+    
+    .btn-guardar:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 15px 40px rgba(0, 255, 136, 0.7);
+    }
+    
+    .btn-guardar i {
+        font-size: 1.5rem;
+    }
+    
+    .form-row-custom {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-box {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 15px;
+        padding: 1rem;
+        margin-top: 1rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+    }
+    
+    .info-box i {
+        color: #ffd700;
+        margin-right: 0.5rem;
+    }
+</style>
+
+<div class="usuario-container">
+    <div class="usuario-header">
+        <h2>
+            <i class="bi bi-person-plus-fill icon-user"></i>
+            Crear Nuevo Usuario
+            <i class="bi bi-shield-fill-check"></i>
+        </h2>
+    </div>
+
+    <div class="glass-card">
+        <form method="POST">
+            
+            <div class="form-row-custom">
+                <div>
+                    <label class="form-label-custom">
+                        <i class="bi bi-person-circle"></i>
+                        Usuario (Login)
+                    </label>
+                    <input type="text" 
+                           name="username" 
+                           class="form-control form-control-custom" 
+                           placeholder="Ej: jperez"
+                           required
+                           autocomplete="off">
+                </div>
+
+                <div>
+                    <label class="form-label-custom">
+                        <i class="bi bi-key-fill"></i>
+                        Contraseña
+                    </label>
+                    <input type="password" 
+                           name="password" 
+                           class="form-control form-control-custom" 
+                           placeholder="Contraseña segura"
+                           required
+                           autocomplete="new-password">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label class="form-label-custom">
+                    <i class="bi bi-person-badge-fill"></i>
+                    Nombre Completo
+                </label>
+                <input type="text" 
+                       name="nombre_completo" 
+                       class="form-control form-control-custom" 
+                       placeholder="Ej: Juan Pérez García"
+                       required>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label class="form-label-custom">
+                    <i class="bi bi-shield-fill"></i>
+                    Rol del Usuario
+                </label>
+                <select name="rol" class="form-select form-control-custom" required>
+                    <option value="">-- Selecciona un rol --</option>
+                    {% for key, value in roles.items() %}
+                    <option value="{{ key }}">{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="info-box">
+                <i class="bi bi-info-circle-fill"></i>
+                <strong>Roles disponibles:</strong><br>
+                • <strong>Administrador:</strong> Acceso total al sistema<br>
+                • <strong>Vendedor:</strong> Puede registrar ventas y ver productos<br>
+                • <strong>Auditor:</strong> Solo puede ver información (sin modificar)
+            </div>
+
+            <button type="submit" class="btn btn-guardar">
+                <i class="bi bi-check-circle-fill"></i>
+                Crear Usuario
+                <i class="bi bi-arrow-right-circle-fill"></i>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

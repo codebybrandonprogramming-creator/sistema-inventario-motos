@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
+
+# Base de datos (opcional)
+data/
+
+# Scripts temporales
+resetear_admin.py
+actualizar_admin.py
+generar_presentacion.py
+
+# IDEs
+.vscode/

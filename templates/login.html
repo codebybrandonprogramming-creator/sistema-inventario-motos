@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Inventario H&D</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animación de fondo */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 480px;
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 30px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            animation: fadeInUp 0.8s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .login-logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 1.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .login-logo i {
+            font-size: 4rem;
+            color: #ffffff;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-title {
+            color: #ffffff;
+            font-size: 2rem;
+            font-weight: 900;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+
+        .login-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .form-group-login {
+            margin-bottom: 1.8rem;
+            position: relative;
+        }
+
+        .form-label-login {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-label-login i {
+            font-size: 1.2rem;
+            color: #ffd700;
+        }
+
+        .form-control-login {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            padding: 1rem 1.2rem 1rem 3.5rem;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #333;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+
+        .form-control-login:focus {
+            outline: none;
+            border-color: #ffd700;
+            background: #ffffff;
+            box-shadow: 0 6px 25px rgba(255, 215, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.3rem;
+            color: #667eea;
+            pointer-events: none;
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+            border: none;
+            border-radius: 20px;
+            padding: 1.1rem 2rem;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.7);
+            background: linear-gradient(135deg, #ffaa00 0%, #ffd700 100%);
+        }
+
+        .btn-login i {
+            font-size: 1.3rem;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        /* Alerts personalizados */
+        .alert-custom {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .alert-error {
+            border-color: rgba(255, 82, 82, 0.8);
+            color: #ffffff;
+            background: rgba(255, 82, 82, 0.3);
+        }
+
+        .alert-success {
+            border-color: rgba(0, 255, 136, 0.8);
+            color: #ffffff;
+            background: rgba(0, 255, 136, 0.3);
+        }
+
+        .alert-info {
+            border-color: rgba(100, 200, 255, 0.8);
+            color: #ffffff;
+            background: rgba(100, 200, 255, 0.3);
+        }
+
+        .alert-warning {
+            border-color: rgba(255, 193, 7, 0.8);
+            color: #ffffff;
+            background: rgba(255, 193, 7, 0.3);
+        }
+
+        .alert-custom i {
+            font-size: 1.5rem;
+        }
+
+        /* Info de credenciales por defecto */
+        .credentials-info {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .credentials-info strong {
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <div class="login-card">
+        <!-- HEADER -->
+        <div class="login-header">
+            <div class="login-logo">
+                <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <h1 class="login-title">INVENTARIO H&D</h1>
+            <p class="login-subtitle">Moto Repuestos Profesional</p>
+        </div>
+
+        <!-- ALERTS -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert-custom alert-{{ category }}">
+                        {% if category == 'error' or category == 'danger' %}
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                        {% elif category == 'success' %}
+                            <i class="bi bi-check-circle-fill"></i>
+                        {% elif category == 'warning' %}
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                        {% else %}
+                            <i class="bi bi-info-circle-fill"></i>
+                        {% endif %}
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- FORM -->
+        <form method="POST">
+            <div class="form-group-login">
+                <label class="form-label-login">
+                    <i class="bi bi-person-fill"></i>
+                    Usuario
+                </label>
+                <div style="position: relative;">
+                    <i class="bi bi-person-circle input-icon"></i>
+                    <input type="text" 
+                           name="username" 
+                           class="form-control-login" 
+                           placeholder="Ingresa tu usuario"
+                           autocomplete="username"
+                           required
+                           autofocus>
+                </div>
+            </div>
+
+            <div class="form-group-login">
+                <label class="form-label-login">
+                    <i class="bi bi-key-fill"></i>
+                    Contraseña
+                </label>
+                <div style="position: relative;">
+                    <i class="bi bi-lock-fill input-icon"></i>
+                    <input type="password" 
+                           name="password" 
+                           class="form-control-login" 
+                           placeholder="Ingresa tu contraseña"
+                           autocomplete="current-password"
+                           required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login">
+                <i class="bi bi-box-arrow-in-right"></i>
+                Iniciar Sesión
+                <i class="bi bi-arrow-right-circle-fill"></i>
+            </button>
+        </form>
+
+        <!-- INFO DE CREDENCIALES -->
+        <div class="credentials-info">
+            <i class="bi bi-info-circle"></i>
+            <strong>Credenciales por defecto:</strong><br>
+            Usuario: <strong>admin</strong> | Contraseña: <strong>admin123</strong>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="login-footer">
+            <i class="bi bi-shield-check"></i>
+            Sistema de Inventario Seguro v2.0
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
