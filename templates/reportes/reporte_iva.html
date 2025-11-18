@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Reporte de IVA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header-section">
+        <h1>🏛️ Reporte de IVA a Pagar al Gobierno</h1>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Volver al Dashboard</a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-section">
+        <form method="GET" class="filter-form">
+            <div class="filter-group">
+                <label>Año:</label>
+                <select name="anio" class="form-control">
+                    <option value="">Todos los años</option>
+                    {% for a in anios %}
+                    <option value="{{ a }}" {% if request.args.get('anio') == a|string %}selected{% endif %}>{{ a }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Mes:</label>
+                <select name="mes" class="form-control">
+                    <option value="">Todos los meses</option>
+                    <option value="01" {% if request.args.get('mes') == '01' %}selected{% endif %}>Enero</option>
+                    <option value="02" {% if request.args.get('mes') == '02' %}selected{% endif %}>Febrero</option>
+                    <option value="03" {% if request.args.get('mes') == '03' %}selected{% endif %}>Marzo</option>
+                    <option value="04" {% if request.args.get('mes') == '04' %}selected{% endif %}>Abril</option>
+                    <option value="05" {% if request.args.get('mes') == '05' %}selected{% endif %}>Mayo</option>
+                    <option value="06" {% if request.args.get('mes') == '06' %}selected{% endif %}>Junio</option>
+                    <option value="07" {% if request.args.get('mes') == '07' %}selected{% endif %}>Julio</option>
+                    <option value="08" {% if request.args.get('mes') == '08' %}selected{% endif %}>Agosto</option>
+                    <option value="09" {% if request.args.get('mes') == '09' %}selected{% endif %}>Septiembre</option>
+                    <option value="10" {% if request.args.get('mes') == '10' %}selected{% endif %}>Octubre</option>
+                    <option value="11" {% if request.args.get('mes') == '11' %}selected{% endif %}>Noviembre</option>
+                    <option value="12" {% if request.args.get('mes') == '12' %}selected{% endif %}>Diciembre</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <button type="submit" class="btn btn-info">🔍 Filtrar</button>
+                <a href="{{ url_for('reporte_iva') }}" class="btn btn-secondary">Limpiar</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Card de Resumen -->
+    <div class="iva-summary-card">
+        <div class="iva-icon">🏛️</div>
+        <div class="iva-content">
+            <h2>Total IVA a Pagar</h2>
+            <p class="iva-amount">${{ "{:,.2f}".format(total_iva) }}</p>
+            <p class="iva-subtitle">
+                {% if filtro_texto %}
+                    {{ filtro_texto }}
+                {% else %}
+                    Todos los períodos
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Desglose por Mes -->
+    <div class="table-card">
+        <h3>📅 Desglose por Mes</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Año</th>
+                    <th>Mes</th>
+                    <th>Ventas Realizadas</th>
+                    <th>Total Vendido</th>
+                    <th>IVA Cobrado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if iva_por_mes %}
+                    {% for item in iva_por_mes %}
+                    <tr>
+                        <td>{{ item.anio }}</td>
+                        <td>{{ item.mes_nombre }}</td>
+                        <td class="text-center">{{ item.num_ventas }}</td>
+                        <td>${{ "{:,.2f}".format(item.total_vendido) }}</td>
+                        <td class="iva-col">${{ "{:,.2f}".format(item.iva_total) }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">No hay ventas en el período seleccionado</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+            {% if iva_por_mes %}
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="2"><strong>TOTAL</strong></td>
+                    <td class="text-center"><strong>{{ total_ventas }}</strong></td>
+                    <td><strong>${{ "{:,.2f}".format(total_vendido) }}</strong></td>
+                    <td class="iva-col"><strong>${{ "{:,.2f}".format(total_iva) }}</strong></td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+
+    <!-- Información Adicional -->
+    <div class="info-box">
+        <h3>ℹ️ Información Importante</h3>
+        <ul>
+            <li>Este reporte muestra el IVA (19%) cobrado en todas las ventas realizadas.</li>
+            <li>Este monto debe ser declarado y pagado periódicamente al gobierno según la legislación fiscal vigente.</li>
+            <li>Consulta con tu contador para determinar las fechas de pago específicas según tu régimen tributario.</li>
+            <li>El IVA se calcula sobre el precio base de venta (sin incluir la ganancia).</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+.filter-section {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.filter-form {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+}
+
+.filter-group {
+    flex: 1;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #555;
+}
+
+.iva-summary-card {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 40px;
+    margin: 20px 0;
+    box-shadow: 0 10px 25px rgba(243, 156, 18, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.iva-icon {
+    font-size: 80px;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+}
+
+.iva-content h2 {
+    margin: 0 0 10px 0;
+    font-size: 24px;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+.iva-amount {
+    font-size: 56px;
+    font-weight: 800;
+    margin: 10px 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.iva-subtitle {
+    font-size: 16px;
+    opacity: 0.8;
+    margin: 5px 0 0 0;
+}
+
+.table-card {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    margin: 20px 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.table-card h3 {
+    margin-top: 0;
+    color: #2c3e50;
+    border-bottom: 2px solid #f39c12;
+    padding-bottom: 10px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.table thead {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: white;
+}
+
+.table th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.table tbody tr:hover {
+    background: #fff8e1;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.iva-col {
+    color: #f39c12;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.total-row {
+    background: #fff3cd;
+    font-size: 18px;
+}
+
+.total-row td {
+    padding: 15px;
+    border-top: 3px solid #f39c12;
+    border-bottom: 3px solid #f39c12;
+}
+
+.info-box {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    padding: 20px;
+    border-radius: 5px;
+    margin: 20px 0;
+}
+
+.info-box h3 {
+    margin-top: 0;
+    color: #1976d2;
+}
+
+.info-box ul {
+    margin: 10px 0 0 20px;
+    line-height: 1.8;
+}
+
+.info-box li {
+    color: #555;
+    margin-bottom: 8px;
+}
+</style>
+{% endblock %}
