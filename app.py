@@ -561,3 +561,4 @@ def resetear_password_usuario(id):
         return redirect(url_for('lista_usuarios'))
     
     return render_template('usuarios/resetear_password.html', usuario=usuario)
+
