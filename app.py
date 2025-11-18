@@ -1043,7 +1043,7 @@ def historial_ventas():
     FROM ventas v
     INNER JOIN productos p ON v.producto_id = p.id
     ORDER BY v.id DESC
-""")
+                   """)
 
     
     params = []
