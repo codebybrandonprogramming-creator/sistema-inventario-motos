@@ -857,34 +857,25 @@ def editar_producto(id):
             return redirect(url_for('editar_producto', id=id))
 
     return render_template("editar_producto.html", producto=producto)
-    
 
-@app.route('/productos/eliminar/<int:id>', methods=['POST'])
+
+@app.route("/productos/<int:id>/eliminar")
 @login_required
+@role_required('admin')
 def eliminar_producto(id):
-    try:
-        producto = Producto.query.get(id)
-        
-        if not producto:
-            return jsonify({'success': False, 'error': 'Producto no encontrado'}), 404
-        
-        # Verificar si hay ventas asociadas
-        ventas_asociadas = Venta.query.filter_by(producto_id=id).count()
-        
-        if ventas_asociadas > 0:
-            return jsonify({
-                'success': False, 
-                'error': f'No se puede eliminar. Tiene {ventas_asociadas} ventas asociadas'
-            }), 400
-        
-        db.session.delete(producto)
-        db.session.commit()
-        
-        return jsonify({'success': True, 'message': 'Producto eliminado exitosamente'})
-    
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
+    """Elimina un producto"""
+    producto = obtener_producto_por_id(id)
+
+    if not producto:
+        flash(f"El producto con el ID {id} no fue encontrado.", "error")
+        return redirect(url_for('lista_productos'))
+
+    eliminar_producto_db(id)
+
+    registrar_log('Producto eliminado', f"Producto: {producto['nombre']} (ID: {id})")
+
+    flash(f"El producto '{producto['nombre']}' fue eliminado con éxito.", "success")
+    return redirect(url_for('lista_productos'))
 
 
 # ---------------------------------------------------------------------------------
