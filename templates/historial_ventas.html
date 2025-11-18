@@ -539,7 +539,13 @@
                                 <td class="td-ganancia">${{ "{:,.3f}".format(venta.ganancia_total or 0) }} COP</td>
                                 <td class="td-total">${{ "{:,.3f}".format(venta.total) }} COP</td>
                                 <td class="td-usuario">{{ venta.usuario_nombre }}</td>
-                                
+                                <td>
+    <a href="{{ url_for('eliminar_venta', id=venta.id) }}" 
+       class="btn btn-danger btn-sm">
+       Eliminar
+    </a>
+</td>
+
                             </tr>
                             {% endfor %}
                         {% else %}
