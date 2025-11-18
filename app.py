@@ -683,3 +683,4 @@ def limpiar_logs():
 
     flash("Historial limpiado correctamente. IDs reiniciados desde 1.", "success")
     return redirect(url_for('ver_logs'))
+
