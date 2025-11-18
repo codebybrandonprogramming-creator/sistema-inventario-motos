@@ -992,7 +992,7 @@ def nueva_venta():
     return render_template('crear_venta.html', productos=productos)
 
 
-@app.route('/ventas/historial')
+
 @app.route('/reportes/iva')
 @login_required
 def reporte_iva():
