@@ -1116,3 +1116,4 @@ def reporte_inventario_total():
         total_unidades=total_unidades,
         valor_total=valor_total_inventario
     )
+
