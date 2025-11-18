@@ -305,8 +305,7 @@ body {
                         <td>${{ "{:,.0f}".format(venta.precio_unitario) }} COP</td>
                         <td class="total-col"><strong>${{ "{:,.0f}".format(venta.total) }} COP</strong></td>
                         <td>{{ venta.usuario_nombre or 'N/A' }}</td>
-                        <td class="text-center">
-    {% if session.rol == 'admin' %}
+                        <td class="text-center">{% if session.rol == 'admin' %}
     <button type="button" onclick="eliminarVenta({{ venta.id }})" 
             class="btn btn-sm btn-danger-table">
         <i class="bi bi-trash-fill"></i>
