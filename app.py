@@ -1,5 +1,68 @@
 # ENUNCIADO OFICIAL DEL SISTEMA DE INVENTARIO DE REPUESTOS PARA MOTOS
 
+# Desarrollar un Sistema de Inventario para un negocio de repuestos
+# de motocicletas, utilizando Flask, archivos JSON y Bootstrap.
+# El sistema debe permitir al dueño del negocio registrar, consultar y 
+# mantener actualizada la información de todos los productos en stock.
+
+# ---
+# OBJETIVO DEL SISTEMA
+
+# Crear una aplicación web que permita gestionar un inventario completo y 
+# organizado de repuestos de motos, con la posibilidad de agregar, 
+# listar, editar y eliminar productos de forma sencilla y profesional.
+
+# ---
+
+# FUNCIONALIDADES OBLIGATORIAS (VERSIÓN 1 – Profesional básica)
+# Registrar productos
+# ID del producto (generado automáticamente)
+# Nombre
+# Categoría (aceites, llantas, frenos, correas, kit de arrastre, bujías, rodamientos, cascos, etc.)
+# Marca
+# Stock disponible
+# Precio unitario
+# Descripción
+# Valor total (stock × precio unitario)
+
+
+# Listar productos
+# Mostrar todos los productos en una tabla
+# Ver botones de detalle, editar y eliminar
+
+# Ver detalle del producto
+# Mostrar toda la información completa
+
+
+# Editar productos
+# Permitir modificar nombre, categoría, marca, stock y precio
+# Recalcular valor total automáticamente
+
+# Eliminar productos
+
+# Persistencia en archivo JSON
+# Todos los cambios deben guardarse en data/productos.json
+
+
+# Interfaz profesional con Bootstrap
+# Diseño limpio, elegante y moderno
+# Cabecera fija con el nombre del sistema
+# Plantilla base con Jinja
+
+# ---
+
+# VERSIÓN 2 (Cuando terminemos lo básico) — Mejoras profesionales
+
+# Estas se agregarán después:
+# Buscador de productos
+# Filtro por categoría
+# Ordenar por precio
+# Alerta de bajo stock
+# Registro automático de ventas (restar stock sin hacerlo a mano)
+# Historial de movimientos (entradas/salidas)
+# Exportar reportes en PDF
+# Conexión a MySQL para manejo real en producción
+
 from flask import Flask, request, render_template, redirect, url_for, flash, send_file, session, jsonify
 import json
 import os
@@ -29,6 +92,18 @@ def get_db_connection():
 def ejecutar_query(query, params=None, commit=False, fetch_one=False, fetch_all=False):
     """
     Función auxiliar para ejecutar consultas SQL de forma segura.
+    
+    Args:
+        query: Consulta SQL con placeholders %s
+        params: Tupla con los parámetros
+        commit: True si es INSERT/UPDATE/DELETE
+        fetch_one: True para obtener un solo registro
+        fetch_all: True para obtener todos los registros
+    
+    Returns:
+        - Si fetch_one: Un diccionario o None
+        - Si fetch_all: Lista de diccionarios
+        - Si commit: ID del último registro insertado (lastrowid)
     """
     connection = None
     cursor = None
@@ -53,7 +128,7 @@ def ejecutar_query(query, params=None, commit=False, fetch_one=False, fetch_all=
         return None
         
     except Exception as e:
-        print(f" Error en la base de datos: {e}")
+        print(f"❌ Error en la base de datos: {e}")
         if commit and connection:
             connection.rollback()
         return None
@@ -83,8 +158,9 @@ ROLES = {
 def cargar_productos():
     """Carga todos los productos desde MySQL"""
     query = """
-        SELECT id, nombre, categoria, marca, stock, precio_unitario, 
-               descripcion, valor_total, fecha_creacion, fecha_actualizacion
+        SELECT id, codigo_sku, nombre, categoria, marca, stock, precio_unitario, 
+               porcentaje_ganancia, precio_venta, descripcion, valor_total, 
+               fecha_creacion, fecha_actualizacion
         FROM productos
         ORDER BY id
     """
@@ -95,28 +171,33 @@ def cargar_productos():
 def obtener_producto_por_id(producto_id):
     """Obtiene un producto específico por su ID"""
     query = """
-        SELECT id, nombre, categoria, marca, stock, precio_unitario, 
-               descripcion, valor_total, fecha_creacion, fecha_actualizacion
+        SELECT id, codigo_sku, nombre, categoria, marca, stock, precio_unitario, 
+               porcentaje_ganancia, precio_venta, descripcion, valor_total, 
+               fecha_creacion, fecha_actualizacion
         FROM productos
         WHERE id = %s
     """
     return ejecutar_query(query, (producto_id,), fetch_one=True)
 
-
-def actualizar_producto(producto_id, nombre, categoria, marca, stock, precio_unitario, descripcion):
+def actualizar_producto(producto_id, nombre, categoria, marca, stock, precio_unitario, descripcion, codigo_sku=None, porcentaje_ganancia=0):
     """Actualiza un producto existente en MySQL"""
     valor_total = round(stock * precio_unitario, 3)
+    
+    # Calcular precio_venta basado en precio_unitario + IVA + ganancia
+    precio_con_iva = round(precio_unitario * 1.19, 2)
+    precio_venta = round(precio_con_iva * (1 + porcentaje_ganancia / 100), 2)
     
     query = """
         UPDATE productos 
         SET nombre = %s, categoria = %s, marca = %s, stock = %s, 
-            precio_unitario = %s, descripcion = %s, valor_total = %s,
+            precio_unitario = %s, porcentaje_ganancia = %s, precio_venta = %s,
+            descripcion = %s, valor_total = %s, codigo_sku = %s,
             fecha_actualizacion = NOW()
         WHERE id = %s
     """
-    params = (nombre, categoria, marca, stock, precio_unitario, descripcion, valor_total, producto_id)
+    params = (nombre, categoria, marca, stock, precio_unitario, porcentaje_ganancia, 
+              precio_venta, descripcion, valor_total, codigo_sku, producto_id)
     return ejecutar_query(query, params, commit=True)
-
 
 def eliminar_producto_db(producto_id):
     """Elimina un producto de MySQL"""
@@ -173,13 +254,6 @@ def guardar_venta(venta):
         venta.get('usuario_nombre')
     )
     return ejecutar_query(query, params, commit=True)
-
-
-#  NUEVA FUNCIÓN: ELIMINAR VENTA
-def eliminar_venta_db(venta_id):
-    """Elimina una venta de MySQL"""
-    query = "DELETE FROM ventas WHERE id = %s"
-    return ejecutar_query(query, (venta_id,), commit=True)
 
 
 # ---------------------------------------------------------------------------------
@@ -259,6 +333,7 @@ def obtener_usuario_por_id(usuario_id):
     """
     return ejecutar_query(query, (usuario_id,), fetch_one=True)
 
+
 def registrar_log(accion, detalle=""):
     """Registra una acción en los logs de MySQL"""
     query = """
@@ -282,6 +357,7 @@ def cargar_logs():
     FROM logs
     ORDER BY fecha_registro ASC
     """
+
     logs = ejecutar_query(query, fetch_all=True)
     return logs if logs else []
 
@@ -314,7 +390,6 @@ def role_required(*roles):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
-
 
 # ---------------------------------------------------------------------------------
 # RUTAS DE AUTENTICACIÓN
@@ -562,6 +637,7 @@ def resetear_password_usuario(id):
     
     return render_template('usuarios/resetear_password.html', usuario=usuario)
 
+
 @app.route('/logs')
 @login_required
 @role_required('admin', 'auditor')
@@ -572,7 +648,7 @@ def ver_logs():
 
 
 # --------------------------------------------------------------
-#  ELIMINAR UN SOLO LOG
+# 🔥 ELIMINAR UN SOLO LOG
 # --------------------------------------------------------------
 @app.route('/logs/eliminar/<int:id>', methods=['POST'])
 @login_required
@@ -588,18 +664,23 @@ def eliminar_log(id):
 
 
 # --------------------------------------------------------------
-#  ELIMINAR TODOS LOS LOGS (LIMPIAR HISTORIAL)
+# 🔥 ELIMINAR TODOS LOS LOGS (LIMPIAR HISTORIAL)
 # --------------------------------------------------------------
+
 @app.route('/logs/limpiar', methods=['POST'])
 @login_required
 @role_required('admin')
 def limpiar_logs():
     """Elimina todos los registros del historial y reinicia el AUTO_INCREMENT"""
+
     # 1. Borrar todos los logs
     ejecutar_query("DELETE FROM logs", commit=True)
+
     # 2. Reiniciar el contador AUTO_INCREMENT a 1
     ejecutar_query("ALTER TABLE logs AUTO_INCREMENT = 1", commit=True)
+
     registrar_log("Historial limpiado", "Se eliminaron todos los logs y se reinició el AUTO_INCREMENT.")
+
     flash("Historial limpiado correctamente. IDs reiniciados desde 1.", "success")
     return redirect(url_for('ver_logs'))
 
@@ -678,6 +759,8 @@ def nuevo_producto():
             stock = int(request.form['stock'])
             precio_unitario = round(float(request.form['precio_unitario']), 3)
             descripcion = request.form.get('descripcion', '').strip()
+            codigo_sku = request.form.get('codigo_sku', '').strip()
+            porcentaje_ganancia = float(request.form.get('porcentaje_ganancia', 0))
 
             # Validaciones
             if not nombre or not categoria:
@@ -695,12 +778,18 @@ def nuevo_producto():
             flash("Faltan campos obligatorios en el formulario.", "error")
             return redirect(url_for('nuevo_producto'))
 
+        # Calcular precio_venta basado en precio_unitario + IVA + ganancia
+        precio_con_iva = round(precio_unitario * 1.19, 2)
+        precio_venta = round(precio_con_iva * (1 + porcentaje_ganancia / 100), 2)
+
         # Insertar en MySQL
         query = """
-            INSERT INTO productos (nombre, categoria, marca, stock, precio_unitario, descripcion)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO productos (nombre, categoria, marca, stock, precio_unitario, 
+                                   porcentaje_ganancia, precio_venta, descripcion, codigo_sku)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        params = (nombre, categoria, marca, stock, precio_unitario, descripcion)
+        params = (nombre, categoria, marca, stock, precio_unitario, 
+                  porcentaje_ganancia, precio_venta, descripcion, codigo_sku)
         producto_id = ejecutar_query(query, params, commit=True)
 
         if producto_id:
@@ -746,6 +835,8 @@ def editar_producto(id):
             stock = int(request.form['stock'])
             precio_unitario = round(float(request.form['precio_unitario']), 3)
             descripcion = request.form.get('descripcion', '').strip()
+            codigo_sku = request.form.get('codigo_sku', '').strip()
+            porcentaje_ganancia = float(request.form.get('porcentaje_ganancia', 0))
 
             # Validaciones
             if stock < 0 or precio_unitario < 0:
@@ -753,7 +844,8 @@ def editar_producto(id):
                 return redirect(url_for('editar_producto', id=id))
 
             # Actualizar producto
-            actualizar_producto(id, nombre, categoria, marca, stock, precio_unitario, descripcion)
+            actualizar_producto(id, nombre, categoria, marca, stock, precio_unitario, 
+                              descripcion, codigo_sku, porcentaje_ganancia)
 
             registrar_log('Producto actualizado', f"Producto: {nombre} (ID: {id})")
 
@@ -767,118 +859,234 @@ def editar_producto(id):
     return render_template("editar_producto.html", producto=producto)
 
 
-#  RUTA CORREGIDA: ELIMINAR PRODUCTO CON JSON RESPONSE
-@app.route("/productos/<int:id>/eliminar", methods=['POST'])
+# AGREGA ESTA RUTA EN TU app.py (después de la función editar_producto)
+
+# Reemplaza tu función eliminar_producto en app.py con esta:
+
+@app.route("/productos/eliminar/<int:id>", methods=['POST'])
 @login_required
 @role_required('admin')
 def eliminar_producto(id):
-    """Elimina un producto"""
-    producto = obtener_producto_por_id(id)
-
-    if not producto:
-        return jsonify({'success': False, 'message': 'Producto no encontrado'}), 404
-
-    eliminar_producto_db(id)
-    registrar_log('Producto eliminado', f"Producto: {producto['nombre']} (ID: {id})")
-
-    return jsonify({'success': True, 'message': f"El producto '{producto['nombre']}' fue eliminado con éxito."})
-
+    """Elimina un producto - VERSIÓN MEJORADA CON MANEJO DE VENTAS"""
+    
+    try:
+        # Buscar el producto
+        producto = obtener_producto_por_id(id)
+        
+        if not producto:
+            return jsonify({
+                'success': False, 
+                'error': 'Producto no encontrado'
+            }), 404
+        
+        # Verificar si tiene ventas asociadas
+        query_ventas = "SELECT COUNT(*) as total FROM ventas WHERE producto_id = %s"
+        resultado = ejecutar_query(query_ventas, (id,), fetch_one=True)
+        
+        ventas_asociadas = resultado['total'] if resultado else 0
+        
+        if ventas_asociadas > 0:
+            # OPCIÓN 1: NO PERMITIR ELIMINACIÓN
+            return jsonify({
+                'success': False,
+                'error': f'No se puede eliminar. Tiene {ventas_asociadas} venta(s) asociada(s)',
+                'ventas_asociadas': ventas_asociadas
+            }), 400
+            
+            # OPCIÓN 2: PERMITIR ELIMINACIÓN FORZADA (Descomenta si prefieres esta opción)
+            # eliminar_ventas = "DELETE FROM ventas WHERE producto_id = %s"
+            # ejecutar_query(eliminar_ventas, (id,), commit=True)
+            # registrar_log('Ventas eliminadas', f'{ventas_asociadas} ventas del producto {producto["nombre"]} eliminadas en cascada')
+        
+        # Eliminar el producto
+        query_eliminar = "DELETE FROM productos WHERE id = %s"
+        ejecutar_query(query_eliminar, (id,), commit=True)
+        
+        registrar_log('Producto eliminado', f"Producto: {producto['nombre']} (ID: {id})")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Producto eliminado exitosamente'
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error al eliminar producto: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 # ---------------------------------------------------------------------------------
-# RUTAS DE VENTAS
+# RUTAS DE VENTAS (🔥 ACTUALIZADO - PASO 7B)
 # ---------------------------------------------------------------------------------
 @app.route('/ventas/nueva', methods=['GET', 'POST'])
 @login_required
 @role_required('admin', 'vendedor')
 def nueva_venta():
-    """Registra una nueva venta"""
-    productos = cargar_productos()
-
-    if request.method == "POST":
+    """Registra una nueva venta con cálculo de IVA y ganancia"""
+    if request.method == 'POST':
         try:
             producto_id = int(request.form['producto_id'])
             cantidad = int(request.form['cantidad'])
-
+            porcentaje_ganancia_general = float(request.form.get('porcentaje_ganancia_general', 0))
+            
+            # Validaciones básicas
             if cantidad <= 0:
-                flash("La cantidad debe ser mayor a 0.", "error")
+                flash('La cantidad debe ser mayor a 0.', 'error')
                 return redirect(url_for('nueva_venta'))
-
-        except (ValueError, KeyError):
-            flash("Datos inválidos en el formulario.", "error")
+            
+            # Obtener producto
+            producto = obtener_producto_por_id(producto_id)
+            
+            if not producto:
+                flash('Producto no encontrado.', 'error')
+                return redirect(url_for('nueva_venta'))
+            
+            # Validar stock
+            if cantidad > producto['stock']:
+                flash(f'Stock insuficiente. Disponible: {producto["stock"]} unidades.', 'error')
+                return redirect(url_for('nueva_venta'))
+            
+            # CÁLCULOS
+            precio_unitario = producto['precio_unitario']
+            precio_con_iva = round(precio_unitario * 1.19, 2)
+            
+            # Determinar qué % de ganancia usar
+            if porcentaje_ganancia_general > 0:
+                # Usar ganancia general ingresada
+                porcentaje_aplicado = porcentaje_ganancia_general
+                precio_venta_final = round(precio_con_iva * (1 + porcentaje_aplicado / 100), 2)
+            else:
+                # Usar ganancia del producto
+                porcentaje_aplicado = producto.get('porcentaje_ganancia', 0)
+                precio_venta_final = producto.get('precio_venta', precio_con_iva)
+            
+            # Calcular totales
+            subtotal = round(precio_unitario * cantidad, 2)  # Sin IVA
+            iva_total = round(subtotal * 0.19, 2)
+            total_venta = round(precio_venta_final * cantidad, 2)
+            ganancia_unitaria = round(precio_venta_final - precio_con_iva, 2)
+            ganancia_total = round(ganancia_unitaria * cantidad, 2)
+            
+            # Registrar venta en BD
+            query = """
+                INSERT INTO ventas 
+                (fecha, hora, producto_id, producto_nombre, categoria, cantidad, 
+                 precio_unitario, total, iva_total, ganancia_unitaria, ganancia_total, 
+                 porcentaje_ganancia_aplicado, usuario_id, usuario_nombre) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            params = (
+                datetime.now().strftime('%Y-%m-%d'),
+                datetime.now().strftime('%H:%M:%S'),
+                producto_id,
+                producto['nombre'],
+                producto['categoria'],
+                cantidad,
+                precio_venta_final,  # Precio unitario de venta
+                total_venta,
+                iva_total,
+                ganancia_unitaria,
+                ganancia_total,
+                porcentaje_aplicado,
+                session.get('user_id'),
+                session.get('nombre_completo')
+            )
+            
+            venta_id = ejecutar_query(query, params, commit=True)
+            
+            if venta_id:
+                # Actualizar stock
+                nuevo_stock = producto['stock'] - cantidad
+                actualizar_stock_producto(producto_id, nuevo_stock)
+                
+                # Registrar log
+                registrar_log(
+                    'Venta registrada',
+                    f"{cantidad} x {producto['nombre']} | Total: ${total_venta:,.2f} | Ganancia: ${ganancia_total:,.2f}"
+                )
+                
+                flash(
+                    f'✅ Venta registrada: {cantidad} x {producto["nombre"]} = ${total_venta:,.2f}',
+                    'success'
+                )
+                return redirect(url_for('historial_ventas'))
+            else:
+                flash('Error al guardar la venta.', 'error')
+                return redirect(url_for('nueva_venta'))
+            
+        except ValueError as e:
+            flash(f'Error en los datos: {str(e)}', 'error')
             return redirect(url_for('nueva_venta'))
-
-        producto = obtener_producto_por_id(producto_id)
-
-        if not producto:
-            flash("Producto no encontrado.", "error")
+        except KeyError as e:
+            flash(f'Campo faltante: {str(e)}', 'error')
             return redirect(url_for('nueva_venta'))
-
-        # Validación de stock
-        if cantidad > producto['stock']:
-            flash(f"No puedes vender {cantidad} unidades. Stock disponible: {producto['stock']}.", "error")
+        except Exception as e:
+            flash(f'Error inesperado: {str(e)}', 'error')
             return redirect(url_for('nueva_venta'))
-
-        # Calcular total
-        total_venta = round(cantidad * producto['precio_unitario'], 3)
-
-        # GUARDAR VENTA EN HISTORIAL
-        venta = {
-            'fecha': datetime.now().strftime('%Y-%m-%d'),
-            'hora': datetime.now().strftime('%H:%M:%S'),
-            'producto_id': producto['id'],
-            'producto_nombre': producto['nombre'],
-            'categoria': producto['categoria'],
-            'cantidad': cantidad,
-            'precio_unitario': producto['precio_unitario'],
-            'total': total_venta,
-            'usuario_id': session.get('user_id'),
-            'usuario_nombre': session.get('nombre_completo')
-        }
-        guardar_venta(venta)
-
-        registrar_log('Venta registrada', f"{cantidad} unidades de '{producto['nombre']}' por ${total_venta:,.3f}")
-
-        # Actualizar stock
-        nuevo_stock = producto['stock'] - cantidad
-        actualizar_stock_producto(producto_id, nuevo_stock)
-
-        flash(f" Venta registrada: {cantidad} unidades de '{producto['nombre']}' por ${total_venta:,.0f} COP", "success")
-        return redirect(url_for('lista_productos'))
-
-    return render_template("crear_venta.html", productos=productos)
+    
+    # GET - Mostrar formulario
+    productos = cargar_productos()
+    return render_template('crear_venta.html', productos=productos)
 
 
 @app.route('/ventas/historial')
 @login_required
 def historial_ventas():
-    """Muestra el historial de ventas"""
-    ventas = cargar_ventas()
+    """Muestra el historial de ventas con filtros"""
+    fecha_desde = request.args.get('fecha_desde', '')
+    fecha_hasta = request.args.get('fecha_hasta', '')
+    
+    
+    cursor.execute("""
+    SELECT v.id, v.fecha, v.hora, p.nombre, p.categoria, v.cantidad,
+           v.precio_unitario, v.iva, v.ganancia_unitaria
+    FROM ventas v
+    INNER JOIN productos p ON v.producto_id = p.id
+    ORDER BY v.id DESC
+                   """)
 
-    # Calcular total general
-    total_general = sum(v.get('total', 0) for v in ventas)
+    
+    params = []
+    
+    # Filtros
+    if fecha_desde:
+        query += " AND DATE(fecha) >= %s"
+        params.append(fecha_desde)
+    
+    if fecha_hasta:
+        query += " AND DATE(fecha) <= %s"
+        params.append(fecha_hasta)
+    
+    query += " ORDER BY fecha DESC, hora DESC"
+    
+    ventas = ejecutar_query(query, tuple(params) if params else None, fetch_all=True)
+    
+    if not ventas:
+        ventas = []
+    
+    # Calcular totales
+    total_vendido = sum(v.get('total', 0) for v in ventas)
+    total_iva = sum(v.get('iva_total', 0) for v in ventas)
+    total_ganancias = sum(v.get('ganancia_total', 0) for v in ventas)
+    num_ventas = len(ventas)
+    
+    return render_template(
+        'historial_ventas.html',
+        ventas=ventas,
+        total_vendido=total_vendido,
+        total_iva=total_iva,
+        total_ganancias=total_ganancias,
+        num_ventas=num_ventas
+    )
 
-    return render_template("historial_ventas.html", ventas=ventas, total_general=total_general)
 
-
-#  NUEVA RUTA: ELIMINAR VENTA
-@app.route('/ventas/<int:id>/eliminar', methods=['POST'])
-@login_required
-@role_required('admin')
+@app.route('/ventas/eliminar/<int:id>')
 def eliminar_venta(id):
-    """Elimina una venta del historial"""
-    # Buscar la venta
-    query = "SELECT * FROM ventas WHERE id = %s"
-    venta = ejecutar_query(query, (id,), fetch_one=True)
-    
-    if not venta:
-        return jsonify({'success': False, 'message': 'Venta no encontrada'}), 404
-    
-    # Eliminar la venta
-    eliminar_venta_db(id)
-    
-    registrar_log('Venta eliminada', f"Venta ID: {id} - Producto: {venta.get('producto_nombre')}")
-    
-    return jsonify({'success': True, 'message': 'Venta eliminada correctamente'})
+    cursor.execute("DELETE FROM ventas WHERE id = %s", (id,))
+    db.commit()
+    flash("Venta eliminada correctamente", "success")
+    return redirect(url_for('historial_ventas'))
 
 
 # ---------------------------------------------------------------------------------
@@ -1032,9 +1240,7 @@ def reporte_mas_vendidos():
         total_productos=len(productos_vendidos)
     )
 
-# ---------------------------------------------------------------------------------
-# REPORTE: VENTAS POR PERÍODO (Día / Mes)
-# ---------------------------------------------------------------------------------
+
 @app.route('/reportes/ventas-por-periodo')
 @login_required
 def reporte_ventas_periodo():
@@ -1051,9 +1257,9 @@ def reporte_ventas_periodo():
     ventas_mensuales = defaultdict(lambda: {'cantidad': 0, 'ingresos': 0, 'num_ventas': 0})
 
     for v in ventas:
-        fecha = v.get('fecha')   # este valor viene de MySQL como date o string
+        fecha = v.get('fecha')
 
-        #  Convertir fecha a string YYYY-MM-DD
+        # Convertir fecha a string YYYY-MM-DD
         if isinstance(fecha, datetime):
             fecha_str = fecha.strftime("%Y-%m-%d")
         elif hasattr(fecha, "strftime"):  
@@ -1067,7 +1273,7 @@ def reporte_ventas_periodo():
         ventas_diarias[fecha_str]['num_ventas'] += 1
 
         # VENTAS POR MES YYYY-MM
-        mes = fecha_str[:7]  # YA ES SEGURO porque fecha_str SIEMPRE es string
+        mes = fecha_str[:7]
         ventas_mensuales[mes]['cantidad'] += v.get('cantidad', 0)
         ventas_mensuales[mes]['ingresos'] += v.get('total', 0)
         ventas_mensuales[mes]['num_ventas'] += 1
@@ -1090,6 +1296,7 @@ def reporte_ventas_periodo():
         ventas_por_dia=ventas_por_dia,
         ventas_por_mes=ventas_por_mes
     )
+
 
 @app.route("/reportes/inventario-total")
 @login_required
@@ -1117,9 +1324,7 @@ def reporte_inventario_total():
         valor_total=valor_total_inventario
     )
 
-# ---------------------------------------------------------------------------------
-# EXPORTACIONES: Excel y PDF
-# ---------------------------------------------------------------------------------
+
 @app.route("/reportes/inventario-total/excel")
 @login_required
 def exportar_excel_inventario():
@@ -1359,6 +1564,563 @@ def exportar_pdf_inventario():
         download_name="inventario_total.pdf",
         mimetype="application/pdf"
     )
+
+
+@app.route('/reportes/iva')
+@login_required
+def reporte_iva():
+    """Reporte de IVA a pagar al gobierno"""
+    anio_filtro = request.args.get('anio', '')
+    mes_filtro = request.args.get('mes', '')
+    
+    # Query base
+    query = """
+        SELECT 
+            YEAR(fecha) as anio,
+            MONTH(fecha) as mes,
+            COUNT(*) as num_ventas,
+            SUM(total) as total_vendido,
+            SUM(iva_total) as iva_total
+        FROM ventas
+        WHERE 1=1
+    """
+    
+    params = []
+    filtro_texto = ""
+    
+    # Filtros
+    if anio_filtro:
+        query += " AND YEAR(fecha) = %s"
+        params.append(anio_filtro)
+        filtro_texto = f"Año {anio_filtro}"
+    
+    if mes_filtro:
+        query += " AND MONTH(fecha) = %s"
+        params.append(mes_filtro)
+        meses = {
+            '01': 'Enero', '02': 'Febrero', '03': 'Marzo', '04': 'Abril',
+            '05': 'Mayo', '06': 'Junio', '07': 'Julio', '08': 'Agosto',
+            '09': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
+        }
+        if filtro_texto:
+            filtro_texto += f" - {meses.get(mes_filtro, 'Mes ' + mes_filtro)}"
+        else:
+            filtro_texto = meses.get(mes_filtro, 'Mes ' + mes_filtro)
+    
+    query += " GROUP BY YEAR(fecha), MONTH(fecha) ORDER BY anio DESC, mes DESC"
+    
+    resultados = ejecutar_query(query, tuple(params) if params else None, fetch_all=True)
+    
+    # Procesar resultados
+    iva_por_mes = []
+    total_iva = 0
+    total_vendido = 0
+    total_ventas = 0
+    
+    meses_nombres = {
+        1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
+        5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
+        9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
+    }
+    
+    if resultados:
+        for r in resultados:
+            iva_por_mes.append({
+                'anio': r['anio'],
+                'mes': r['mes'],
+                'mes_nombre': meses_nombres.get(r['mes'], str(r['mes'])),
+                'num_ventas': r['num_ventas'],
+                'total_vendido': r['total_vendido'] or 0,
+                'iva_total': r['iva_total'] or 0
+            })
+            total_iva += r['iva_total'] or 0
+            total_vendido += r['total_vendido'] or 0
+            total_ventas += r['num_ventas']
+    
+    # Obtener años disponibles
+    query_anios = "SELECT DISTINCT YEAR(fecha) as anio FROM ventas ORDER BY anio DESC"
+    anios_result = ejecutar_query(query_anios, fetch_all=True)
+    anios = [str(r['anio']) for r in anios_result] if anios_result else []
+    
+    return render_template(
+        'reportes/reporte_iva.html',
+        iva_por_mes=iva_por_mes,
+        total_iva=total_iva,
+        total_vendido=total_vendido,
+        total_ventas=total_ventas,
+        anios=anios,
+        filtro_texto=filtro_texto
+    )
+
+
+@app.route('/reportes/iva/excel')
+@login_required
+def exportar_iva_excel():
+    """Exporta el reporte de IVA a Excel"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+    except Exception:
+        flash("openpyxl no está disponible. Instala 'openpyxl' para exportar a Excel.", "error")
+        return redirect(url_for('reporte_iva'))
+
+    import io
+    
+    anio_filtro = request.args.get('anio', '')
+    mes_filtro = request.args.get('mes', '')
+    
+    # Query base (misma del reporte)
+    query = """
+        SELECT 
+            YEAR(fecha) as anio,
+            MONTH(fecha) as mes,
+            COUNT(*) as num_ventas,
+            SUM(total) as total_vendido,
+            SUM(iva_total) as iva_total
+        FROM ventas
+        WHERE 1=1
+    """
+    
+    params = []
+    
+    if anio_filtro:
+        query += " AND YEAR(fecha) = %s"
+        params.append(anio_filtro)
+    
+    if mes_filtro:
+        query += " AND MONTH(fecha) = %s"
+        params.append(mes_filtro)
+    
+    query += " GROUP BY YEAR(fecha), MONTH(fecha) ORDER BY anio DESC, mes DESC"
+    
+    resultados = ejecutar_query(query, tuple(params) if params else None, fetch_all=True)
+    
+    meses_nombres = {
+        1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
+        5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
+        9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
+    }
+    
+    # Crear workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Reporte IVA"
+    
+    # TÍTULO
+    ws.merge_cells('A1:E1')
+    cell_title = ws['A1']
+    cell_title.value = "Reporte de IVA a Pagar al Gobierno"
+    cell_title.font = Font(size=16, bold=True, color="FFFFFF")
+    cell_title.fill = PatternFill(start_color="F39C12", end_color="F39C12", fill_type="solid")
+    cell_title.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 30
+    
+    # TOTALES
+    total_iva = sum(r['iva_total'] or 0 for r in resultados) if resultados else 0
+    total_vendido = sum(r['total_vendido'] or 0 for r in resultados) if resultados else 0
+    total_ventas = sum(r['num_ventas'] for r in resultados) if resultados else 0
+    
+    ws.merge_cells('A3:B3')
+    ws.merge_cells('C3:D3')
+    ws['A3'] = "Total Ventas Realizadas"
+    ws['C3'] = "Total Vendido"
+    ws['E3'] = "IVA a Pagar"
+    
+    ws['A3'].font = Font(bold=True)
+    ws['C3'].font = Font(bold=True)
+    ws['E3'].font = Font(bold=True)
+    
+    ws.merge_cells('A4:B4')
+    ws.merge_cells('C4:D4')
+    ws['A4'] = total_ventas
+    ws['C4'] = total_vendido
+    ws['E4'] = total_iva
+    
+    ws['A4'].alignment = Alignment(horizontal="center")
+    ws['C4'].alignment = Alignment(horizontal="center")
+    ws['E4'].alignment = Alignment(horizontal="center")
+    
+    ws['C4'].number_format = '"$"#,##0.00'
+    ws['E4'].number_format = '"$"#,##0.00'
+    ws['E4'].font = Font(bold=True, size=14, color="E67E22")
+    
+    summary_fill = PatternFill(start_color="FEF5E7", end_color="FEF5E7", fill_type="solid")
+    for cell in ['A3', 'C3', 'E3', 'A4', 'C4', 'E4']:
+        ws[cell].fill = summary_fill
+    
+    # TABLA
+    start_row = 6
+    encabezados = ["Año", "Mes", "Ventas Realizadas", "Total Vendido", "IVA Cobrado"]
+    
+    for col_idx, header in enumerate(encabezados, start=1):
+        cell = ws.cell(row=start_row, column=col_idx, value=header)
+        cell.fill = PatternFill(start_color="F39C12", end_color="F39C12", fill_type="solid")
+        cell.font = Font(color="FFFFFF", bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+    
+    # DATOS
+    row = start_row + 1
+    if resultados:
+        for r in resultados:
+            ws.cell(row=row, column=1, value=r['anio'])
+            ws.cell(row=row, column=2, value=meses_nombres.get(r['mes'], str(r['mes'])))
+            ws.cell(row=row, column=3, value=r['num_ventas'])
+            
+            cell_total = ws.cell(row=row, column=4, value=r['total_vendido'] or 0)
+            cell_total.number_format = '"$"#,##0.00'
+            
+            cell_iva = ws.cell(row=row, column=5, value=r['iva_total'] or 0)
+            cell_iva.number_format = '"$"#,##0.00'
+            cell_iva.font = Font(color="E67E22", bold=True)
+            
+            ws.cell(row=row, column=1).alignment = Alignment(horizontal="center")
+            ws.cell(row=row, column=3).alignment = Alignment(horizontal="center")
+            
+            row += 1
+    
+    # BORDES
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    max_row = row - 1
+    for r in ws.iter_rows(min_row=start_row, max_row=max_row, min_col=1, max_col=5):
+        for cell in r:
+            cell.border = thin_border
+    
+    # AJUSTAR COLUMNAS
+    ws.column_dimensions['A'].width = 12
+    ws.column_dimensions['B'].width = 15
+    ws.column_dimensions['C'].width = 18
+    ws.column_dimensions['D'].width = 18
+    ws.column_dimensions['E'].width = 18
+    
+    # EXPORTAR
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="reporte_iva.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
+@app.route('/reportes/rentabilidad')
+@login_required
+def reporte_rentabilidad():
+    """Reporte de productos más rentables"""
+    fecha_desde = request.args.get('fecha_desde', '')
+    fecha_hasta = request.args.get('fecha_hasta', '')
+    ordenar = request.args.get('ordenar', 'ganancia')
+    
+    # Query base
+    query = """
+        SELECT 
+            v.producto_id,
+            p.nombre,
+            p.categoria,
+            COUNT(*) as num_ventas,
+            SUM(v.cantidad) as cantidad_vendida,
+            SUM(v.total) as total_vendido,
+            AVG(v.ganancia_unitaria) as ganancia_unitaria_promedio,
+            SUM(v.ganancia_total) as ganancia_total
+        FROM ventas v
+        JOIN productos p ON v.producto_id = p.id
+        WHERE 1=1
+    """
+    
+    params = []
+    
+    # Filtros
+    if fecha_desde:
+        query += " AND DATE(v.fecha) >= %s"
+        params.append(fecha_desde)
+    
+    if fecha_hasta:
+        query += " AND DATE(v.fecha) <= %s"
+        params.append(fecha_hasta)
+    
+    query += " GROUP BY v.producto_id, p.nombre, p.categoria"
+    
+    # Ordenar
+    if ordenar == 'cantidad':
+        query += " ORDER BY cantidad_vendida DESC"
+    else:
+        query += " ORDER BY ganancia_total DESC"
+    
+    resultados = ejecutar_query(query, tuple(params) if params else None, fetch_all=True)
+    
+    # Procesar resultados
+    productos_rentables = []
+    ganancia_total = 0
+    unidades_vendidas = 0
+    
+    if resultados:
+        for r in resultados:
+            ganancia_tot = r['ganancia_total'] or 0
+            total_vend = r['total_vendido'] or 0
+            
+            # Calcular % de margen
+            if total_vend > 0:
+                margen = (ganancia_tot / total_vend) * 100
+            else:
+                margen = 0
+            
+            productos_rentables.append({
+                'producto_id': r['producto_id'],
+                'nombre': r['nombre'],
+                'categoria': r['categoria'],
+                'num_ventas': r['num_ventas'],
+                'cantidad_vendida': r['cantidad_vendida'],
+                'total_vendido': total_vend,
+                'ganancia_unitaria_promedio': r['ganancia_unitaria_promedio'] or 0,
+                'ganancia_total': ganancia_tot,
+                'margen_porcentaje': margen
+            })
+            
+            ganancia_total += ganancia_tot
+            unidades_vendidas += r['cantidad_vendida']
+    
+    # Rentabilidad por categoría
+    query_cat = """
+        SELECT 
+            p.categoria,
+            COUNT(DISTINCT v.producto_id) as num_productos,
+            SUM(v.cantidad) as unidades_vendidas,
+            SUM(v.ganancia_total) as ganancia_total
+        FROM ventas v
+        JOIN productos p ON v.producto_id = p.id
+        WHERE 1=1
+    """
+    
+    params_cat = []
+    
+    if fecha_desde:
+        query_cat += " AND DATE(v.fecha) >= %s"
+        params_cat.append(fecha_desde)
+    
+    if fecha_hasta:
+        query_cat += " AND DATE(v.fecha) <= %s"
+        params_cat.append(fecha_hasta)
+    
+    query_cat += " GROUP BY p.categoria ORDER BY ganancia_total DESC"
+    
+    resultados_cat = ejecutar_query(query_cat, tuple(params_cat) if params_cat else None, fetch_all=True)
+    
+    rentabilidad_categorias = []
+    if resultados_cat:
+        for r in resultados_cat:
+            ganancia_cat = r['ganancia_total'] or 0
+            num_prod = r['num_productos']
+            
+            rentabilidad_categorias.append({
+                'categoria': r['categoria'],
+                'num_productos': num_prod,
+                'unidades_vendidas': r['unidades_vendidas'],
+                'ganancia_total': ganancia_cat,
+                'ganancia_promedio': ganancia_cat / num_prod if num_prod > 0 else 0
+            })
+    
+    return render_template(
+        'reportes/reporte_rentabilidad.html',
+        productos_rentables=productos_rentables,
+        rentabilidad_categorias=rentabilidad_categorias,
+        ganancia_total=ganancia_total,
+        total_productos=len(productos_rentables),
+        unidades_vendidas=unidades_vendidas
+    )
+
+
+@app.route('/reportes/rentabilidad/excel')
+@login_required
+def exportar_rentabilidad_excel():
+    """Exporta el reporte de rentabilidad a Excel"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+    except Exception:
+        flash("openpyxl no está disponible.", "error")
+        return redirect(url_for('reporte_rentabilidad'))
+
+    import io
+    
+    fecha_desde = request.args.get('fecha_desde', '')
+    fecha_hasta = request.args.get('fecha_hasta', '')
+    ordenar = request.args.get('ordenar', 'ganancia')
+    
+    # Query (misma del reporte)
+    query = """
+        SELECT 
+            v.producto_id,
+            p.nombre,
+            p.categoria,
+            COUNT(*) as num_ventas,
+            SUM(v.cantidad) as cantidad_vendida,
+            SUM(v.total) as total_vendido,
+            AVG(v.ganancia_unitaria) as ganancia_unitaria_promedio,
+            SUM(v.ganancia_total) as ganancia_total
+        FROM ventas v
+        JOIN productos p ON v.producto_id = p.id
+        WHERE 1=1
+    """
+    
+    params = []
+    
+    if fecha_desde:
+        query += " AND DATE(v.fecha) >= %s"
+        params.append(fecha_desde)
+    
+    if fecha_hasta:
+        query += " AND DATE(v.fecha) <= %s"
+        params.append(fecha_hasta)
+    
+    query += " GROUP BY v.producto_id, p.nombre, p.categoria"
+    
+    if ordenar == 'cantidad':
+        query += " ORDER BY cantidad_vendida DESC"
+    else:
+        query += " ORDER BY ganancia_total DESC"
+    
+    resultados = ejecutar_query(query, tuple(params) if params else None, fetch_all=True)
+    
+    # Crear workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Rentabilidad"
+    
+    # TÍTULO
+    ws.merge_cells('A1:H1')
+    cell_title = ws['A1']
+    cell_title.value = "Reporte de Productos Más Rentables"
+    cell_title.font = Font(size=16, bold=True, color="FFFFFF")
+    cell_title.fill = PatternFill(start_color="27AE60", end_color="27AE60", fill_type="solid")
+    cell_title.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 30
+    
+    # TOTALES
+    ganancia_total = sum(r['ganancia_total'] or 0 for r in resultados) if resultados else 0
+    unidades_vendidas = sum(r['cantidad_vendida'] for r in resultados) if resultados else 0
+    
+    ws.merge_cells('A3:B3')
+    ws.merge_cells('C3:D3')
+    ws.merge_cells('E3:F3')
+    ws['A3'] = "Ganancia Total"
+    ws['C3'] = "Productos Vendidos"
+    ws['E3'] = "Unidades Vendidas"
+    
+    ws['A3'].font = Font(bold=True)
+    ws['C3'].font = Font(bold=True)
+    ws['E3'].font = Font(bold=True)
+    
+    ws.merge_cells('A4:B4')
+    ws.merge_cells('C4:D4')
+    ws.merge_cells('E4:F4')
+    ws['A4'] = ganancia_total
+    ws['C4'] = len(resultados)
+    ws['E4'] = unidades_vendidas
+    
+    ws['A4'].alignment = Alignment(horizontal="center")
+    ws['C4'].alignment = Alignment(horizontal="center")
+    ws['E4'].alignment = Alignment(horizontal="center")
+    
+    ws['A4'].number_format = '"$"#,##0.00'
+    ws['A4'].font = Font(bold=True, size=14, color="27AE60")
+    
+    summary_fill = PatternFill(start_color="E8F8F5", end_color="E8F8F5", fill_type="solid")
+    for cell in ['A3', 'C3', 'E3', 'A4', 'C4', 'E4']:
+        ws[cell].fill = summary_fill
+    
+    # TABLA
+    start_row = 6
+    encabezados = ["Posición", "Producto", "Categoría", "Unidades", "Total Vendido", "Gan. Unitaria", "Gan. Total", "% Margen"]
+    
+    for col_idx, header in enumerate(encabezados, start=1):
+        cell = ws.cell(row=start_row, column=col_idx, value=header)
+        cell.fill = PatternFill(start_color="27AE60", end_color="27AE60", fill_type="solid")
+        cell.font = Font(color="FFFFFF", bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+    
+    # DATOS
+    row = start_row + 1
+    if resultados:
+        for idx, r in enumerate(resultados, start=1):
+            ganancia_tot = r['ganancia_total'] or 0
+            total_vend = r['total_vendido'] or 0
+            margen = (ganancia_tot / total_vend * 100) if total_vend > 0 else 0
+            
+            ws.cell(row=row, column=1, value=idx)
+            ws.cell(row=row, column=2, value=r['nombre'])
+            ws.cell(row=row, column=3, value=r['categoria'])
+            ws.cell(row=row, column=4, value=r['cantidad_vendida'])
+            
+            cell_total = ws.cell(row=row, column=5, value=total_vend)
+            cell_total.number_format = '"$"#,##0.00'
+            
+            cell_gan_unit = ws.cell(row=row, column=6, value=r['ganancia_unitaria_promedio'] or 0)
+            cell_gan_unit.number_format = '"$"#,##0.00'
+            
+            cell_gan_total = ws.cell(row=row, column=7, value=ganancia_tot)
+            cell_gan_total.number_format = '"$"#,##0.00'
+            cell_gan_total.font = Font(bold=True, color="27AE60")
+            
+            cell_margen = ws.cell(row=row, column=8, value=margen)
+            cell_margen.number_format = '0.0"%"'
+            
+            ws.cell(row=row, column=1).alignment = Alignment(horizontal="center")
+            ws.cell(row=row, column=4).alignment = Alignment(horizontal="center")
+            
+            # Destacar TOP 3
+            if idx <= 3:
+                for col in range(1, 9):
+                    ws.cell(row=row, column=col).fill = PatternFill(
+                        start_color="FFF9E6", end_color="FFF9E6", fill_type="solid"
+                    )
+            
+            row += 1
+    
+    # BORDES
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    max_row = row - 1
+    for r in ws.iter_rows(min_row=start_row, max_row=max_row, min_col=1, max_col=8):
+        for cell in r:
+            cell.border = thin_border
+    
+    # AJUSTAR COLUMNAS
+    ws.column_dimensions['A'].width = 10
+    ws.column_dimensions['B'].width = 30
+    ws.column_dimensions['C'].width = 15
+    ws.column_dimensions['D'].width = 10
+    ws.column_dimensions['E'].width = 15
+    ws.column_dimensions['F'].width = 15
+    ws.column_dimensions['G'].width = 15
+    ws.column_dimensions['H'].width = 12
+    
+    # EXPORTAR
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="reporte_rentabilidad.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
 
 # ---------------------------------------------------------------------------------
 # RUN
