@@ -1644,6 +1644,8 @@ def reporte_iva():
     )
 
 
+
+
 @app.route('/reportes/rentabilidad')
 @login_required
 def reporte_rentabilidad():
