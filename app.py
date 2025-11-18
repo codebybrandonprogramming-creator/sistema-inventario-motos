@@ -1063,39 +1063,7 @@ def historial_ventas():
     )
 
     
-    params = []
     
-    # Filtros
-    if fecha_desde:
-        query += " AND DATE(fecha) >= %s"
-        params.append(fecha_desde)
-    
-    if fecha_hasta:
-        query += " AND DATE(fecha) <= %s"
-        params.append(fecha_hasta)
-    
-    query += " ORDER BY fecha DESC, hora DESC"
-    
-    ventas = ejecutar_query(query, tuple(params) if params else None, fetch_all=True)
-    
-    if not ventas:
-        ventas = []
-    
-    # Calcular totales
-    total_vendido = sum(v.get('total', 0) for v in ventas)
-    total_iva = sum(v.get('iva_total', 0) for v in ventas)
-    total_ganancias = sum(v.get('ganancia_total', 0) for v in ventas)
-    num_ventas = len(ventas)
-    
-    return render_template(
-        'historial_ventas.html',
-        ventas=ventas,
-        total_vendido=total_vendido,
-        total_iva=total_iva,
-        total_ganancias=total_ganancias,
-        num_ventas=num_ventas
-    )
-
 
 @app.route('/ventas/eliminar/<int:id>', methods=['POST'])
 @login_required
