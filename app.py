@@ -877,3 +877,4 @@ def eliminar_producto(id):
     flash(f"El producto '{producto['nombre']}' fue eliminado con éxito.", "success")
     return redirect(url_for('lista_productos'))
 
+
