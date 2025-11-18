@@ -88,6 +88,7 @@ def get_db_connection():
         cursorclass=pymysql.cursors.DictCursor
     )
 
+
 def ejecutar_query(query, params=None, commit=False, fetch_one=False, fetch_all=False):
     """
     Función auxiliar para ejecutar consultas SQL de forma segura.
@@ -877,7 +878,7 @@ def editar_producto(id):
 def eliminar_producto(id):
     """Elimina un producto - VERSIÓN MEJORADA CON MANEJO DE VENTAS"""
     
-    try:
+    try: 
         # Buscar el producto
         producto = obtener_producto_por_id(id)
         
