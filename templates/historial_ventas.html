@@ -1,0 +1,559 @@
+{% extends "base.html" %}
+
+{% block title %}Historial de Ventas{% endblock %}
+
+{% block content %}
+
+<style>
+    /* ========== TEMA OSCURO PREMIUM ========== */
+    .ventas-dark-container {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        min-height: 100vh;
+        padding: 2rem;
+        animation: fadeIn 0.8s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    /* ========== HEADER GLASSMORPHISM ========== */
+    .header-glass {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 25px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 
+            0 8px 32px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: slideDown 0.6s ease;
+    }
+    
+    @keyframes slideDown {
+        from { 
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .header-glass h1 {
+        color: #00d9ff;
+        font-size: 2.5rem;
+        font-weight: 900;
+        text-shadow: 
+            0 0 20px rgba(0, 217, 255, 0.5),
+            0 0 40px rgba(0, 217, 255, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 0;
+    }
+    
+    .header-glass h1 i {
+        font-size: 3rem;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .btn-nueva {
+        background: linear-gradient(135deg, #00d9ff 0%, #0099cc 100%);
+        border: none;
+        border-radius: 15px;
+        padding: 1rem 2rem;
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 1.1rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.8rem;
+        box-shadow: 
+            0 8px 25px rgba(0, 217, 255, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-nueva:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(0, 217, 255, 0.6);
+        color: #ffffff;
+    }
+    
+    .btn-nueva i {
+        font-size: 1.5rem;
+    }
+    
+    /* ========== FILTROS GLASS ========== */
+    .filtros-glass {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.7s ease 0.2s backwards;
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .filtros-form {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+    
+    .filtro-item {
+        flex: 1;
+        min-width: 220px;
+    }
+    
+    .filtro-label {
+        display: block;
+        color: #00d9ff;
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .filtro-input {
+        width: 100%;
+        padding: 0.8rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        color: #ffffff;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .filtro-input:focus {
+        outline: none;
+        border-color: #00d9ff;
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+    }
+    
+    .btn-filtrar, .btn-limpiar {
+        padding: 0.8rem 1.8rem;
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-filtrar {
+        background: linear-gradient(135deg, #00d9ff 0%, #0099cc 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 15px rgba(0, 217, 255, 0.4);
+    }
+    
+    .btn-limpiar {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .btn-filtrar:hover, .btn-limpiar:hover {
+        transform: translateY(-2px);
+    }
+    
+    /* ========== TARJETAS NEÓN ========== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 1.8rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        transition: all 0.4s ease;
+        animation: zoomIn 0.6s ease backwards;
+    }
+    
+    .stat-card:nth-child(1) { animation-delay: 0.3s; }
+    .stat-card:nth-child(2) { animation-delay: 0.4s; }
+    .stat-card:nth-child(3) { animation-delay: 0.5s; }
+    .stat-card:nth-child(4) { animation-delay: 0.6s; }
+    
+    @keyframes zoomIn {
+        from { 
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to { 
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 15px 45px rgba(0, 217, 255, 0.3);
+        border-color: #00d9ff;
+    }
+    
+    .stat-icon {
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        border-radius: 15px;
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .icon-vendido {
+        background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+        box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+    }
+    
+    .icon-ganancias {
+        background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+        box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+    }
+    
+    .icon-iva {
+        background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        box-shadow: 0 8px 25px rgba(255, 152, 0, 0.4);
+    }
+    
+    .icon-cantidad {
+        background: linear-gradient(135deg, #00d9ff 0%, #0099cc 100%);
+        box-shadow: 0 8px 25px rgba(0, 217, 255, 0.4);
+    }
+    
+    .stat-content h3 {
+        color: #00d9ff;
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .stat-content p {
+        color: #ffffff;
+        font-size: 2rem;
+        font-weight: 900;
+        margin: 0;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* ========== TABLA CYBERPUNK ========== */
+    .tabla-glass {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(20px);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 0;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        animation: slideUp 0.8s ease 0.7s backwards;
+    }
+    
+    .tabla-scroll {
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: 600px;
+    }
+    
+    .tabla-scroll::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+    }
+    
+    .tabla-scroll::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .tabla-scroll::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #00d9ff 0%, #0099cc 100%);
+        border-radius: 10px;
+    }
+    
+    .tabla-ventas {
+        width: 100%;
+        min-width: 1400px;
+        border-collapse: collapse;
+    }
+    
+    .tabla-ventas thead {
+        background: linear-gradient(135deg, #00d9ff 0%, #0099cc 100%);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        box-shadow: 0 4px 15px rgba(0, 217, 255, 0.4);
+    }
+    
+    .tabla-ventas thead th {
+        padding: 1.2rem 1rem;
+        color: #0f3460;
+        font-weight: 900;
+        font-size: 0.85rem;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-right: 2px solid rgba(15, 52, 96, 0.3);
+    }
+    
+    .tabla-ventas thead th:last-child {
+        border-right: none;
+    }
+    
+    .tabla-ventas tbody tr {
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .tabla-ventas tbody tr:nth-child(even) {
+        background: rgba(255, 255, 255, 0.04);
+    }
+    
+    .tabla-ventas tbody tr:hover {
+        background: rgba(0, 217, 255, 0.1);
+        transform: translateX(5px);
+        box-shadow: -4px 0 15px rgba(0, 217, 255, 0.3);
+    }
+    
+    .tabla-ventas tbody td {
+        padding: 1rem;
+        color: #ffffff;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-align: center;
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .tabla-ventas tbody td:last-child {
+        border-right: none;
+    }
+    
+    .td-id {
+        color: #00d9ff;
+        font-weight: 800;
+        font-size: 1rem;
+    }
+    
+    .td-producto {
+        text-align: left !important;
+        color: #ffffff;
+        font-weight: 700;
+    }
+    
+    .td-categoria {
+        color: #a0a0a0;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+    }
+    
+    .td-numero {
+        font-family: 'Courier New', monospace;
+        color: #ffffff;
+    }
+    
+    .td-iva {
+        color: #ff9800;
+        font-weight: 700;
+    }
+    
+    .td-ganancia {
+        color: #00ff88;
+        font-weight: 700;
+    }
+    
+    .td-total {
+        color: #ffd700;
+        font-weight: 900;
+        font-size: 1rem;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+    
+    .td-usuario {
+        color: #00d9ff;
+    }
+    
+    .no-ventas {
+        text-align: center;
+        padding: 4rem;
+        color: #a0a0a0;
+    }
+    
+    .no-ventas i {
+        font-size: 4rem;
+        opacity: 0.3;
+        display: block;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="ventas-dark-container">
+    <div class="container-fluid">
+
+        <!-- HEADER -->
+        <div class="header-glass">
+            <h1>
+                <i class="bi bi-graph-up-arrow"></i>
+                Historial de Ventas
+            </h1>
+            <a href="{{ url_for('nueva_venta') }}" class="btn-nueva">
+                <i class="bi bi-plus-circle-fill"></i>
+                Nueva Venta
+            </a>
+        </div>
+
+        <!-- FILTROS -->
+        <div class="filtros-glass">
+            <form method="GET" class="filtros-form">
+                <div class="filtro-item">
+                    <label class="filtro-label">Fecha Desde</label>
+                    <input type="date" name="fecha_desde" value="{{ request.args.get('fecha_desde', '') }}" class="filtro-input">
+                </div>
+                <div class="filtro-item">
+                    <label class="filtro-label">Fecha Hasta</label>
+                    <input type="date" name="fecha_hasta" value="{{ request.args.get('fecha_hasta', '') }}" class="filtro-input">
+                </div>
+                <div class="filtro-item" style="flex: 0;">
+                    <button type="submit" class="btn-filtrar">
+                        <i class="bi bi-funnel-fill"></i> Filtrar
+                    </button>
+                    <a href="{{ url_for('historial_ventas') }}" class="btn-limpiar">
+                        <i class="bi bi-x-circle"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- ESTADÍSTICAS -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon icon-vendido">💰</div>
+                <div class="stat-content">
+                    <h3>Total Vendido</h3>
+                    <p>${{ "{:,.3f}".format(total_vendido) }} COP</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon icon-ganancias">📈</div>
+                <div class="stat-content">
+                    <h3>Ganancias</h3>
+                    <p>${{ "{:,.3f}".format(total_ganancias) }} COP</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon icon-iva">🏛️</div>
+                <div class="stat-content">
+                    <h3>IVA 19%</h3>
+                    <p>${{ "{:,.3f}".format(total_iva) }} COP</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon icon-cantidad">🛒</div>
+                <div class="stat-content">
+                    <h3>Total Ventas</h3>
+                    <p>{{ num_ventas }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLA -->
+        <div class="tabla-glass">
+            <div class="tabla-scroll">
+                <table class="tabla-ventas">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>FECHA</th>
+                            <th>HORA</th>
+                            <th>PRODUCTO</th>
+                            <th>CATEGORÍA</th>
+                            <th>CANTIDAD</th>
+                            <th>PRECIO UNIT.</th>
+                            <th>IVA 19%</th>
+                            <th>GANANCIA UNIT.</th>
+                            <th>GANANCIA TOTAL</th>
+                            <th>TOTAL</th>
+                            <th>USUARIO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if ventas %}
+                            {% for venta in ventas %}
+                            <tr>
+                                <td class="td-id">{{ venta.id }}</td>
+                                <td class="td-numero">{{ venta.fecha }}</td>
+                                <td class="td-numero">{{ venta.hora }}</td>
+                                <td class="td-producto">{{ venta.producto_nombre }}</td>
+                                <td class="td-categoria">{{ venta.categoria }}</td>
+                                <td class="td-numero">{{ venta.cantidad }}</td>
+                                <td class="td-numero">${{ "{:,.3f}".format(venta.precio_unitario) }} COP</td>
+                                <td class="td-iva">${{ "{:,.3f}".format(venta.iva_total or 0) }} COP</td>
+                                <td class="td-ganancia">${{ "{:,.3f}".format(venta.ganancia_unitaria or 0) }} COP</td>
+                                <td class="td-ganancia">${{ "{:,.3f}".format(venta.ganancia_total or 0) }} COP</td>
+                                <td class="td-total">${{ "{:,.3f}".format(venta.total) }} COP</td>
+                                <td class="td-usuario">{{ venta.usuario_nombre }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="12" class="no-ventas">
+                                    <i class="bi bi-inbox"></i>
+                                    <p>No hay ventas registradas</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
