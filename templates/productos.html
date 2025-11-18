@@ -483,8 +483,8 @@
                                 {% if session.get('rol') == 'admin' %}
                                 <button
                                 data-id="{{ p.id }}"
-    data-nombre="{{ p.nombre }}"
-    onclick="confirmarEliminar(this.dataset.id, this.dataset.nombre)"
+                                data-nombre="{{ p.nombre }}"
+                                onclick="confirmarEliminar(this.dataset.id, this.dataset.nombre)"
     class="btn btn-danger btn-sm btn-action-3d"
     type="button"
 >
