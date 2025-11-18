@@ -4,7 +4,15 @@
 
 {% block content %}
 <div class="container">
-    
+    <div class="header-section">
+        <h1>🏛️ Reporte de IVA a Pagar al Gobierno</h1>
+        <div class="button-group">
+            <a href="{{ url_for('exportar_iva_excel', **request.args) }}" class="btn btn-success">
+                📊 Exportar a Excel
+            </a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Volver al Dashboard</a>
+        </div>
+    </div>
 
     <!-- Filtros -->
     <div class="filter-section">
