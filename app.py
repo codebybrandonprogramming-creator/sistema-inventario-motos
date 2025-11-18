@@ -1041,3 +1041,479 @@ def historial_ventas():
         num_ventas=num_ventas
     )
 
+
+# ---------------------------------------------------------------------------------
+# DASHBOARD Y REPORTES
+# ---------------------------------------------------------------------------------
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    """Dashboard con métricas y estadísticas generales"""
+    productos = cargar_productos()
+    ventas = cargar_ventas()
+
+    # MÉTRICAS GENERALES
+    total_productos = len(productos)
+    valor_inventario_total = sum(p.get('valor_total', 0) for p in productos)
+    productos_bajo_stock = sum(1 for p in productos if p.get('stock', 0) < STOCK_MINIMO)
+    total_ventas_realizadas = len(ventas)
+
+    # INGRESOS TOTALES
+    ingresos_totales = sum(v.get('total', 0) for v in ventas)
+
+    # PRODUCTOS MÁS VENDIDOS (Top 5)
+    ventas_por_producto = {}
+    for v in ventas:
+        pid = v.get('producto_id')
+        if pid not in ventas_por_producto:
+            ventas_por_producto[pid] = {
+                'nombre': v.get('producto_nombre'),
+                'cantidad_vendida': 0,
+                'ingresos': 0
+            }
+        ventas_por_producto[pid]['cantidad_vendida'] += v.get('cantidad', 0)
+        ventas_por_producto[pid]['ingresos'] += v.get('total', 0)
+
+    # Ordenar por cantidad vendida
+    top_vendidos = sorted(
+        ventas_por_producto.values(),
+        key=lambda x: x['cantidad_vendida'],
+        reverse=True
+    )[:5]
+
+    # VENTAS POR CATEGORÍA
+    ventas_por_categoria = {}
+    for v in ventas:
+        cat = v.get('categoria', 'Sin categoría')
+        if cat not in ventas_por_categoria:
+            ventas_por_categoria[cat] = {
+                'cantidad': 0,
+                'ingresos': 0
+            }
+        ventas_por_categoria[cat]['cantidad'] += v.get('cantidad', 0)
+        ventas_por_categoria[cat]['ingresos'] += v.get('total', 0)
+
+    # VENTAS POR DÍA (Últimos 7 días)
+    from collections import defaultdict
+    ventas_por_dia = defaultdict(lambda: {'cantidad': 0, 'ingresos': 0})
+
+    for v in ventas:
+        fecha = v.get('fecha')
+        ventas_por_dia[fecha]['cantidad'] += v.get('cantidad', 0)
+        ventas_por_dia[fecha]['ingresos'] += v.get('total', 0)
+
+    # Ordenar por fecha
+    ventas_diarias = sorted(
+        [{'fecha': k, 'cantidad': v['cantidad'], 'ingresos': v['ingresos']}
+         for k, v in ventas_por_dia.items() if k],
+        key=lambda x: x['fecha']
+    )[-7:]  # Últimos 7 días
+
+    # PRODUCTOS CON BAJO STOCK (detalle)
+    productos_criticos = [
+        p for p in productos
+        if p.get('stock', 0) < STOCK_MINIMO
+    ]
+    productos_criticos = sorted(productos_criticos, key=lambda x: x.get('stock', 0))[:10]
+
+    return render_template(
+        'dashboard.html',
+        # Métricas principales
+        total_productos=total_productos,
+        valor_inventario_total=valor_inventario_total,
+        productos_bajo_stock=productos_bajo_stock,
+        total_ventas_realizadas=total_ventas_realizadas,
+        ingresos_totales=ingresos_totales,
+
+        # Datos para gráficas
+        top_vendidos=top_vendidos,
+        ventas_por_categoria=ventas_por_categoria,
+        ventas_diarias=ventas_diarias,
+        productos_criticos=productos_criticos,
+
+        STOCK_MINIMO=STOCK_MINIMO
+    )
+
+
+@app.route('/reportes/productos-mas-vendidos')
+@login_required
+def reporte_mas_vendidos():
+    """Reporte detallado de productos más vendidos"""
+    ventas = cargar_ventas()
+
+    if not ventas:
+        flash("No hay ventas registradas para generar el reporte.", "info")
+        return redirect(url_for('dashboard'))
+
+    # Agrupar ventas por producto
+    ventas_por_producto = {}
+    for v in ventas:
+        pid = v.get('producto_id')
+        if pid not in ventas_por_producto:
+            ventas_por_producto[pid] = {
+                'id': pid,
+                'nombre': v.get('producto_nombre'),
+                'categoria': v.get('categoria'),
+                'cantidad_vendida': 0,
+                'ingresos': 0,
+                'num_ventas': 0
+            }
+        ventas_por_producto[pid]['cantidad_vendida'] += v.get('cantidad', 0)
+        ventas_por_producto[pid]['ingresos'] += v.get('total', 0)
+        ventas_por_producto[pid]['num_ventas'] += 1
+
+    # Convertir a lista y ordenar
+    productos_vendidos = list(ventas_por_producto.values())
+
+    # Top 5 MÁS vendidos
+    top_5_mas = sorted(
+        productos_vendidos,
+        key=lambda x: x['cantidad_vendida'],
+        reverse=True
+    )[:5]
+
+    # Top 5 MENOS vendidos
+    top_5_menos = sorted(
+        productos_vendidos,
+        key=lambda x: x['cantidad_vendida']
+    )[:5]
+
+    # Todos los productos ordenados
+    todos_ordenados = sorted(
+        productos_vendidos,
+        key=lambda x: x['cantidad_vendida'],
+        reverse=True
+    )
+
+    return render_template(
+        'reporte_productos.html',
+        top_5_mas=top_5_mas,
+        top_5_menos=top_5_menos,
+        todos_productos=todos_ordenados,
+        total_productos=len(productos_vendidos)
+    )
+
+
+@app.route('/reportes/ventas-por-periodo')
+@login_required
+def reporte_ventas_periodo():
+    """Reporte de ventas por período usando MySQL"""
+
+    ventas = cargar_ventas()
+
+    if not ventas:
+        flash("No hay ventas registradas.", "info")
+        return redirect(url_for('dashboard'))
+
+    from collections import defaultdict
+    ventas_diarias = defaultdict(lambda: {'cantidad': 0, 'ingresos': 0, 'num_ventas': 0})
+    ventas_mensuales = defaultdict(lambda: {'cantidad': 0, 'ingresos': 0, 'num_ventas': 0})
+
+    for v in ventas:
+        fecha = v.get('fecha')
+
+        # Convertir fecha a string YYYY-MM-DD
+        if isinstance(fecha, datetime):
+            fecha_str = fecha.strftime("%Y-%m-%d")
+        elif hasattr(fecha, "strftime"):  
+            fecha_str = fecha.strftime("%Y-%m-%d")
+        else:
+            fecha_str = str(fecha)
+
+        # VENTAS POR DÍA
+        ventas_diarias[fecha_str]['cantidad'] += v.get('cantidad', 0)
+        ventas_diarias[fecha_str]['ingresos'] += v.get('total', 0)
+        ventas_diarias[fecha_str]['num_ventas'] += 1
+
+        # VENTAS POR MES YYYY-MM
+        mes = fecha_str[:7]
+        ventas_mensuales[mes]['cantidad'] += v.get('cantidad', 0)
+        ventas_mensuales[mes]['ingresos'] += v.get('total', 0)
+        ventas_mensuales[mes]['num_ventas'] += 1
+
+    # ORDENAR
+    ventas_por_dia = sorted(
+        [{'fecha': k, **v} for k, v in ventas_diarias.items()],
+        key=lambda x: x['fecha'],
+        reverse=True
+    )
+
+    ventas_por_mes = sorted(
+        [{'mes': k, **v} for k, v in ventas_mensuales.items()],
+        key=lambda x: x['mes'],
+        reverse=True
+    )
+
+    return render_template(
+        'reporte_periodo.html',
+        ventas_por_dia=ventas_por_dia,
+        ventas_por_mes=ventas_por_mes
+    )
+
+
+@app.route("/reportes/inventario-total")
+@login_required
+def reporte_inventario_total():
+    """Reporte completo del inventario total"""
+    productos = cargar_productos()
+
+    if not productos:
+        flash("No hay productos en el inventario para mostrar el reporte.", "info")
+        return redirect(url_for('lista_productos'))
+
+    # Cálculos generales
+    total_items = len(productos)
+    total_unidades = sum(p.get('stock', 0) for p in productos)
+    valor_total_inventario = sum(p.get('stock', 0) * p.get('precio_unitario', 0) for p in productos)
+
+    # Ordenar por categoría y nombre
+    productos_ordenados = sorted(productos, key=lambda x: x.get('id', 0))
+
+    return render_template(
+        "reportes/reporte_inventario_total.html",
+        productos=productos_ordenados,
+        total_items=total_items,
+        total_unidades=total_unidades,
+        valor_total=valor_total_inventario
+    )
+
+
+@app.route("/reportes/inventario-total/excel")
+@login_required
+def exportar_excel_inventario():
+    """Exporta el inventario total a Excel"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+    except Exception as e:
+        flash("openpyxl no está disponible. Instala 'openpyxl' para exportar a Excel.", "error")
+        return redirect(url_for('reporte_inventario_total'))
+
+    import io
+
+    productos = cargar_productos()
+    productos_sorted = sorted(productos, key=lambda x: x.get('id', 0))
+
+    total_items = len(productos_sorted)
+    total_unidades = sum(p.get('stock', 0) for p in productos_sorted)
+    valor_total = sum(p.get('stock', 0) * p.get('precio_unitario', 0) for p in productos_sorted)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Inventario Total"
+
+    # TÍTULO
+    ws.merge_cells('A1:F1')
+    cell_title = ws['A1']
+    cell_title.value = "Reporte de Inventario Total - Motorrepuestos H&D"
+    cell_title.font = Font(size=14, bold=True)
+    cell_title.alignment = Alignment(horizontal="center", vertical="center")
+
+    # TOTALES
+    ws.merge_cells('A2:B2')
+    ws.merge_cells('C2:D2')
+    ws.merge_cells('E2:F2')
+
+    ws['A2'].value = "Total de Productos"
+    ws['C2'].value = "Total de Unidades"
+    ws['E2'].value = "Valor Total del Inventario"
+
+    ws['A2'].font = Font(bold=True)
+    ws['C2'].font = Font(bold=True)
+    ws['E2'].font = Font(bold=True)
+
+    ws.merge_cells('A3:B3')
+    ws.merge_cells('C3:D3')
+    ws.merge_cells('E3:F3')
+
+    ws['A3'].value = total_items
+    ws['C3'].value = total_unidades
+    ws['E3'].value = valor_total
+
+    ws['A3'].alignment = Alignment(horizontal="center")
+    ws['C3'].alignment = Alignment(horizontal="center")
+    ws['E3'].alignment = Alignment(horizontal="center")
+
+    box_fill = PatternFill(start_color="F0F0F0", end_color="F0F0F0", fill_type="solid")
+    for cell_coord in ['A2', 'C2', 'E2', 'A3', 'C3', 'E3']:
+        ws[cell_coord].fill = box_fill
+
+    # TABLA
+    start_row = 5
+    encabezados = ["ID", "Producto", "Categoría", "Cantidad", "Precio Unitario", "Valor Total"]
+
+    for col_idx, header in enumerate(encabezados, start=1):
+        cell = ws.cell(row=start_row, column=col_idx, value=header)
+        cell.fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+        cell.font = Font(color="FFFFFF", bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    row = start_row + 1
+    for p in productos_sorted:
+        cantidad = p.get("stock", 0)
+        precio = p.get("precio_unitario", 0)
+        valor = round(cantidad * precio, 2)
+
+        ws.cell(row=row, column=1, value=p.get("id"))
+        ws.cell(row=row, column=2, value=p.get("nombre"))
+        ws.cell(row=row, column=3, value=p.get("categoria"))
+        ws.cell(row=row, column=4, value=cantidad)
+
+        cell_precio = ws.cell(row=row, column=5, value=precio)
+        cell_valor = ws.cell(row=row, column=6, value=valor)
+
+        cell_precio.number_format = '"$"#,##0.00'
+        cell_valor.number_format = '"$"#,##0.00'
+
+        ws.cell(row=row, column=1).alignment = Alignment(horizontal="center")
+        ws.cell(row=row, column=4).alignment = Alignment(horizontal="center")
+
+        row += 1
+
+    # BORDES
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+
+    max_col = len(encabezados)
+    max_row = ws.max_row
+
+    for r in ws.iter_rows(min_row=start_row, max_row=max_row, min_col=1, max_col=max_col):
+        for c in r:
+            c.border = thin_border
+
+    # AJUSTE DE COLUMNAS
+    for idx, column_cells in enumerate(ws.columns, start=1):
+        try:
+            length = max(len(str(cell.value)) if cell.value else 0 for cell in column_cells)
+        except:
+            length = 10
+
+        width = min(max(length + 2, 10), 60)
+        col_letter = get_column_letter(idx)
+        ws.column_dimensions[col_letter].width = width
+
+    # EXPORTAR
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="inventario_total.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+
+@app.route("/reportes/inventario-total/pdf")
+@login_required
+def exportar_pdf_inventario():
+    """Exporta el inventario total a PDF"""
+    try:
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4, landscape
+    except Exception:
+        flash("reportlab no está disponible. Instala 'reportlab' para exportar a PDF.", "error")
+        return redirect(url_for('reporte_inventario_total'))
+
+    productos = cargar_productos()
+    productos_sorted = sorted(productos, key=lambda x: x.get('id', 0))
+
+    total_items = len(productos_sorted)
+    total_unidades = sum(p.get('stock', 0) for p in productos_sorted)
+    valor_total = sum(p.get('stock', 0) * p.get('precio_unitario', 0) for p in productos_sorted)
+
+    import io
+    buffer = io.BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(A4),
+        rightMargin=20,
+        leftMargin=20,
+        topMargin=20,
+        bottomMargin=20
+    )
+
+    styles = getSampleStyleSheet()
+    story = []
+
+    # TÍTULO
+    title_style = ParagraphStyle(
+        name="TitleCenter",
+        parent=styles['Heading1'],
+        alignment=1,
+        fontSize=18,
+        spaceAfter=8
+    )
+
+    story.append(Paragraph("Reporte de Inventario Total - Motorrepuestos H&D", title_style))
+    story.append(Spacer(1, 8))
+
+    # TOTALES
+    totals_data = [
+        ["Total de Productos", str(total_items)],
+        ["Total de Unidades", str(total_unidades)],
+        ["Valor Total del Inventario", f"${valor_total:,.2f}"]
+    ]
+    totals_table = Table(totals_data, colWidths=[200, 120], hAlign='CENTER')
+    totals_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f0f0f0")),
+        ("BACKGROUND", (0, 1), (-1, -1), colors.whitesmoke),
+        ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
+        ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+    ]))
+    story.append(totals_table)
+    story.append(Spacer(1, 12))
+
+    # TABLA PRINCIPAL
+    data = [["ID", "Producto", "Categoría", "Cantidad", "Precio Unitario", "Valor Total"]]
+    for p in productos_sorted:
+        cantidad = p.get("stock", 0)
+        precio = p.get("precio_unitario", 0)
+        valor = round(cantidad * precio, 2)
+
+        data.append([
+            p.get("id"),
+            p.get("nombre"),
+            p.get("categoria"),
+            str(cantidad),
+            f"${precio:,.2f}",
+            f"${valor:,.2f}"
+        ])
+
+    col_widths = [40, 240, 120, 60, 90, 100]
+
+    table = Table(data, colWidths=col_widths, repeatRows=1, hAlign='CENTER')
+
+    table_style = TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1F4E78")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, 0), 10),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 8),
+        ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
+        ("BACKGROUND", (0, 1), (-1, -1), colors.whitesmoke),
+    ])
+
+    table.setStyle(table_style)
+    story.append(table)
+
+    doc.build(story)
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="inventario_total.pdf",
+        mimetype="application/pdf"
+    )
