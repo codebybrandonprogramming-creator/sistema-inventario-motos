@@ -879,3 +879,5 @@ def eliminar_venta(id):
     registrar_log('Venta eliminada', f"Venta ID: {id} - Producto: {venta.get('producto_nombre')}")
     
     return jsonify({'success': True, 'message': 'Venta eliminada correctamente'})
+
+
