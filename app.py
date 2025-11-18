@@ -63,7 +63,7 @@
 # Exportar reportes en PDF
 # Conexión a MySQL para manejo real en producción
 
-from flask import Flask, request, render_template, redirect, url_for, flash, send_file, session
+from flask import Flask, request, render_template, redirect, url_for, flash, send_file, session, jsonify
 import json
 import os
 from datetime import datetime
