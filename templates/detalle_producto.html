@@ -1,2 +1,198 @@
+{% extends "base.html" %}
 
+{% block title %}Detalle del Producto{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header-section">
+        <h1>📦 Detalle del Producto</h1>
+        <div class="button-group">
+            <a href="{{ url_for('editar_producto', id=producto[0]) }}" class="btn btn-warning">
+                ✏️ Editar
+            </a>
+            <a href="{{ url_for('productos') }}" class="btn btn-secondary">
+                ← Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="detail-card">
+        <div class="detail-row">
+            <span class="detail-label">ID:</span>
+            <span class="detail-value">{{ producto[0] }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Código SKU:</span>
+            <span class="detail-value">{{ producto[1] or 'N/A' }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Nombre del Producto:</span>
+            <span class="detail-value">{{ producto[2] }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Categoría:</span>
+            <span class="detail-value">{{ producto[3] }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Stock Actual:</span>
+            <span class="detail-value stock-badge 
+                {% if producto[4] <= 5 %}stock-low
+                {% elif producto[4] <= 10 %}stock-medium
+                {% else %}stock-high{% endif %}">
+                {{ producto[4] }} unidades
+            </span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Precio Unitario (sin IVA):</span>
+            <span class="detail-value">${{ "{:,.2f}".format(producto[5]) }}</span>
+        </div>
+
+        {% set iva = producto[5] * 0.19 %}
+        <div class="detail-row">
+            <span class="detail-label">IVA 19%:</span>
+            <span class="detail-value text-warning">${{ "{:,.2f}".format(iva) }}</span>
+        </div>
+
+        {% set precio_con_iva = producto[5] * 1.19 %}
+        <div class="detail-row">
+            <span class="detail-label">Precio + IVA:</span>
+            <span class="detail-value text-success">${{ "{:,.2f}".format(precio_con_iva) }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">% Ganancia:</span>
+            <span class="detail-value text-info">{{ producto[6] or 0 }}%</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Precio de Venta:</span>
+            <span class="detail-value text-primary">${{ "{:,.2f}".format(producto[7] or 0) }}</span>
+        </div>
+
+        {% set ganancia_unitaria = (producto[7] or 0) - precio_con_iva %}
+        <div class="detail-row">
+            <span class="detail-label">Ganancia Unitaria:</span>
+            <span class="detail-value text-success">${{ "{:,.2f}".format(ganancia_unitaria) }}</span>
+        </div>
+
+        {% set valor_total_con_iva = producto[4] * precio_con_iva %}
+        <div class="detail-row">
+            <span class="detail-label">Valor Total con IVA:</span>
+            <span class="detail-value total-value">${{ "{:,.2f}".format(valor_total_con_iva) }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Ubicación:</span>
+            <span class="detail-value">{{ producto[8] or 'Sin ubicación' }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Proveedor:</span>
+            <span class="detail-value">{{ producto[9] or 'Sin proveedor' }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Descripción:</span>
+            <span class="detail-value">{{ producto[10] or 'Sin descripción' }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Fecha de Registro:</span>
+            <span class="detail-value">{{ producto[11].strftime('%d/%m/%Y %H:%M') if producto[11] else 'N/A' }}</span>
+        </div>
+    </div>
+</div>
+
+<style>
+.detail-card {
+    background: white;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-top: 20px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #555;
+    flex: 0 0 250px;
+}
+
+.detail-value {
+    font-size: 16px;
+    color: #333;
+    flex: 1;
+    text-align: right;
+}
+
+.stock-badge {
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.stock-low {
+    background: #fee;
+    color: #c00;
+}
+
+.stock-medium {
+    background: #ffeaa7;
+    color: #d63031;
+}
+
+.stock-high {
+    background: #dfe6e9;
+    color: #00b894;
+}
+
+.text-warning {
+    color: #f39c12 !important;
+    font-weight: 600;
+}
+
+.text-success {
+    color: #27ae60 !important;
+    font-weight: 600;
+}
+
+.text-info {
+    color: #3498db !important;
+    font-weight: 600;
+}
+
+.text-primary {
+    color: #2c3e50 !important;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.total-value {
+    color: #8e44ad !important;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+}
+</style>
+{% endblock %}
 10:33 p. m.
