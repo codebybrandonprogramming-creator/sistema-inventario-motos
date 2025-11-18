@@ -1042,8 +1042,7 @@ def historial_ventas():
            v.precio_unitario, v.iva, v.ganancia_unitaria
     FROM ventas v
     INNER JOIN productos p ON v.producto_id = p.id
-    ORDER BY v.id DESC
-                   """)
+    ORDER BY v.id DESC""")
 
     
     params = []
