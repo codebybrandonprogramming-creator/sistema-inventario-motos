@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Nueva Venta{% endblock %}
+
+{% block content %}
+<style>
+    /* EFECTOS 3D MODERNOS */
+    .card-3d {
+        background: linear-gradient(145deg, #ffffff, #f0f0f0);
+        border-radius: 20px;
+        box-shadow: 
+            20px 20px 60px #d1d1d1,
+            -20px -20px 60px #ffffff;
+        padding: 30px;
+        transition: all 0.3s ease;
+    }
+
+    .card-3d:hover {
+        transform: translateY(-5px);
+        box-shadow: 
+            25px 25px 70px #bebebe,
+            -25px -25px 70px #ffffff;
+    }
+
+    .input-3d {
+        background: #ffffff;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 20px;
+        box-shadow: 
+            inset 5px 5px 10px #d1d1d1,
+            inset -5px -5px 10px #ffffff;
+        transition: all 0.3s ease;
+        font-size: 15px;
+    }
+
+    .input-3d:focus {
+        outline: none;
+        box-shadow: 
+            inset 7px 7px 14px #b8b8b8,
+            inset -7px -7px 14px #ffffff;
+        transform: scale(1.02);
+    }
+
+    .select-3d {
+        background: #ffffff;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 20px;
+        box-shadow: 
+            5px 5px 15px #d1d1d1,
+            -5px -5px 15px #ffffff;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        font-size: 15px;
+    }
+
+    .select-3d:hover {
+        box-shadow: 
+            7px 7px 20px #bebebe,
+            -7px -7px 20px #ffffff;
+    }
+
+    .btn-3d {
+        background: linear-gradient(145deg, #4CAF50, #45a049);
+        border: none;
+        border-radius: 15px;
+        padding: 15px 40px;
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+        box-shadow: 
+            8px 8px 20px #3d8b40,
+            -8px -8px 20px #5bc560;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn-3d:hover {
+        transform: translateY(-3px);
+        box-shadow: 
+            10px 10px 25px #357a38,
+            -10px -10px 25px #63d968;
+    }
+
+    .btn-3d:active {
+        transform: translateY(0px);
+        box-shadow: 
+            5px 5px 15px #3d8b40,
+            -5px -5px 15px #5bc560;
+    }
+
+    .info-box-3d {
+        background: linear-gradient(145deg, #fff3cd, #f0e6b8);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 
+            10px 10px 30px #d4c9a0,
+            -10px -10px 30px #fffffa;
+        margin: 20px 0;
+    }
+
+    .total-box-3d {
+        background: linear-gradient(145deg, #d4edda, #c3e6cb);
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 
+            15px 15px 40px #a8c9b0,
+            -15px -15px 40px #e0ffea;
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .total-amount {
+        font-size: 48px;
+        font-weight: bold;
+        color: #28a745;
+        text-shadow: 3px 3px 6px rgba(0,0,0,0.1);
+        margin: 10px 0;
+    }
+
+    .badge-3d {
+        background: linear-gradient(145deg, #ffc107, #e0a800);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        box-shadow: 
+            4px 4px 10px #cc9a00,
+            -4px -4px 10px #ffd814;
+        display: inline-block;
+        margin: 5px;
+    }
+
+    .label-3d {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+        display: block;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+    }
+
+    /* Efecto de carga */
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="card-3d">
+        <h2 class="mb-4" style="color: #495057; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">
+            💰 Registrar Nueva Venta
+        </h2>
+
+        <a href="{{ url_for('historial_ventas') }}" class="btn btn-secondary mb-4" 
+           style="border-radius: 10px; box-shadow: 4px 4px 12px rgba(0,0,0,0.2);">
+            ← Volver al Historial
+        </a>
+
+        <form method="POST" id="formVenta">
+            <!-- SELECTOR DE PRODUCTO 3D -->
+            <div class="mb-4">
+                <label class="label-3d">🔍 Seleccionar Producto</label>
+                <select name="producto_id" id="producto_id" class="form-control select-3d" required onchange="cargarInfoProducto()">
+                    <option value="">-- Seleccione un producto --</option>
+                    {% for p in productos %}
+                    <option value="{{ p.id }}" 
+                            data-precio="{{ p.precio_unitario }}"
+                            data-stock="{{ p.stock }}"
+                            data-nombre="{{ p.nombre }}"
+                            data-categoria="{{ p.categoria }}"
+                            data-ganancia="{{ p.porcentaje_ganancia or 0 }}"
+                            data-precio-venta="{{ p.precio_venta or 0 }}">
+                        {{ p.nombre }} - SKU: {{ p.codigo_sku or 'N/A' }} - (Stock: {{ p.stock }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- INFO DEL PRODUCTO (SE MUESTRA AL SELECCIONAR) -->
+            <div id="infoProducto" class="info-box-3d" style="display: none;">
+                <h5 style="color: #856404; margin-bottom: 15px;">📦 Información del Producto</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Nombre:</strong> <span id="info-nombre" class="badge-3d">-</span></p>
+                        <p><strong>Categoría:</strong> <span id="info-categoria" class="badge-3d">-</span></p>
+                        <p><strong>Stock Disponible:</strong> <span id="info-stock" class="badge-3d">-</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Precio Base:</strong> <span id="info-precio" class="badge-3d">$0</span></p>
+                        <p><strong>IVA (19%):</strong> <span id="info-iva" class="badge-3d">$0</span></p>
+                        <p><strong>Precio + IVA:</strong> <span id="info-precio-iva" class="badge-3d">$0</span></p>
+                        <p><strong>% Ganancia:</strong> <span id="info-ganancia" class="badge-3d">0%</span></p>
+                        <p><strong>Precio de Venta:</strong> <span id="info-precio-venta" class="badge-3d">$0</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CANTIDAD -->
+            <div class="mb-4">
+                <label class="label-3d">📊 Cantidad a Vender</label>
+                <input type="number" name="cantidad" id="cantidad" class="form-control input-3d" 
+                       min="1" value="1" required oninput="calcularTotal()">
+            </div>
+
+            <!-- GANANCIA GENERAL OPCIONAL -->
+            <div class="info-box-3d" style="background: linear-gradient(145deg, #e7f3ff, #d0e7f9);">
+                <h5 style="color: #004085; margin-bottom: 15px;">✅ % Ganancia General (Opcional)</h5>
+                <p style="color: #004085; font-size: 14px;">
+                    Si ingresa un porcentaje, se aplicará a TODA la venta (sobrescribe el % del producto)
+                </p>
+                <div class="input-group">
+                    <input type="number" name="porcentaje_ganancia_general" id="porcentaje_ganancia_general" 
+                           class="form-control input-3d" step="0.01" min="0" value="0" 
+                           placeholder="Ej: 30" oninput="calcularTotal()">
+                    <span class="input-group-text" style="background: #ffc107; color: white; font-weight: bold; border-radius: 0 12px 12px 0;">%</span>
+                </div>
+            </div>
+
+            <!-- RESUMEN DE VENTA EN TIEMPO REAL -->
+            <div id="resumenVenta" class="total-box-3d" style="display: none;">
+                <h4 style="color: #155724; margin-bottom: 20px;">📋 Resumen de la Venta</h4>
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <p style="color: #6c757d; font-size: 14px; margin: 0;">Subtotal (Sin IVA)</p>
+                        <h4 style="color: #007bff; font-weight: bold;" id="resumen-subtotal">$0</h4>
+                    </div>
+                    <div class="col-md-3">
+                        <p style="color: #6c757d; font-size: 14px; margin: 0;">IVA Total (19%)</p>
+                        <h4 style="color: #dc3545; font-weight: bold;" id="resumen-iva">$0</h4>
+                    </div>
+                    <div class="col-md-3">
+                        <p style="color: #6c757d; font-size: 14px; margin: 0;">Ganancia Total</p>
+                        <h4 style="color: #28a745; font-weight: bold;" id="resumen-ganancia">$0</h4>
+                    </div>
+                    <div class="col-md-3">
+                        <p style="color: #6c757d; font-size: 14px; margin: 0;">TOTAL FINAL</p>
+                        <div class="total-amount" id="resumen-total">$0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTÓN REGISTRAR -->
+            <div class="text-center mt-4">
+                <button type="submit" class="btn-3d">
+                    ✅ Registrar Venta
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function cargarInfoProducto() {
+    const select = document.getElementById('producto_id');
+    const option = select.options[select.selectedIndex];
+    
+    if (!option.value) {
+        document.getElementById('infoProducto').style.display = 'none';
+        document.getElementById('resumenVenta').style.display = 'none';
+        return;
+    }
+    
+    // Mostrar información del producto
+    document.getElementById('info-nombre').textContent = option.dataset.nombre;
+    document.getElementById('info-categoria').textContent = option.dataset.categoria;
+    document.getElementById('info-stock').textContent = option.dataset.stock + ' unidades';
+    
+    const precioBase = parseFloat(option.dataset.precio);
+    const iva = precioBase * 0.19;
+    const precioConIva = precioBase * 1.19;
+    const ganancia = parseFloat(option.dataset.ganancia) || 0;
+    const precioVenta = parseFloat(option.dataset.precioVenta) || precioConIva;
+    
+    document.getElementById('info-precio').textContent = '$' + precioBase.toLocaleString('es-CO', {minimumFractionDigits: 2});
+    document.getElementById('info-iva').textContent = '$' + iva.toLocaleString('es-CO', {minimumFractionDigits: 2});
+    document.getElementById('info-precio-iva').textContent = '$' + precioConIva.toLocaleString('es-CO', {minimumFractionDigits: 2});
+    document.getElementById('info-ganancia').textContent = ganancia.toFixed(2) + '%';
+    document.getElementById('info-precio-venta').textContent = '$' + precioVenta.toLocaleString('es-CO', {minimumFractionDigits: 2});
+    
+    document.getElementById('infoProducto').style.display = 'block';
+    
+    // Calcular total inicial
+    calcularTotal();
+}
+
+function calcularTotal() {
+    const select = document.getElementById('producto_id');
+    const option = select.options[select.selectedIndex];
+    
+    if (!option.value) return;
+    
+    const cantidad = parseInt(document.getElementById('cantidad').value) || 0;
+    const gananciaGeneral = parseFloat(document.getElementById('porcentaje_ganancia_general').value) || 0;
+    
+    const precioBase = parseFloat(option.dataset.precio);
+    const precioConIva = precioBase * 1.19;
+    const gananciaProducto = parseFloat(option.dataset.ganancia) || 0;
+    const precioVentaProducto = parseFloat(option.dataset.precioVenta);
+    
+    // Determinar qué ganancia usar
+    let precioVentaFinal;
+    if (gananciaGeneral > 0) {
+        precioVentaFinal = precioConIva * (1 + gananciaGeneral / 100);
+    } else {
+        precioVentaFinal = precioVentaProducto;
+    }
+    
+    // Cálculos
+    const subtotal = precioBase * cantidad;
+    const ivaTotal = subtotal * 0.19;
+    const totalVenta = precioVentaFinal * cantidad;
+    const gananciaUnitaria = precioVentaFinal - precioConIva;
+    const gananciaTotal = gananciaUnitaria * cantidad;
+    
+    // Mostrar resumen
+    document.getElementById('resumen-subtotal').textContent = '$' + subtotal.toLocaleString('es-CO', {minimumFractionDigits: 2});
+    document.getElementById('resumen-iva').textContent = '$' + ivaTotal.toLocaleString('es-CO', {minimumFractionDigits: 2});
+    document.getElementById('resumen-ganancia').textContent = '$' + gananciaTotal.toLocaleString('es-CO', {minimumFractionDigits: 2});
+    document.getElementById('resumen-total').textContent = '$' + totalVenta.toLocaleString('es-CO', {minimumFractionDigits: 2});
+    
+    document.getElementById('resumenVenta').style.display = 'block';
+}
+
+// Validación antes de enviar
+document.getElementById('formVenta').addEventListener('submit', function(e) {
+    const select = document.getElementById('producto_id');
+    const option = select.options[select.selectedIndex];
+    const cantidad = parseInt(document.getElementById('cantidad').value);
+    const stock = parseInt(option.dataset.stock);
+    
+    if (cantidad > stock) {
+        e.preventDefault();
+        alert('⚠️ Stock insuficiente. Disponible: ' + stock + ' unidades');
+        return false;
+    }
+});
+</script>
+{% endblock %}
