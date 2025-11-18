@@ -1644,6 +1644,163 @@ def reporte_iva():
     )
 
 
+@app.route('/reportes/iva/excel')
+@login_required
+def exportar_iva_excel():
+    """Exporta el reporte de IVA a Excel"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+    except Exception:
+        flash("openpyxl no está disponible. Instala 'openpyxl' para exportar a Excel.", "error")
+        return redirect(url_for('reporte_iva'))
+
+    import io
+    
+    anio_filtro = request.args.get('anio', '')
+    mes_filtro = request.args.get('mes', '')
+    
+    # Query base (misma del reporte)
+    query = """
+        SELECT 
+            YEAR(fecha) as anio,
+            MONTH(fecha) as mes,
+            COUNT(*) as num_ventas,
+            SUM(total) as total_vendido,
+            SUM(iva_total) as iva_total
+        FROM ventas
+        WHERE 1=1
+    """
+    
+    params = []
+    
+    if anio_filtro:
+        query += " AND YEAR(fecha) = %s"
+        params.append(anio_filtro)
+    
+    if mes_filtro:
+        query += " AND MONTH(fecha) = %s"
+        params.append(mes_filtro)
+    
+    query += " GROUP BY YEAR(fecha), MONTH(fecha) ORDER BY anio DESC, mes DESC"
+    
+    resultados = ejecutar_query(query, tuple(params) if params else None, fetch_all=True)
+    
+    meses_nombres = {
+        1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
+        5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
+        9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
+    }
+    
+    # Crear workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Reporte IVA"
+    
+    # TÍTULO
+    ws.merge_cells('A1:E1')
+    cell_title = ws['A1']
+    cell_title.value = "Reporte de IVA a Pagar al Gobierno"
+    cell_title.font = Font(size=16, bold=True, color="FFFFFF")
+    cell_title.fill = PatternFill(start_color="F39C12", end_color="F39C12", fill_type="solid")
+    cell_title.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 30
+    
+    # TOTALES
+    total_iva = sum(r['iva_total'] or 0 for r in resultados) if resultados else 0
+    total_vendido = sum(r['total_vendido'] or 0 for r in resultados) if resultados else 0
+    total_ventas = sum(r['num_ventas'] for r in resultados) if resultados else 0
+    
+    ws.merge_cells('A3:B3')
+    ws.merge_cells('C3:D3')
+    ws['A3'] = "Total Ventas Realizadas"
+    ws['C3'] = "Total Vendido"
+    ws['E3'] = "IVA a Pagar"
+    
+    ws['A3'].font = Font(bold=True)
+    ws['C3'].font = Font(bold=True)
+    ws['E3'].font = Font(bold=True)
+    
+    ws.merge_cells('A4:B4')
+    ws.merge_cells('C4:D4')
+    ws['A4'] = total_ventas
+    ws['C4'] = total_vendido
+    ws['E4'] = total_iva
+    
+    ws['A4'].alignment = Alignment(horizontal="center")
+    ws['C4'].alignment = Alignment(horizontal="center")
+    ws['E4'].alignment = Alignment(horizontal="center")
+    
+    ws['C4'].number_format = '"$"#,##0.00'
+    ws['E4'].number_format = '"$"#,##0.00'
+    ws['E4'].font = Font(bold=True, size=14, color="E67E22")
+    
+    summary_fill = PatternFill(start_color="FEF5E7", end_color="FEF5E7", fill_type="solid")
+    for cell in ['A3', 'C3', 'E3', 'A4', 'C4', 'E4']:
+        ws[cell].fill = summary_fill
+    
+    # TABLA
+    start_row = 6
+    encabezados = ["Año", "Mes", "Ventas Realizadas", "Total Vendido", "IVA Cobrado"]
+    
+    for col_idx, header in enumerate(encabezados, start=1):
+        cell = ws.cell(row=start_row, column=col_idx, value=header)
+        cell.fill = PatternFill(start_color="F39C12", end_color="F39C12", fill_type="solid")
+        cell.font = Font(color="FFFFFF", bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+    
+    # DATOS
+    row = start_row + 1
+    if resultados:
+        for r in resultados:
+            ws.cell(row=row, column=1, value=r['anio'])
+            ws.cell(row=row, column=2, value=meses_nombres.get(r['mes'], str(r['mes'])))
+            ws.cell(row=row, column=3, value=r['num_ventas'])
+            
+            cell_total = ws.cell(row=row, column=4, value=r['total_vendido'] or 0)
+            cell_total.number_format = '"$"#,##0.00'
+            
+            cell_iva = ws.cell(row=row, column=5, value=r['iva_total'] or 0)
+            cell_iva.number_format = '"$"#,##0.00'
+            cell_iva.font = Font(color="E67E22", bold=True)
+            
+            ws.cell(row=row, column=1).alignment = Alignment(horizontal="center")
+            ws.cell(row=row, column=3).alignment = Alignment(horizontal="center")
+            
+            row += 1
+    
+    # BORDES
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    max_row = row - 1
+    for r in ws.iter_rows(min_row=start_row, max_row=max_row, min_col=1, max_col=5):
+        for cell in r:
+            cell.border = thin_border
+    
+    # AJUSTAR COLUMNAS
+    ws.column_dimensions['A'].width = 12
+    ws.column_dimensions['B'].width = 15
+    ws.column_dimensions['C'].width = 18
+    ws.column_dimensions['D'].width = 18
+    ws.column_dimensions['E'].width = 18
+    
+    # EXPORTAR
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="reporte_iva.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 
 @app.route('/reportes/rentabilidad')
