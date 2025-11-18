@@ -872,35 +872,7 @@ def editar_producto(id):
 
 # Reemplaza tu función eliminar_producto en app.py con esta:
 
-@app.route("/productos/eliminar/<int:id>", methods=['POST'])
-@login_required
-@role_required('admin')
-def eliminar_producto(id):
-    """Elimina un producto - VERSIÓN MEJORADA CON MANEJO DE VENTAS"""
-    
-    try:
-        # Buscar el producto
-        producto = obtener_producto_por_id(id)
-        
-        if not producto:
-            return jsonify({
-                'success': False, 
-                'error': 'Producto no encontrado'
-            }), 404
-        
-        # Verificar si tiene ventas asociadas
-        query_ventas = "SELECT COUNT(*) as total FROM ventas WHERE producto_id = %s"
-        resultado = ejecutar_query(query_ventas, (id,), fetch_one=True)
-        
-        ventas_asociadas = resultado['total'] if resultado else 0
-        
-        if ventas_asociadas > 0:
-            # OPCIÓN 1: NO PERMITIR ELIMINACIÓN
-            return jsonify({
-                'success': False,
-                'error': f'No se puede eliminar. Tiene {ventas_asociadas} venta(s) asociada(s)',
-                'ventas_asociadas': ventas_asociadas
-            }), 400
+
             
             # OPCIÓN 2: PERMITIR ELIMINACIÓN FORZADA (Descomenta si prefieres esta opción)
             # eliminar_ventas = "DELETE FROM ventas WHERE producto_id = %s"
