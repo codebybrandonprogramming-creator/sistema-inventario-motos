@@ -234,12 +234,12 @@ def cargar_ventas():
     return ventas if ventas else []
 
 
-def guardar_venta(venta):
+
     """Guarda una nueva venta en MySQL"""
     query = """
         INSERT INTO ventas (fecha, hora, producto_id, producto_nombre, categoria,
                            cantidad, precio_unitario, total, usuario_id, usuario_nombre)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %def guardar_venta(venta):s, %s, %s, %s, %s, %s, %s, %s)
     """
     params = (
         venta['fecha'],
