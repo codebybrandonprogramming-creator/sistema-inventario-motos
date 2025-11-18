@@ -481,9 +481,15 @@
                                 <a href="{{ url_for('editar_producto', id=p.id) }}" 
                                    class="btn btn-warning btn-sm btn-action-3d">✏️</a>
                                 {% if session.get('rol') == 'admin' %}
-                                <button onclick="confirmarEliminar({{ p.id }}, '{{ p.nombre }}')" 
-                                   class="btn btn-danger btn-sm btn-action-3d"
-                                   type="button">🗑️</button>
+                                <button
+    data-id="{{ p.id }}"
+    data-nombre="{{ p.nombre }}"
+    onclick="confirmarEliminar(this.dataset.id, this.dataset.nombre)"
+    class="btn btn-danger btn-sm btn-action-3d"
+    type="button"
+>
+    🗑
+</button>
                                 {% endif %}
                             </td>
                         </tr>
