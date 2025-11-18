@@ -992,66 +992,6 @@ def nueva_venta():
     return render_template('crear_venta.html', productos=productos)
 
 
-@app.route('/ventas/historial')
-@login_required
-def historial_ventas():
-    """Muestra el historial de ventas con filtros"""
-    fecha_desde = request.args.get('fecha_desde')
-    fecha_hasta = request.args.get('fecha_hasta')
-    
-    # Query base
-    query = """
-        SELECT 
-            v.id,
-            v.fecha,
-            v.hora,
-            v.producto_id,
-            v.producto_nombre,
-            v.categoria,
-            v.cantidad,
-            v.precio_unitario,
-            v.total,
-            v.iva_total,
-            v.ganancia_unitaria,
-            v.ganancia_total,
-            v.porcentaje_ganancia_aplicado,
-            v.usuario_id,
-            v.usuario_nombre,
-            v.fecha_registro
-        FROM ventas v
-        WHERE 1=1
-    """
-    
-    params = []
-    
-    # Filtros opcionales
-    if fecha_desde:
-        query += " AND DATE(v.fecha) >= %s"
-        params.append(fecha_desde)
-    
-    if fecha_hasta:
-        query += " AND DATE(v.fecha) <= %s"
-        params.append(fecha_hasta)
-    
-    query += " ORDER BY v.fecha DESC, v.hora DESC"
-    
-    ventas = ejecutar_query(query, tuple(params), fetch_all=True)
-    
-    if not ventas:
-        ventas = []
-    
-    # Calcular totales
-    total_vendido = sum(v.get('total', 0) for v in ventas)
-    total_iva = sum(v.get('iva_total', 0) for v in ventas)
-    total_ganancias = sum(v.get('ganancia_total', 0) for v in ventas)
-    
-    return render_template(
-        'historial_ventas.html',
-        ventas=ventas,
-        total_vendido=total_vendido,
-        total_iva=total_iva,
-        total_ganancias=total_ganancias
-    )
 
 
 # ---------------------------------------------------------------------------------
