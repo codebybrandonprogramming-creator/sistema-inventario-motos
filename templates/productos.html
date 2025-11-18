@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block title %}Productos - Sistema de Inventario{% endblock %}
+
+{% block content %}
+<div class="productos-container">
+    <!-- Barra de filtros -->
+    <div class="filtros-bar">
+        <input type="text" id="filtro-busqueda" placeholder="Ej: Filtro" class="filtro-input">
+        
+        <select id="filtro-categoria" class="filtro-select">
+            <option value="">-- Todas las categorías --</option>
+            {% for categoria in categorias %}
+            <option value="{{ categoria }}">{{ categoria }}</option>
+            {% endfor %}
+        </select>
+
+        <select id="filtro-orden" class="filtro-select">
+            <option value="">-- Sin ordenar --</option>
+            <option value="nombre_asc">Nombre (A-Z)</option>
+            <option value="nombre_desc">Nombre (Z-A)</option>
+            <option value="precio_asc">Precio (Menor a Mayor)</option>
+            <option value="precio_desc">Precio (Mayor a Menor)</option>
+            <option value="stock_asc">Stock (Menor a Mayor)</option>
+            <option value="stock_desc">Stock (Mayor a Menor)</option>
+        </select>
+
+        <button onclick="aplicarFiltros()" class="btn-aplicar">
+            🔍 Aplicar
+        </button>
+
+        <label class="checkbox-container">
+            <input type="checkbox" id="solo-bajo-stock">
+            ⚠️ Solo bajo stock
+        </label>
+    </div>
+
+    <!-- Botón agregar nuevo producto -->
+    <a href="{{ url_for('crear_producto') }}" class="btn-agregar">
+        ➕ Agregar Nuevo Producto
+    </a>
+
+    <!-- Tabla de productos -->
+    <div class="tabla-container">
+        <table class="tabla-productos">
+            <thead>
+                <tr>
+                    <th>CÓDIGO SKU</th>
+                    <th>PRODUCTO</th>
+                    <th>CATEGORÍA</th>
+                    <th>STOCK</th>
+                    <th>PRECIO UNIT.</th>
+                    <th>IVA (19%)</th>
+                    <th>PRECIO + IVA</th>
+                    <th>% GANANCIA</th>
+                    <th>PRECIO VENTA</th>
+                    <th>GANANCIA UNIT.</th>
+                    <th>VALOR TOTAL CON IVA</th>
+                    <th>ACCIONES</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-productos-body">
+                {% for producto in productos %}
+                <tr data-producto-id="{{ producto.id }}">
+                    <td>
+                        <span class="badge-sku">{{ producto.codigo_sku or 'N/A' }}</span>
+                    </td>
+                    <td>{{ producto.nombre }}</td>
+                    <td>{{ producto.categoria }}</td>
+                    <td>
+                        <span class="badge-stock {% if producto.stock <= producto.stock_minimo %}stock-bajo{% elif producto.stock <= producto.stock_minimo * 1.5 %}stock-medio{% else %}stock-alto{% endif %}">
+                            {% if producto.stock <= producto.stock_minimo %}⚠️{% elif producto.stock <= producto.stock_minimo * 1.5 %}🔔{% else %}✅{% endif %}
+                            {{ producto.stock }}
+                        </span>
+                    </td>
+                    <td>${{ "{:,.0f}".format(producto.precio_costo) }} COP</td>
+                    <td>${{ "{:,.0f}".format(producto.precio_costo * 0.19) }} COP</td>
+                    <td>${{ "{:,.0f}".format(producto.precio_costo * 1.19) }} COP</td>
+                    <td>
+                        <span class="badge-ganancia">{{ "%.0f"|format(producto.porcentaje_ganancia) }}%</span>
+                    </td>
+                    <td>${{ "{:,.0f}".format(producto.precio_venta) }} COP</td>
+                    <td>${{ "{:,.0f}".format(producto.precio_venta - (producto.precio_costo * 1.19)) }} COP</td>
+                    <td>${{ "{:,.0f}".format(producto.stock * producto.precio_venta) }} COP</td>
+                    <td>
+                        <div class="acciones-grupo">
+                            <a href="{{ url_for('detalle_producto', id=producto.id) }}" class="btn-accion btn-ver" title="Ver detalles">
+                                👁️
+                            </a>
+                            <a href="{{ url_for('editar_producto', id=producto.id) }}" class="btn-accion btn-editar" title="Editar">
+                                ✏️
+                            </a>
+                            <button onclick="confirmarEliminar({{ producto.id }}, '{{ producto.nombre }}')" class="btn-accion btn-eliminar" title="Eliminar">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal de confirmación de eliminación -->
+<div id="modal-eliminar" class="modal">
+    <div class="modal-contenido">
+        <h3>⚠️ Confirmar Eliminación</h3>
+        <p id="mensaje-eliminar"></p>
+        <div class="modal-acciones">
+            <button onclick="cerrarModal()" class="btn-cancelar">Cancelar</button>
+            <button onclick="eliminarProducto()" class="btn-confirmar-eliminar">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let productoAEliminar = null;
+
+// Función para confirmar eliminación
+function confirmarEliminar(id, nombre) {
+    productoAEliminar = id;
+    document.getElementById('mensaje-eliminar').textContent = 
+        `¿Estás seguro de que deseas eliminar el producto "${nombre}"? Esta acción no se puede deshacer.`;
+    document.getElementById('modal-eliminar').style.display = 'flex';
+}
+
+// Función para cerrar modal
+function cerrarModal() {
+    document.getElementById('modal-eliminar').style.display = 'none';
+    productoAEliminar = null;
+}
+
+// Función para eliminar producto
+function eliminarProducto() {
+    if (!productoAEliminar) return;
+    
+    fetch(`/productos/eliminar/${productoAEliminar}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Eliminar la fila de la tabla
+            const fila = document.querySelector(`tr[data-producto-id="${productoAEliminar}"]`);
+            if (fila) {
+                fila.remove();
+            }
+            cerrarModal();
+            alert('✅ Producto eliminado exitosamente');
+        } else {
+            alert('❌ Error al eliminar el producto: ' + (data.error || 'Error desconocido'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Error al eliminar el producto');
+    });
+}
+
+// Función para aplicar filtros
+function aplicarFiltros() {
+    const busqueda = document.getElementById('filtro-busqueda').value.toLowerCase();
+    const categoria = document.getElementById('filtro-categoria').value;
+    const orden = document.getElementById('filtro-orden').value;
+    const soloBajoStock = document.getElementById('solo-bajo-stock').checked;
+    
+    const filas = Array.from(document.querySelectorAll('#tabla-productos-body tr'));
+    
+    // Filtrar filas
+    filas.forEach(fila => {
+        const texto = fila.textContent.toLowerCase();
+        const categoriaFila = fila.children[2].textContent;
+        const stockBadge = fila.querySelector('.badge-stock');
+        const esBajoStock = stockBadge && stockBadge.classList.contains('stock-bajo');
+        
+        let mostrar = true;
+        
+        if (busqueda && !texto.includes(busqueda)) {
+            mostrar = false;
+        }
+        
+        if (categoria && categoriaFila !== categoria) {
+            mostrar = false;
+        }
+        
+        if (soloBajoStock && !esBajoStock) {
+            mostrar = false;
+        }
+        
+        fila.style.display = mostrar ? '' : 'none';
+    });
+    
+    // Ordenar filas visibles
+    if (orden) {
+        const filasVisibles = filas.filter(f => f.style.display !== 'none');
+        
+        filasVisibles.sort((a, b) => {
+            let valorA, valorB;
+            
+            switch(orden) {
+                case 'nombre_asc':
+                case 'nombre_desc':
+                    valorA = a.children[1].textContent;
+                    valorB = b.children[1].textContent;
+                    return orden === 'nombre_asc' ? 
+                        valorA.localeCompare(valorB) : valorB.localeCompare(valorA);
+                
+                case 'precio_asc':
+                case 'precio_desc':
+                    valorA = parseFloat(a.children[4].textContent.replace(/[^0-9]/g, ''));
+                    valorB = parseFloat(b.children[4].textContent.replace(/[^0-9]/g, ''));
+                    return orden === 'precio_asc' ? valorA - valorB : valorB - valorA;
+                
+                case 'stock_asc':
+                case 'stock_desc':
+                    valorA = parseInt(a.children[3].textContent.replace(/[^0-9]/g, ''));
+                    valorB = parseInt(b.children[3].textContent.replace(/[^0-9]/g, ''));
+                    return orden === 'stock_asc' ? valorA - valorB : valorB - valorA;
+            }
+        });
+        
+        const tbody = document.getElementById('tabla-productos-body');
+        filasVisibles.forEach(fila => tbody.appendChild(fila));
+    }
+}
+
+// Cerrar modal al hacer clic fuera de él
+window.onclick = function(event) {
+    const modal = document.getElementById('modal-eliminar');
+    if (event.target === modal) {
+        cerrarModal();
+    }
+}
+</script>
+
+<style>
+/* Modal de eliminación */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-contenido {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    text-align: center;
+}
+
+.modal-contenido h3 {
+    color: #e74c3c;
+    margin-bottom: 15px;
+}
+
+.modal-contenido p {
+    margin-bottom: 25px;
+    color: #555;
+}
+
+.modal-acciones {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.btn-cancelar {
+    padding: 10px 30px;
+    background-color: #95a5a6;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.btn-cancelar:hover {
+    background-color: #7f8c8d;
+}
+
+.btn-confirmar-eliminar {
+    padding: 10px 30px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.btn-confirmar-eliminar:hover {
+    background-color: #c0392b;
+}
+
+/* Botones de acción */
+.acciones-grupo {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.btn-accion {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-accion:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-ver {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-editar {
+    background-color: #f39c12;
+    color: white;
+}
+
+.btn-eliminar {
+    background-color: #e74c3c;
+    color: white;
+}
+</style>
+
+{% endblock %}
