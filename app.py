@@ -1517,3 +1517,5 @@ def exportar_pdf_inventario():
         download_name="inventario_total.pdf",
         mimetype="application/pdf"
     )
+
+
