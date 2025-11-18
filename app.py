@@ -1930,7 +1930,188 @@ def reporte_rentabilidad():
 
 
 
+@app.route('/reportes/rentabilidad/excel')
+@login_required
+def exportar_rentabilidad_excel():
+    """Exporta el reporte de rentabilidad a Excel"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+    except Exception:
+        flash("openpyxl no está disponible.", "error")
+        return redirect(url_for('reporte_rentabilidad'))
 
+    import io
+    
+    fecha_desde = request.args.get('fecha_desde', '')
+    fecha_hasta = request.args.get('fecha_hasta', '')
+    ordenar = request.args.get('ordenar', 'ganancia')
+    
+    # Query (misma del reporte)
+    query = """
+        SELECT 
+            v.producto_id,
+            p.nombre,
+            p.categoria,
+            COUNT(*) as num_ventas,
+            SUM(v.cantidad) as cantidad_vendida,
+            SUM(v.total) as total_vendido,
+            AVG(v.ganancia_unitaria) as ganancia_unitaria_promedio,
+            SUM(v.ganancia_total) as ganancia_total
+        FROM ventas v
+        JOIN productos p ON v.producto_id = p.id
+        WHERE 1=1
+    """
+    
+    params = []
+    
+    if fecha_desde:
+        query += " AND DATE(v.fecha) >= %s"
+        params.append(fecha_desde)
+    
+    if fecha_hasta:
+        query += " AND DATE(v.fecha) <= %s"
+        params.append(fecha_hasta)
+    
+    query += " GROUP BY v.producto_id, p.nombre, p.categoria"
+    
+    if ordenar == 'cantidad':
+        query += " ORDER BY cantidad_vendida DESC"
+    else:
+        query += " ORDER BY ganancia_total DESC"
+    
+    resultados = ejecutar_query(query, tuple(params) if params else None, fetch_all=True)
+    
+    # Crear workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Rentabilidad"
+    
+    # TÍTULO
+    ws.merge_cells('A1:H1')
+    cell_title = ws['A1']
+    cell_title.value = "Reporte de Productos Más Rentables"
+    cell_title.font = Font(size=16, bold=True, color="FFFFFF")
+    cell_title.fill = PatternFill(start_color="27AE60", end_color="27AE60", fill_type="solid")
+    cell_title.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 30
+    
+    # TOTALES
+    ganancia_total = sum(r['ganancia_total'] or 0 for r in resultados) if resultados else 0
+    unidades_vendidas = sum(r['cantidad_vendida'] for r in resultados) if resultados else 0
+    
+    ws.merge_cells('A3:B3')
+    ws.merge_cells('C3:D3')
+    ws.merge_cells('E3:F3')
+    ws['A3'] = "Ganancia Total"
+    ws['C3'] = "Productos Vendidos"
+    ws['E3'] = "Unidades Vendidas"
+    
+    ws['A3'].font = Font(bold=True)
+    ws['C3'].font = Font(bold=True)
+    ws['E3'].font = Font(bold=True)
+    
+    ws.merge_cells('A4:B4')
+    ws.merge_cells('C4:D4')
+    ws.merge_cells('E4:F4')
+    ws['A4'] = ganancia_total
+    ws['C4'] = len(resultados)
+    ws['E4'] = unidades_vendidas
+    
+    ws['A4'].alignment = Alignment(horizontal="center")
+    ws['C4'].alignment = Alignment(horizontal="center")
+    ws['E4'].alignment = Alignment(horizontal="center")
+    
+    ws['A4'].number_format = '"$"#,##0.00'
+    ws['A4'].font = Font(bold=True, size=14, color="27AE60")
+    
+    summary_fill = PatternFill(start_color="E8F8F5", end_color="E8F8F5", fill_type="solid")
+    for cell in ['A3', 'C3', 'E3', 'A4', 'C4', 'E4']:
+        ws[cell].fill = summary_fill
+    
+    # TABLA
+    start_row = 6
+    encabezados = ["Posición", "Producto", "Categoría", "Unidades", "Total Vendido", "Gan. Unitaria", "Gan. Total", "% Margen"]
+    
+    for col_idx, header in enumerate(encabezados, start=1):
+        cell = ws.cell(row=start_row, column=col_idx, value=header)
+        cell.fill = PatternFill(start_color="27AE60", end_color="27AE60", fill_type="solid")
+        cell.font = Font(color="FFFFFF", bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+    
+    # DATOS
+    row = start_row + 1
+    if resultados:
+        for idx, r in enumerate(resultados, start=1):
+            ganancia_tot = r['ganancia_total'] or 0
+            total_vend = r['total_vendido'] or 0
+            margen = (ganancia_tot / total_vend * 100) if total_vend > 0 else 0
+            
+            ws.cell(row=row, column=1, value=idx)
+            ws.cell(row=row, column=2, value=r['nombre'])
+            ws.cell(row=row, column=3, value=r['categoria'])
+            ws.cell(row=row, column=4, value=r['cantidad_vendida'])
+            
+            cell_total = ws.cell(row=row, column=5, value=total_vend)
+            cell_total.number_format = '"$"#,##0.00'
+            
+            cell_gan_unit = ws.cell(row=row, column=6, value=r['ganancia_unitaria_promedio'] or 0)
+            cell_gan_unit.number_format = '"$"#,##0.00'
+            
+            cell_gan_total = ws.cell(row=row, column=7, value=ganancia_tot)
+            cell_gan_total.number_format = '"$"#,##0.00'
+            cell_gan_total.font = Font(bold=True, color="27AE60")
+            
+            cell_margen = ws.cell(row=row, column=8, value=margen)
+            cell_margen.number_format = '0.0"%"'
+            
+            ws.cell(row=row, column=1).alignment = Alignment(horizontal="center")
+            ws.cell(row=row, column=4).alignment = Alignment(horizontal="center")
+            
+            # Destacar TOP 3
+            if idx <= 3:
+                for col in range(1, 9):
+                    ws.cell(row=row, column=col).fill = PatternFill(
+                        start_color="FFF9E6", end_color="FFF9E6", fill_type="solid"
+                    )
+            
+            row += 1
+    
+    # BORDES
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    max_row = row - 1
+    for r in ws.iter_rows(min_row=start_row, max_row=max_row, min_col=1, max_col=8):
+        for cell in r:
+            cell.border = thin_border
+    
+    # AJUSTAR COLUMNAS
+    ws.column_dimensions['A'].width = 10
+    ws.column_dimensions['B'].width = 30
+    ws.column_dimensions['C'].width = 15
+    ws.column_dimensions['D'].width = 10
+    ws.column_dimensions['E'].width = 15
+    ws.column_dimensions['F'].width = 15
+    ws.column_dimensions['G'].width = 15
+    ws.column_dimensions['H'].width = 12
+    
+    # EXPORTAR
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="reporte_rentabilidad.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 
 # ---------------------------------------------------------------------------------
