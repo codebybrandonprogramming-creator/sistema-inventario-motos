@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Historial de Ventas{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header-section">
+        <h1>📊 Historial de Ventas</h1>
+        <a href="{{ url_for('registrar_venta') }}" class="btn btn-primary">+ Nueva Venta</a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-section">
+        <form method="GET" class="filter-form">
+            <div class="filter-group">
+                <label>Fecha Desde:</label>
+                <input type="date" name="fecha_desde" value="{{ request.args.get('fecha_desde', '') }}" class="form-control">
+            </div>
+            <div class="filter-group">
+                <label>Fecha Hasta:</label>
+                <input type="date" name="fecha_hasta" value="{{ request.args.get('fecha_hasta', '') }}" class="form-control">
+            </div>
+            <div class="filter-group">
+                <button type="submit" class="btn btn-info">🔍 Filtrar</button>
+                <a href="{{ url_for('historial_ventas') }}" class="btn btn-secondary">Limpiar</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Resumen General -->
+    <div class="summary-cards">
+        <div class="summary-card">
+            <div class="summary-icon">💰</div>
+            <div class="summary-content">
+                <h3>Total Vendido</h3>
+                <p>${{ "{:,.2f}".format(total_vendido) }}</p>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon">📈</div>
+            <div class="summary-content">
+                <h3>Total Ganancias</h3>
+                <p class="text-success">${{ "{:,.2f}".format(total_ganancias) }}</p>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon">🏛️</div>
+            <div class="summary-content">
+                <h3>IVA a Pagar</h3>
+                <p class="text-warning">${{ "{:,.2f}".format(total_iva) }}</p>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon">🛒</div>
+            <div class="summary-content">
+                <h3>Total Ventas</h3>
+                <p>{{ ventas|length }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Ventas -->
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unit.</th>
+                    <th>IVA</th>
+                    <th>% Ganancia</th>
+                    <th>Ganancia Unit.</th>
+                    <th>Ganancia Total</th>
+                    <th>Total con IVA</th>
+                    <th>Usuario</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if ventas %}
+                    {% for venta in ventas %}
+                    <tr>
+                        <td>{{ venta[0] }}</td>
+                        <td>{{ venta[10].strftime('%d/%m/%Y %H:%M') if venta[10] else 'N/A' }}</td>
+                        <td><strong>{{ venta[11] }}</strong></td>
+                        <td class="text-center">{{ venta[2] }}</td>
+                        <td>${{ "{:,.2f}".format(venta[3]) }}</td>
+                        <td class="text-warning">${{ "{:,.2f}".format(venta[5] or 0) }}</td>
+                        <td class="text-info">{{ "{:.2f}".format(venta[8] or 0) }}%</td>
+                        <td class="text-success">${{ "{:,.2f}".format(venta[6] or 0) }}</td>
+                        <td class="text-success"><strong>${{ "{:,.2f}".format(venta[7] or 0) }}</strong></td>
+                        <td class="total-col"><strong>${{ "{:,.2f}".format(venta[4]) }}</strong></td>
+                        <td>{{ venta[12] }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="11" class="text-center">No hay ventas registradas</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.filter-section {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.filter-form {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+}
+
+.filter-group {
+    flex: 1;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #555;
+}
+
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.summary-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: transform 0.2s;
+}
+
+.summary-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.summary-icon {
+    font-size: 40px;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.summary-content h3 {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+    font-weight: 600;
+}
+
+.summary-content p {
+    margin: 5px 0 0 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.table-responsive {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.table th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-warning {
+    color: #f39c12;
+    font-weight: 600;
+}
+
+.text-success {
+    color: #27ae60;
+    font-weight: 600;
+}
+
+.text-info {
+    color: #3498db;
+    font-weight: 600;
+}
+
+.total-col {
+    color: #8e44ad;
+    font-weight: 700;
+    font-size: 16px;
+}
+</style>
+{% endblock %}
