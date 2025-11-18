@@ -305,9 +305,8 @@ body {
                         <td>${{ "{:,.0f}".format(venta.precio_unitario) }} COP</td>
                         <td class="total-col"><strong>${{ "{:,.0f}".format(venta.total) }} COP</strong></td>
                         <td>{{ venta.usuario_nombre or 'N/A' }}</td>
-                        td class="text-center">
-                        <button onclick="eliminarVenta({{ venta.id }}, '{{ venta.producto_nombre }}')" 
-                        class="btn btn-sm btn-danger-table">
+                        td class="text-center"><button onclick="eliminarVenta({{ venta.id }}, '{{ venta.producto_nombre }}')" 
+            class="btn btn-sm btn-danger-table">
         <i class="bi bi-trash-fill"></i>
     </button>
 </td>
