@@ -857,7 +857,7 @@ def editar_producto(id):
             return redirect(url_for('editar_producto', id=id))
 
     return render_template("editar_producto.html", producto=producto)
-
+    
 
 @app.route('/productos/eliminar/<int:id>', methods=['POST'])
 @login_required
