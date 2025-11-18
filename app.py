@@ -881,3 +881,238 @@ def eliminar_venta(id):
     return jsonify({'success': True, 'message': 'Venta eliminada correctamente'})
 
 
+# ---------------------------------------------------------------------------------
+# DASHBOARD Y REPORTES
+# ---------------------------------------------------------------------------------
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    """Dashboard con métricas y estadísticas generales"""
+    productos = cargar_productos()
+    ventas = cargar_ventas()
+
+    # MÉTRICAS GENERALES
+    total_productos = len(productos)
+    valor_inventario_total = sum(p.get('valor_total', 0) for p in productos)
+    productos_bajo_stock = sum(1 for p in productos if p.get('stock', 0) < STOCK_MINIMO)
+    total_ventas_realizadas = len(ventas)
+
+    # INGRESOS TOTALES
+    ingresos_totales = sum(v.get('total', 0) for v in ventas)
+
+    # PRODUCTOS MÁS VENDIDOS (Top 5)
+    ventas_por_producto = {}
+    for v in ventas:
+        pid = v.get('producto_id')
+        if pid not in ventas_por_producto:
+            ventas_por_producto[pid] = {
+                'nombre': v.get('producto_nombre'),
+                'cantidad_vendida': 0,
+                'ingresos': 0
+            }
+        ventas_por_producto[pid]['cantidad_vendida'] += v.get('cantidad', 0)
+        ventas_por_producto[pid]['ingresos'] += v.get('total', 0)
+
+    # Ordenar por cantidad vendida
+    top_vendidos = sorted(
+        ventas_por_producto.values(),
+        key=lambda x: x['cantidad_vendida'],
+        reverse=True
+    )[:5]
+
+    # VENTAS POR CATEGORÍA
+    ventas_por_categoria = {}
+    for v in ventas:
+        cat = v.get('categoria', 'Sin categoría')
+        if cat not in ventas_por_categoria:
+            ventas_por_categoria[cat] = {
+                'cantidad': 0,
+                'ingresos': 0
+            }
+        ventas_por_categoria[cat]['cantidad'] += v.get('cantidad', 0)
+        ventas_por_categoria[cat]['ingresos'] += v.get('total', 0)
+
+    # VENTAS POR DÍA (Últimos 7 días)
+    from collections import defaultdict
+    ventas_por_dia = defaultdict(lambda: {'cantidad': 0, 'ingresos': 0})
+
+    for v in ventas:
+        fecha = v.get('fecha')
+        ventas_por_dia[fecha]['cantidad'] += v.get('cantidad', 0)
+        ventas_por_dia[fecha]['ingresos'] += v.get('total', 0)
+
+    # Ordenar por fecha
+    ventas_diarias = sorted(
+        [{'fecha': k, 'cantidad': v['cantidad'], 'ingresos': v['ingresos']}
+         for k, v in ventas_por_dia.items() if k],
+        key=lambda x: x['fecha']
+    )[-7:]  # Últimos 7 días
+
+    # PRODUCTOS CON BAJO STOCK (detalle)
+    productos_criticos = [
+        p for p in productos
+        if p.get('stock', 0) < STOCK_MINIMO
+    ]
+    productos_criticos = sorted(productos_criticos, key=lambda x: x.get('stock', 0))[:10]
+
+    return render_template(
+        'dashboard.html',
+        # Métricas principales
+        total_productos=total_productos,
+        valor_inventario_total=valor_inventario_total,
+        productos_bajo_stock=productos_bajo_stock,
+        total_ventas_realizadas=total_ventas_realizadas,
+        ingresos_totales=ingresos_totales,
+
+        # Datos para gráficas
+        top_vendidos=top_vendidos,
+        ventas_por_categoria=ventas_por_categoria,
+        ventas_diarias=ventas_diarias,
+        productos_criticos=productos_criticos,
+
+        STOCK_MINIMO=STOCK_MINIMO
+    )
+
+
+@app.route('/reportes/productos-mas-vendidos')
+@login_required
+def reporte_mas_vendidos():
+    """Reporte detallado de productos más vendidos"""
+    ventas = cargar_ventas()
+
+    if not ventas:
+        flash("No hay ventas registradas para generar el reporte.", "info")
+        return redirect(url_for('dashboard'))
+
+    # Agrupar ventas por producto
+    ventas_por_producto = {}
+    for v in ventas:
+        pid = v.get('producto_id')
+        if pid not in ventas_por_producto:
+            ventas_por_producto[pid] = {
+                'id': pid,
+                'nombre': v.get('producto_nombre'),
+                'categoria': v.get('categoria'),
+                'cantidad_vendida': 0,
+                'ingresos': 0,
+                'num_ventas': 0
+            }
+        ventas_por_producto[pid]['cantidad_vendida'] += v.get('cantidad', 0)
+        ventas_por_producto[pid]['ingresos'] += v.get('total', 0)
+        ventas_por_producto[pid]['num_ventas'] += 1
+
+    # Convertir a lista y ordenar
+    productos_vendidos = list(ventas_por_producto.values())
+
+    # Top 5 MÁS vendidos
+    top_5_mas = sorted(
+        productos_vendidos,
+        key=lambda x: x['cantidad_vendida'],
+        reverse=True
+    )[:5]
+
+    # Top 5 MENOS vendidos
+    top_5_menos = sorted(
+        productos_vendidos,
+        key=lambda x: x['cantidad_vendida']
+    )[:5]
+
+    # Todos los productos ordenados
+    todos_ordenados = sorted(
+        productos_vendidos,
+        key=lambda x: x['cantidad_vendida'],
+        reverse=True
+    )
+
+    return render_template(
+        'reporte_productos.html',
+        top_5_mas=top_5_mas,
+        top_5_menos=top_5_menos,
+        todos_productos=todos_ordenados,
+        total_productos=len(productos_vendidos)
+    )
+
+# ---------------------------------------------------------------------------------
+# REPORTE: VENTAS POR PERÍODO (Día / Mes)
+# ---------------------------------------------------------------------------------
+@app.route('/reportes/ventas-por-periodo')
+@login_required
+def reporte_ventas_periodo():
+    """Reporte de ventas por período usando MySQL"""
+
+    ventas = cargar_ventas()
+
+    if not ventas:
+        flash("No hay ventas registradas.", "info")
+        return redirect(url_for('dashboard'))
+
+    from collections import defaultdict
+    ventas_diarias = defaultdict(lambda: {'cantidad': 0, 'ingresos': 0, 'num_ventas': 0})
+    ventas_mensuales = defaultdict(lambda: {'cantidad': 0, 'ingresos': 0, 'num_ventas': 0})
+
+    for v in ventas:
+        fecha = v.get('fecha')   # este valor viene de MySQL como date o string
+
+        #  Convertir fecha a string YYYY-MM-DD
+        if isinstance(fecha, datetime):
+            fecha_str = fecha.strftime("%Y-%m-%d")
+        elif hasattr(fecha, "strftime"):  
+            fecha_str = fecha.strftime("%Y-%m-%d")
+        else:
+            fecha_str = str(fecha)
+
+        # VENTAS POR DÍA
+        ventas_diarias[fecha_str]['cantidad'] += v.get('cantidad', 0)
+        ventas_diarias[fecha_str]['ingresos'] += v.get('total', 0)
+        ventas_diarias[fecha_str]['num_ventas'] += 1
+
+        # VENTAS POR MES YYYY-MM
+        mes = fecha_str[:7]  # YA ES SEGURO porque fecha_str SIEMPRE es string
+        ventas_mensuales[mes]['cantidad'] += v.get('cantidad', 0)
+        ventas_mensuales[mes]['ingresos'] += v.get('total', 0)
+        ventas_mensuales[mes]['num_ventas'] += 1
+
+    # ORDENAR
+    ventas_por_dia = sorted(
+        [{'fecha': k, **v} for k, v in ventas_diarias.items()],
+        key=lambda x: x['fecha'],
+        reverse=True
+    )
+
+    ventas_por_mes = sorted(
+        [{'mes': k, **v} for k, v in ventas_mensuales.items()],
+        key=lambda x: x['mes'],
+        reverse=True
+    )
+
+    return render_template(
+        'reporte_periodo.html',
+        ventas_por_dia=ventas_por_dia,
+        ventas_por_mes=ventas_por_mes
+    )
+
+@app.route("/reportes/inventario-total")
+@login_required
+def reporte_inventario_total():
+    """Reporte completo del inventario total"""
+    productos = cargar_productos()
+
+    if not productos:
+        flash("No hay productos en el inventario para mostrar el reporte.", "info")
+        return redirect(url_for('lista_productos'))
+
+    # Cálculos generales
+    total_items = len(productos)
+    total_unidades = sum(p.get('stock', 0) for p in productos)
+    valor_total_inventario = sum(p.get('stock', 0) * p.get('precio_unitario', 0) for p in productos)
+
+    # Ordenar por categoría y nombre
+    productos_ordenados = sorted(productos, key=lambda x: x.get('id', 0))
+
+    return render_template(
+        "reportes/reporte_inventario_total.html",
+        productos=productos_ordenados,
+        total_items=total_items,
+        total_unidades=total_unidades,
+        valor_total=valor_total_inventario
+    )
