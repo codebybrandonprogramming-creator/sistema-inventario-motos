@@ -1,30 +1,4 @@
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/reportes/reporte_inventario_total.html
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/usuarios/lista_usuarios.html
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/usuarios/resetear_password.html
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/base.html
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/cambiar_password.html
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/crear_producto.html
-https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/crear_venta.html
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/dashboard.html
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/detalle_producto.html
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/editar_producto.html
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/historial_ventas.html
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/login.html
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/login.html
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/productos.html
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/reporte_inventario_total.html
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/reporte_periodo.html
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/reporte_productos.html
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/.gitignore
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/README.md
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/app.py
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/autoup_git.py
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/requirements.txt
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/static/css/styles.css
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/generador_pdf/pdf_generador.py
-< https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/usuarios/nuevo_usuario.html
-https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/reportes/reporte_iva.html
-https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/refs/heads/main/templates/reportes/reporte_rentabilidad.html
+ng-creator/sistema-inventario-motos/refs/heads/main/templates/reportes/reporte_rentabilidad.html
 
 Mostrar más
 Voy a analizar todos los archivos de tu sistema de inventario de motos para entender su estructura y funcionalidad.
