@@ -282,7 +282,7 @@
 
     {% if bajo_stock_total > 0 %}
     <div class="alert-glass">
-         <strong> Alerta:</strong> Hay {{ bajo_stock_total }} productos con stock menor a {{ STOCK_MINIMO }} unidades.
+         <strong>Alerta:</strong> Hay {{ bajo_stock_total }} productos con stock menor a {{ STOCK_MINIMO }} unidades.
     </div>
     {% endif %}
 
@@ -376,11 +376,11 @@
                                 <i class="bi bi-pencil-square"></i>
                             </a>
 
-                            <!-- ÚNICA LÍNEA MODIFICADA: ahora el nombre va entre comillas -->
-                            <button onclick='eliminarProducto({{ p.id }}, "{{ p.nombre }}")'
-                            class="btn btn-sm btn-table btn-danger-table">
-                            <i class="bi bi-trash-fill"></i>
-                            </button>
+                            <a href="{{ url_for('eliminar_producto', id=p.id) }}" 
+                               class="btn btn-sm btn-table btn-danger-table"
+                               onclick="return confirm('¿Eliminar este producto?')">
+                                <i class="bi bi-trash-fill"></i>
+                            </a>
                         </td>
                     </tr>
                     {% else %}
@@ -396,29 +396,5 @@
         </div>
     </div>
 </div>
-
-<script>
-function eliminarProducto(id, nombre) {
-    if (confirm('¿Estás seguro de que deseas eliminar el producto "' + nombre + '"?')) {
-        fetch('/productos/' + id + '/eliminar', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);
-                location.reload();
-            } else {
-                alert('Error: ' + data.message);
-            }
-        })
-        .catch(error => {
-            alert('Error al eliminar el producto: ' + error);
-        });
-    }
-}
-</script>
 {% endblock %}
+11:27 p. m.
