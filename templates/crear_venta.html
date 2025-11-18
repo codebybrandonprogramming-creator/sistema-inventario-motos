@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Venta{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header-section">
+        <h1>💰 Registrar Nueva Venta</h1>
+        <a href="{{ url_for('historial_ventas') }}" class="btn btn-secondary">← Volver al Historial</a>
+    </div>
+
+    <div class="form-card">
+        <form method="POST" id="formVenta">
+            <!-- Selección de Producto -->
+            <div class="form-group">
+                <label for="producto_id">🔍 Seleccionar Producto</label>
+                <select name="producto_id" id="producto_id" class="form-control" required onchange="actualizarInfo()">
+                    <option value="">-- Seleccione un producto --</option>
+                    {% for producto in productos %}
+                    <option value="{{ producto[0] }}" 
+                            data-nombre="{{ producto[2] }}"
+                            data-stock="{{ producto[4] }}"
+                            data-precio="{{ producto[5] }}"
+                            data-ganancia="{{ producto[6] or 0 }}"
+                            data-precio-venta="{{ producto[7] or 0 }}">
+                        {{ producto[1] or 'Sin SKU' }} - {{ producto[2] }} (Stock: {{ producto[4] }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Información del Producto Seleccionado -->
+            <div id="infoProducto" class="info-box" style="display: none;">
+                <h3>📦 Información del Producto</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Stock Disponible:</span>
+                        <span id="stockDisponible" class="value">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Precio Unitario:</span>
+                        <span id="precioUnitario" class="value">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">IVA (19%):</span>
+                        <span id="ivaUnitario" class="value">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Precio + IVA:</span>
+                        <span id="precioConIva" class="value">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">% Ganancia Producto:</span>
+                        <span id="gananciaProducto" class="value">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Precio de Venta:</span>
+                        <span id="precioVentaProducto" class="value">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cantidad -->
+            <div class="form-group">
+                <label for="cantidad">📊 Cantidad a Vender</label>
+                <input type="number" name="cantidad" id="cantidad" class="form-control" 
+                       min="1" required onchange="calcularTotales()">
+            </div>
+
+            <!-- % Ganancia General (NUEVO) -->
+            <div class="form-group ganancia-general">
+                <label for="porcentaje_ganancia_general">
+                    💹 % Ganancia General (Opcional)
+                    <small>Si se ingresa, se aplica a toda la venta y sobrescribe la ganancia del producto</small>
+                </label>
+                <div class="input-group">
+                    <input type="number" name="porcentaje_ganancia_general" 
+                           id="porcentaje_ganancia_general" class="form-control" 
+                           min="0" max="1000" step="0.01" placeholder="Ej: 30"
+                           onchange="calcularTotales()">
+                    <span class="input-addon">%</span>
+                </div>
+            </div>
+
+            <!-- Resumen de Venta -->
+            <div id="resumenVenta" class="resumen-box" style="display: none;">
+                <h3>📋 Resumen de la Venta</h3>
+                <table class="resumen-table">
+                    <tr>
+                        <td>Subtotal (sin IVA):</td>
+                        <td id="subtotalVenta">$0.00</td>
+                    </tr>
+                    <tr>
+                        <td>IVA Total (19%):</td>
+                        <td id="ivaTotalVenta" class="text-warning">$0.00</td>
+                    </tr>
+                    <tr>
+                        <td>% Ganancia Aplicado:</td>
+                        <td id="gananciaAplicada" class="text-info">0%</td>
+                    </tr>
+                    <tr>
+                        <td>Ganancia Total:</td>
+                        <td id="gananciaTotalVenta" class="text-success">$0.00</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td><strong>TOTAL A COBRAR:</strong></td>
+                        <td id="totalVenta"><strong>$0.00</strong></td>
+                    </tr>
+                </table>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">✅ Registrar Venta</button>
+        </form>
+    </div>
+</div>
+
+<script>
+let precioUnitario = 0;
+let stockDisponible = 0;
+let porcentajeGananciaProducto = 0;
+let precioVentaProducto = 0;
+
+function actualizarInfo() {
+    const select = document.getElementById('producto_id');
+    const option = select.options[select.selectedIndex];
+    
+    if (option.value) {
+        stockDisponible = parseFloat(option.dataset.stock);
+        precioUnitario = parseFloat(option.dataset.precio);
+        porcentajeGananciaProducto = parseFloat(option.dataset.ganancia) || 0;
+        precioVentaProducto = parseFloat(option.dataset.precioVenta) || 0;
+        
+        const ivaUnitario = precioUnitario * 0.19;
+        const precioConIva = precioUnitario * 1.19;
+        
+        document.getElementById('stockDisponible').textContent = stockDisponible + ' unidades';
+        document.getElementById('precioUnitario').textContent = '$' + precioUnitario.toLocaleString('es-CO', {minimumFractionDigits: 2});
+        document.getElementById('ivaUnitario').textContent = '$' + ivaUnitario.toLocaleString('es-CO', {minimumFractionDigits: 2});
+        document.getElementById('precioConIva').textContent = '$' + precioConIva.toLocaleString('es-CO', {minimumFractionDigits: 2});
+        document.getElementById('gananciaProducto').textContent = porcentajeGananciaProducto + '%';
+        document.getElementById('precioVentaProducto').textContent = '$' + precioVentaProducto.toLocaleString('es-CO', {minimumFractionDigits: 2});
+        
+        document.getElementById('infoProducto').style.display = 'block';
+        document.getElementById('cantidad').max = stockDisponible;
+        
+        calcularTotales();
+    } else {
+        document.getElementById('infoProducto').style.display = 'none';
+        document.getElementById('resumenVenta').style.display = 'none';
+    }
+}
+
+function calcularTotales() {
+    const cantidad = parseFloat(document.getElementById('cantidad').value) || 0;
+    const gananciaGeneral = parseFloat(document.getElementById('porcentaje_ganancia_general').value) || 0;
+    
+    if (cantidad > 0 && precioUnitario > 0) {
+        const precioConIva = precioUnitario * 1.19;
+        let precioVentaFinal;
+        let porcentajeAplicado;
+        
+        if (gananciaGeneral > 0) {
+            porcentajeAplicado = gananciaGeneral;
+            precioVentaFinal = precioConIva * (1 + gananciaGeneral / 100);
+        } else {
+            porcentajeAplicado = porcentajeGananciaProducto;
+            precioVentaFinal = precioVentaProducto || precioConIva;
+        }
+        
+        const subtotal = precioUnitario * cantidad;
+        const ivaTotal = subtotal * 0.19;
+        const totalVenta = precioVentaFinal * cantidad;
+        const gananciaUnitaria = precioVentaFinal - precioConIva;
+        const gananciaTotal = gananciaUnitaria * cantidad;
+        
+        document.getElementById('subtotalVenta').textContent = '$' + subtotal.toLocaleString('es-CO', {minimumFractionDigits: 2});
+        document.getElementById('ivaTotalVenta').textContent = '$' + ivaTotal.toLocaleString('es-CO', {minimumFractionDigits: 2});
+        document.getElementById('gananciaAplicada').textContent = porcentajeAplicado.toFixed(2) + '%';
+        document.getElementById('gananciaTotalVenta').textContent = '$' + gananciaTotal.toLocaleString('es-CO', {minimumFractionDigits: 2});
+        document.getElementById('totalVenta').textContent = '$' + totalVenta.toLocaleString('es-CO', {minimumFractionDigits: 2});
+        
+        document.getElementById('resumenVenta').style.display = 'block';
+    } else {
+        document.getElementById('resumenVenta').style.display = 'none';
+    }
+}
+</script>
+
+<style>
+.form-card {
+    background: white;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    max-width: 800px;
+    margin: 20px auto;
+}
+
+.info-box {
+    background: #f8f9fa;
+    border-left: 4px solid #007bff;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 5px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background: white;
+    border-radius: 5px;
+}
+
+.info-item .label {
+    font-weight: 600;
+    color: #555;
+}
+
+.info-item .value {
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.ganancia-general {
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.ganancia-general label {
+    color: #856404;
+    font-weight: 700;
+}
+
+.ganancia-general small {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #856404;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+}
+
+.input-addon {
+    background: #ffc107;
+    padding: 10px 20px;
+    border-radius: 0 5px 5px 0;
+    font-weight: 700;
+    color: #856404;
+}
+
+.resumen-box {
+    background: #e8f5e9;
+    border-left: 4px solid #4caf50;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 5px;
+}
+
+.resumen-table {
+    width: 100%;
+    margin-top: 15px;
+}
+
+.resumen-table td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.resumen-table td:first-child {
+    font-weight: 600;
+    color: #555;
+}
+
+.resumen-table td:last-child {
+    text-align: right;
+    font-weight: 700;
+}
+
+.total-row {
+    background: #c8e6c9;
+}
+
+.total-row td {
+    font-size: 20px;
+    color: #2e7d32;
+    border-bottom: none;
+}
+
+.text-warning {
+    color: #f39c12 !important;
+}
+
+.text-success {
+    color: #27ae60 !important;
+}
+
+.text-info {
+    color: #3498db !important;
+}
+</style>
+{% endblock %}
