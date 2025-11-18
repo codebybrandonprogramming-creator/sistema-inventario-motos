@@ -859,7 +859,37 @@ def editar_producto(id):
     return render_template("editar_producto.html", producto=producto)
 
 
-
+@app.route('/productos/eliminar/<int:id>', methods=['POST'])
+@login_required
+def eliminar_producto(id):
+    try:
+        producto = obtener_producto_por_id(id)
+        
+        if not producto:
+            return jsonify({'success': False, 'error': 'Producto no encontrado'}), 404
+        
+        # Verificar ventas asociadas
+        query_ventas = "SELECT COUNT(*) as total FROM ventas WHERE producto_id = %s"
+        resultado = ejecutar_query(query_ventas, (id,), fetch_one=True)
+        ventas_asociadas = resultado['total'] if resultado else 0
+        
+        if ventas_asociadas > 0:
+            return jsonify({
+                'success': False, 
+                'error': f'No se puede eliminar. Tiene {ventas_asociadas} ventas asociadas'
+            }), 400
+        
+        resultado = eliminar_producto_db(id)
+        
+        if resultado is not None:
+            registrar_log('Producto eliminado', f"Producto: {producto['nombre']} (ID: {id})")
+            return jsonify({'success': True, 'message': 'Producto eliminado exitosamente'})
+        else:
+            return jsonify({'success': False, 'error': 'Error al eliminar el producto'}), 500
+    
+    except Exception as e:
+        print(f"Error al eliminar producto: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ---------------------------------------------------------------------------------
 # RUTAS DE VENTAS (🔥 ACTUALIZADO - PASO 7B)
