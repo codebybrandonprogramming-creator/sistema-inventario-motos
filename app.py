@@ -63,3 +63,194 @@
 # Exportar reportes en PDF
 # Conexión a MySQL para manejo real en producción
 
+from flask import Flask, request, render_template, redirect, url_for, flash, send_file, session
+import json
+import os
+from datetime import datetime
+from functools import wraps
+from werkzeug.security import generate_password_hash, check_password_hash
+import pymysql
+
+app = Flask(__name__)
+app.secret_key = "dev_secret_key_change_in_production"
+
+
+# ---------------------------------------------------------------------------------
+# CONFIGURACIÓN Y CONEXIÓN A MYSQL
+# ---------------------------------------------------------------------------------
+def get_db_connection():
+    """Crea y retorna una conexión a MySQL"""
+    return pymysql.connect(
+        host='127.0.0.1',
+        user='root',
+        password='',  # XAMPP no tiene contraseña por defecto
+        database='inventario_repuestos',
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
+
+def ejecutar_query(query, params=None, commit=False, fetch_one=False, fetch_all=False):
+    """
+    Función auxiliar para ejecutar consultas SQL de forma segura.
+    
+    Args:
+        query: Consulta SQL con placeholders %s
+        params: Tupla con los parámetros
+        commit: True si es INSERT/UPDATE/DELETE
+        fetch_one: True para obtener un solo registro
+        fetch_all: True para obtener todos los registros
+    
+    Returns:
+        - Si fetch_one: Un diccionario o None
+        - Si fetch_all: Lista de diccionarios
+        - Si commit: ID del último registro insertado (lastrowid)
+    """
+    connection = None
+    cursor = None
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute(query, params or ())
+        
+        if commit:
+            connection.commit()
+            last_id = cursor.lastrowid
+            return last_id
+        
+        if fetch_one:
+            result = cursor.fetchone()
+            return result
+        
+        if fetch_all:
+            results = cursor.fetchall()
+            return results
+        
+        return None
+        
+    except Exception as e:
+        print(f"❌ Error en la base de datos: {e}")
+        if commit and connection:
+            connection.rollback()
+        return None
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+
+# ---------------------------------------------------------------------------------
+# CONSTANTES
+# ---------------------------------------------------------------------------------
+STOCK_MINIMO = 5
+
+# Roles disponibles
+ROLES = {
+    'admin': 'Administrador',
+    'vendedor': 'Vendedor',
+    'auditor': 'Auditor'
+}
+
+
+# ---------------------------------------------------------------------------------
+# FUNCIONES DE CARGA Y GUARDADO (MYSQL)
+# ---------------------------------------------------------------------------------
+def cargar_productos():
+    """Carga todos los productos desde MySQL"""
+    query = """
+        SELECT id, codigo_sku, nombre, categoria, marca, stock, precio_unitario, 
+               porcentaje_ganancia, precio_venta, descripcion, valor_total, 
+               fecha_creacion, fecha_actualizacion
+        FROM productos
+        ORDER BY id
+    """
+    productos = ejecutar_query(query, fetch_all=True)
+    return productos if productos else []
+
+
+def obtener_producto_por_id(producto_id):
+    """Obtiene un producto específico por su ID"""
+    query = """
+        SELECT id, codigo_sku, nombre, categoria, marca, stock, precio_unitario, 
+               porcentaje_ganancia, precio_venta, descripcion, valor_total, 
+               fecha_creacion, fecha_actualizacion
+        FROM productos
+        WHERE id = %s
+    """
+    return ejecutar_query(query, (producto_id,), fetch_one=True)
+
+def actualizar_producto(producto_id, nombre, categoria, marca, stock, precio_unitario, descripcion, codigo_sku=None, porcentaje_ganancia=0):
+    """Actualiza un producto existente en MySQL"""
+    valor_total = round(stock * precio_unitario, 3)
+    
+    # Calcular precio_venta basado en precio_unitario + IVA + ganancia
+    precio_con_iva = round(precio_unitario * 1.19, 2)
+    precio_venta = round(precio_con_iva * (1 + porcentaje_ganancia / 100), 2)
+    
+    query = """
+        UPDATE productos 
+        SET nombre = %s, categoria = %s, marca = %s, stock = %s, 
+            precio_unitario = %s, porcentaje_ganancia = %s, precio_venta = %s,
+            descripcion = %s, valor_total = %s, codigo_sku = %s,
+            fecha_actualizacion = NOW()
+        WHERE id = %s
+    """
+    params = (nombre, categoria, marca, stock, precio_unitario, porcentaje_ganancia, 
+              precio_venta, descripcion, valor_total, codigo_sku, producto_id)
+    return ejecutar_query(query, params, commit=True)
+
+def eliminar_producto_db(producto_id):
+    """Elimina un producto de MySQL"""
+    query = "DELETE FROM productos WHERE id = %s"
+    return ejecutar_query(query, (producto_id,), commit=True)
+
+
+def actualizar_stock_producto(producto_id, nuevo_stock):
+    """Actualiza solo el stock de un producto"""
+    producto = obtener_producto_por_id(producto_id)
+    if not producto:
+        return False
+    
+    valor_total = round(nuevo_stock * producto['precio_unitario'], 3)
+    
+    query = """
+        UPDATE productos 
+        SET stock = %s, valor_total = %s, fecha_actualizacion = NOW()
+        WHERE id = %s
+    """
+    return ejecutar_query(query, (nuevo_stock, valor_total, producto_id), commit=True)
+
+
+def cargar_ventas():
+    """Carga todas las ventas desde MySQL"""
+    query = """
+        SELECT id, fecha, hora, producto_id, producto_nombre, categoria,
+               cantidad, precio_unitario, total, usuario_id, usuario_nombre,
+               fecha_registro
+        FROM ventas
+        ORDER BY fecha DESC, hora DESC
+    """
+    ventas = ejecutar_query(query, fetch_all=True)
+    return ventas if ventas else []
+
+
+def guardar_venta(venta):
+    """Guarda una nueva venta en MySQL"""
+    query = """
+        INSERT INTO ventas (fecha, hora, producto_id, producto_nombre, categoria,
+                           cantidad, precio_unitario, total, usuario_id, usuario_nombre)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    params = (
+        venta['fecha'],
+        venta['hora'],
+        venta['producto_id'],
+        venta['producto_nombre'],
+        venta['categoria'],
+        venta['cantidad'],
+        venta['precio_unitario'],
+        venta['total'],
+        venta.get('usuario_id'),
+        venta.get('usuario_nombre')
+    )
+    return ejecutar_query(query, params, commit=True)
