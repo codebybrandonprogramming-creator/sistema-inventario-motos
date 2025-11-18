@@ -1,444 +1,540 @@
 {% extends "base.html" %}
-
 {% block title %}Lista de Productos{% endblock %}
 
 {% block content %}
 <style>
-    /* EFECTOS 3D PARA BOTONES Y FILTROS */
-    .filter-container-3d {
-        background: linear-gradient(145deg, #ffffff, #f0f0f0);
-        border-radius: 20px;
-        box-shadow: 
-            15px 15px 40px #d1d1d1,
-            -15px -15px 40px #ffffff;
-        padding: 25px;
-        margin-bottom: 30px;
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
     }
-
-    .search-input-3d {
-        background: #ffffff;
-        border: none;
-        border-radius: 15px;
-        padding: 12px 20px;
-        box-shadow: 
-            inset 5px 5px 12px #d1d1d1,
-            inset -5px -5px 12px #ffffff;
-        transition: all 0.3s ease;
-        width: 100%;
-        font-size: 15px;
+    
+    .lista-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
     }
-
-    .search-input-3d:focus {
-        outline: none;
-        box-shadow: 
-            inset 7px 7px 16px #b8b8b8,
-            inset -7px -7px 16px #ffffff;
-        transform: scale(1.01);
+    
+    .lista-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+        animation: fadeInDown 0.6s ease;
     }
-
-    .select-3d {
-        background: #ffffff;
-        border: none;
-        border-radius: 15px;
-        padding: 12px 20px;
-        box-shadow: 
-            6px 6px 16px #d1d1d1,
-            -6px -6px 16px #ffffff;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        width: 100%;
-        font-size: 15px;
+    
+    .lista-title {
+        color: #ffffff;
+        font-size: 2.5rem;
+        font-weight: 800;
+        text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
     }
-
-    .select-3d:hover {
-        box-shadow: 
-            8px 8px 20px #bebebe,
-            -8px -8px 20px #ffffff;
-        transform: translateY(-2px);
+    
+    .lista-title i {
+        font-size: 3rem;
+        animation: pulse 2s ease-in-out infinite;
     }
-
-    .btn-3d-primary {
-        background: linear-gradient(145deg, #007bff, #0056b3);
-        border: none;
-        border-radius: 15px;
-        padding: 12px 30px;
-        color: white;
-        font-weight: bold;
-        font-size: 15px;
-        box-shadow: 
-            8px 8px 20px #004494,
-            -8px -8px 20px #0092ff;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        width: 100%;
-    }
-
-    .btn-3d-primary:hover {
-        transform: translateY(-3px);
-        box-shadow: 
-            10px 10px 25px #003d7a,
-            -10px -10px 25px #00a3ff;
-        color: white;
-    }
-
-    .btn-3d-primary:active {
-        transform: translateY(0px);
-        box-shadow: 
-            5px 5px 15px #004494,
-            -5px -5px 15px #0092ff;
-    }
-
-    .checkbox-3d {
-        transform: scale(1.3);
-        cursor: pointer;
-        margin-right: 10px;
-    }
-
-    .label-3d {
-        font-weight: 600;
-        color: #495057;
-        margin-bottom: 8px;
-        display: block;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
-        font-size: 14px;
-    }
-
-    /* ===== ENCABEZADOS FIJOS ===== */
-    .table-wrapper {
-        position: relative;
-        max-height: 600px;
-        overflow-y: auto;
-        border-radius: 15px;
-        box-shadow: 
-            10px 10px 30px #d1d1d1,
-            -10px -10px 30px #ffffff;
-    }
-
-    .table-scroll-container {
-        overflow-x: auto;
-        overflow-y: visible;
-        position: relative;
-    }
-
-    .table-fixed-header {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-
-    .table-fixed-header thead {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        background: linear-gradient(145deg, #343a40, #23272b);
-    }
-
-    .table-fixed-header thead th {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        background: linear-gradient(145deg, #343a40, #23272b);
-        color: #FFD700;
-        font-weight: bold;
-        padding: 15px 10px;
-        text-align: center;
-        border: none;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        font-size: 13px;
-        white-space: nowrap;
-    }
-
-    .scroll-top-container {
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        background: white;
-        padding: 10px 0;
-        margin-bottom: -10px;
-        border-radius: 15px 15px 0 0;
-    }
-
-    .scroll-top-bar {
-        overflow-x: auto;
-        overflow-y: hidden;
-        height: 20px;
-    }
-
-    .scroll-top-content {
-        height: 1px;
-    }
-
-    .sync-scroll {
-        overflow-x: auto;
-        overflow-y: visible;
-    }
-
-    .table-fixed-header tbody tr {
-        transition: all 0.2s ease;
-    }
-
-    .table-fixed-header tbody tr:hover {
-        background: linear-gradient(145deg, #f8f9fa, #e9ecef);
-        transform: scale(1.01);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-
-    .table-fixed-header tbody td {
-        padding: 12px 10px;
-        border-bottom: 1px solid #dee2e6;
-        text-align: center;
-        font-size: 14px;
-    }
-
-    .badge-stock-ok {
-        background: linear-gradient(145deg, #28a745, #1e7e34);
-        color: white;
-        padding: 6px 12px;
-        border-radius: 10px;
-        font-weight: bold;
-        box-shadow: 3px 3px 8px rgba(0,0,0,0.2);
-    }
-
-    .badge-stock-low {
-        background: linear-gradient(145deg, #dc3545, #a71d2a);
-        color: white;
-        padding: 6px 12px;
-        border-radius: 10px;
-        font-weight: bold;
-        box-shadow: 3px 3px 8px rgba(0,0,0,0.2);
-        animation: pulse 2s infinite;
-    }
-
+    
     @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.7; }
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
     }
-
-    .alert-3d {
-        background: linear-gradient(145deg, #fff3cd, #f0e6b8);
+    
+    .btn-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-premium {
+        background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
         border: none;
         border-radius: 15px;
-        padding: 15px 20px;
-        box-shadow: 
-            8px 8px 20px #d4c9a0,
-            -8px -8px 20px #fffffa;
-        margin-bottom: 20px;
+        padding: 0.9rem 2rem;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #333;
+        box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
     }
-
-    .btn-action-3d {
+    
+    .btn-premium:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(255, 215, 0, 0.6);
+        color: #333;
+    }
+    
+    .btn-success-premium {
+        background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+        color: #ffffff;
+    }
+    
+    .btn-success-premium:hover {
+        box-shadow: 0 10px 30px rgba(0, 255, 136, 0.6);
+        color: #ffffff;
+    }
+    
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .alert-glass {
+        background: rgba(255, 193, 7, 0.2);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 193, 7, 0.5);
+        border-radius: 15px;
+        padding: 1rem 1.5rem;
+        color: #ffffff;
+        font-weight: 700;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        margin-bottom: 1.5rem;
+        animation: fadeInUp 0.6s ease;
+    }
+    
+    .filtros-glass {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        animation: fadeInUp 0.7s ease;
+    }
+    
+    .filtro-input {
+        background: rgba(255, 255, 255, 0.95);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 12px;
+        padding: 0.8rem 1.2rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #333;
+        transition: all 0.3s ease;
+    }
+    
+    .filtro-input:focus {
+        outline: none;
+        border-color: #ffd700;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+    }
+    
+    .btn-filtrar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border: none;
-        border-radius: 8px;
-        padding: 6px 12px;
-        margin: 2px;
-        box-shadow: 3px 3px 8px rgba(0,0,0,0.2);
-        transition: all 0.2s ease;
-        font-size: 13px;
+        border-radius: 12px;
+        padding: 0.8rem 2rem;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #ffffff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
     }
-
-    .btn-action-3d:hover {
+    
+    .btn-filtrar:hover {
         transform: translateY(-2px);
-        box-shadow: 4px 4px 12px rgba(0,0,0,0.3);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+    
+    .checkbox-glass {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #ffffff;
+        font-weight: 600;
+        margin-top: 0.8rem;
+    }
+    
+    .tabla-glass {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: fadeInUp 0.9s ease;
+    }
+    
+    .table-premium {
+        margin: 0;
+        color: #ffffff;
+    }
+    
+    .table-premium thead {
+        background: rgba(0, 0, 0, 0.3);
+    }
+    
+    .table-premium thead th {
+        padding: 1.2rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border: none;
+        color: #ffd700;
+    }
+    
+    .table-premium tbody tr {
+        background: rgba(255, 255, 255, 0.05);
+        transition: all 0.3s ease;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .table-premium tbody tr:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: scale(1.01);
+    }
+    
+    .table-premium tbody td {
+        padding: 1rem;
+        font-weight: 600;
+        border: none;
+        vertical-align: middle;
+    }
+    
+    .bajo-stock-row {
+        background: rgba(255, 82, 82, 0.2) !important;
+        border-left: 4px solid #ff5252 !important;
+    }
+    
+    .badge-stock-bajo {
+        background: linear-gradient(135deg, #ff5252 0%, #cc0000 100%);
+        color: #ffffff;
+        padding: 0.4rem 0.8rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-block;
+        margin-top: 0.3rem;
+    }
+    
+    .btn-table {
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-weight: 700;
+        border: none;
+        transition: all 0.3s ease;
+        margin: 0 0.2rem;
+        cursor: pointer;
+    }
+    
+    .btn-table:hover {
+        transform: translateY(-2px);
+    }
+    
+    .btn-info-table {
+        background: linear-gradient(135deg, #00bfff 0%, #0080ff 100%);
+        color: #ffffff;
+    }
+    
+    .btn-warning-table {
+        background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+        color: #333;
+    }
+    
+    .btn-danger-table {
+        background: linear-gradient(135deg, #ff5252 0%, #cc0000 100%);
+        color: #ffffff;
     }
 
-    .money-text {
-        color: #28a745;
-        font-weight: bold;
+    /* Modal de confirmación */
+    .modal-eliminar {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-eliminar-contenido {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        max-width: 500px;
+        text-align: center;
+        color: #ffffff;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .modal-eliminar-contenido h3 {
+        color: #ffd700;
+        margin-bottom: 1rem;
+        font-weight: 800;
+    }
+
+    .modal-eliminar-contenido p {
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+    }
+
+    .modal-eliminar-acciones {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .btn-modal {
+        padding: 0.8rem 2rem;
+        border-radius: 12px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-modal-cancelar {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+    }
+
+    .btn-modal-cancelar:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .btn-modal-eliminar {
+        background: linear-gradient(135deg, #ff5252 0%, #cc0000 100%);
+        color: #ffffff;
+    }
+
+    .btn-modal-eliminar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 82, 82, 0.6);
     }
 </style>
 
-<div class="container-fluid py-4">
+<div class="lista-container">
+    <div class="lista-header">
+        <div class="lista-title">
+            <i class="bi bi-box2-heart-fill"></i>
+            Inventario de Productos
+        </div>
+        <div class="btn-actions">
+            <a href="{{ url_for('nuevo_producto') }}" class="btn btn-premium">
+                <i class="bi bi-plus-circle-fill"></i> Nuevo Producto
+            </a>
+            <a href="{{ url_for('nueva_venta') }}" class="btn btn-premium btn-success-premium">
+                <i class="bi bi-cash-stack"></i> Registrar Venta
+            </a>
+        </div>
+    </div>
+
     {% if bajo_stock_total > 0 %}
-    <div class="alert-3d">
-        <strong>⚠️ Alerta:</strong> Hay {{ bajo_stock_total }} productos con stock menor a {{ STOCK_MINIMO }} unidades.
+    <div class="alert-glass">
+         <strong>⚠️ Alerta:</strong> Hay {{ bajo_stock_total }} productos con stock menor a {{ STOCK_MINIMO }} unidades.
     </div>
     {% endif %}
 
-    <h2 class="mb-4" style="color: #495057; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">
-        📦 Lista de Productos
-    </h2>
-
-    <div class="filter-container-3d">
-        <form method="GET" action="{{ url_for('lista_productos') }}" id="formFiltros">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="label-3d">🔍 Buscar por nombre</label>
-                    <input type="text" name="q" class="search-input-3d" 
-                           placeholder="Ej: Filtro" value="{{ request.args.get('q', '') }}">
-                </div>
-
-                <div class="col-md-3">
-                    <label class="label-3d">📁 Todas las categorías</label>
-                    <select name="categoria" class="select-3d">
-                        <option value="">-- Todas las categorías --</option>
-                        {% for cat in categorias %}
-                        <option value="{{ cat }}" {% if request.args.get('categoria') == cat %}selected{% endif %}>
-                            {{ cat }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label class="label-3d">📊 Ordenar por...</label>
-                    <select name="ordenar" class="select-3d">
-                        <option value="">-- Sin ordenar --</option>
-                        <option value="precio_asc" {% if request.args.get('ordenar') == 'precio_asc' %}selected{% endif %}>
-                            Precio: Menor a Mayor
-                        </option>
-                        <option value="precio_desc" {% if request.args.get('ordenar') == 'precio_desc' %}selected{% endif %}>
-                            Precio: Mayor a Menor
-                        </option>
-                        <option value="stock_asc" {% if request.args.get('ordenar') == 'stock_asc' %}selected{% endif %}>
-                            Stock: Menor a Mayor
-                        </option>
-                        <option value="stock_desc" {% if request.args.get('ordenar') == 'stock_desc' %}selected{% endif %}>
-                            Stock: Mayor a Menor
-                        </option>
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <button type="submit" class="btn-3d-primary">
-                        🔍 Aplicar
-                    </button>
-                </div>
-
-                <div class="col-md-2">
-                    <div style="margin-top: 30px;">
-                        <label style="cursor: pointer; display: flex; align-items: center;">
-                            <input type="checkbox" name="solo_bajo_stock" value="1" class="checkbox-3d"
-                                   {% if solo_bajo_stock %}checked{% endif %} onchange="this.form.submit()">
-                            <span class="label-3d" style="margin: 0;">⚠️ Solo bajo stock</span>
-                        </label>
-                    </div>
-                </div>
+    <!-- FILTROS -->
+    <form method="GET" class="filtros-glass">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <input name="q"
+                       class="form-control filtro-input"
+                       placeholder=" Buscar por nombre..."
+                       value="{{ request.args.get('q', '') }}">
             </div>
-        </form>
-    </div>
 
-    <div class="mb-3">
-        <a href="{{ url_for('nuevo_producto') }}" class="btn-3d-primary" style="display: inline-block; width: auto; padding: 12px 30px;">
-            ➕ Agregar Nuevo Producto
-        </a>
-    </div>
+            <div class="col-md-3">
+                <select name="categoria" class="form-select filtro-input">
+                    <option value=""> Todas las categorías</option>
+                    {% for c in categorias %}
+                    <option value="{{ c }}"
+                        {% if request.args.get('categoria') == c %}selected{% endif %}>
+                        {{ c }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-    <div class="table-wrapper">
-        <div class="scroll-top-container">
-            <div class="scroll-top-bar" id="scrollTop">
-                <div class="scroll-top-content" id="scrollTopContent"></div>
+            <div class="col-md-3">
+                <select name="ordenar" class="form-select filtro-input">
+                    <option value=""> Ordenar por...</option>
+                    <option value="precio_asc" {% if request.args.get('ordenar') == 'precio_asc' %}selected{% endif %}>Precio ↑</option>
+                    <option value="precio_desc" {% if request.args.get('ordenar') == 'precio_desc' %}selected{% endif %}>Precio ↓</option>
+                    <option value="stock_asc" {% if request.args.get('ordenar') == 'stock_asc' %}selected{% endif %}>Stock ↑</option>
+                    <option value="stock_desc" {% if request.args.get('ordenar') == 'stock_desc' %}selected{% endif %}>Stock ↓</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-filtrar">Aplicar</button>
+            </div>
+
+            <div class="col-md-12">
+                <label class="checkbox-glass">
+                    <input type="checkbox" name="solo_bajo_stock" value="1"
+                        {% if request.args.get('solo_bajo_stock') == "1" %}checked{% endif %}>
+                     Solo mostrar productos con bajo stock
+                </label>
             </div>
         </div>
+    </form>
 
-        <div class="table-scroll-container sync-scroll" id="tableScroll">
-            <table class="table table-fixed-header">
+    <!-- TABLA -->
+    <div class="tabla-glass">
+        <div class="table-responsive">
+            <table class="table table-premium table-hover">
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>CÓDIGO SKU</th>
-                        <th>PRODUCTO</th>
-                        <th>CATEGORÍA</th>
-                        <th>STOCK</th>
-                        <th>PRECIO UNIT.</th>
-                        <th>IVA (19%)</th>
-                        <th>PRECIO + IVA</th>
-                        <th>% GANANCIA</th>
-                        <th>PRECIO VENTA</th>
-                        <th>GANANCIA UNIT.</th>
-                        <th>VALOR TOTAL<br>CON IVA</th>
-                        <th>ACCIONES</th>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Marca</th>
+                        <th>Stock</th>
+                        <th>Precio Unit.</th>
+                        <th>Valor Total</th>
+                        <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% if productos %}
-                        {% for p in productos %}
-                        {% set precio_base = p.precio_unitario|float %}
-                        {% set iva = (precio_base * 0.19)|round(0) %}
-                        {% set precio_con_iva = (precio_base * 1.19)|round(0) %}
-                        {% set porcentaje_ganancia = (p.porcentaje_ganancia|float) if p.porcentaje_ganancia else 0.0 %}
-                        {% set precio_venta = (p.precio_venta|float) if p.precio_venta else precio_con_iva %}
-                        {% set ganancia_unitaria = (precio_venta - precio_con_iva)|round(0) %}
-                        {% set valor_total_con_iva = (p.stock * precio_con_iva)|round(0) %}
-                        
-                        <tr>
-                            <td><strong>{{ p.id }}</strong></td>
-                            <td>
-                                {% if p.codigo_sku %}
-                                    <span class="badge bg-info">{{ p.codigo_sku }}</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">N/A</span>
-                                {% endif %}
-                            </td>
-                            <td style="text-align: left; max-width: 200px;">
-                                <strong>{{ p.nombre }}</strong>
-                            </td>
-                            <td>{{ p.categoria }}</td>
-                            <td>
-                                {% if p.stock < STOCK_MINIMO %}
-                                    <span class="badge-stock-low">⚠️ {{ p.stock }}</span>
-                                {% else %}
-                                    <span class="badge-stock-ok">✅ {{ p.stock }}</span>
-                                {% endif %}
-                            </td>
-                            <td class="money-text">${{ "{:,.0f}".format(precio_base) }} COP</td>
-                            <td class="money-text">${{ "{:,.0f}".format(iva) }} COP</td>
-                            <td class="money-text"><strong>${{ "{:,.0f}".format(precio_con_iva) }} COP</strong></td>
-                            <td>
-                                {% if porcentaje_ganancia > 0 %}
-                                    <span class="badge bg-warning">{{ "{:.2f}".format(porcentaje_ganancia) }}%</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">0%</span>
-                                {% endif %}
-                            </td>
-                            <td class="money-text"><strong>${{ "{:,.0f}".format(precio_venta) }} COP</strong></td>
-                            <td class="money-text">${{ "{:,.0f}".format(ganancia_unitaria) }} COP</td>
-                            <td class="money-text"><strong>${{ "{:,.0f}".format(valor_total_con_iva) }} COP</strong></td>
-                            <td style="white-space: nowrap;">
-                                <a href="{{ url_for('detalle_producto', id=p.id) }}" 
-                                   class="btn btn-info btn-sm btn-action-3d">👁️</a>
-                                <a href="{{ url_for('editar_producto', id=p.id) }}" 
-                                   class="btn btn-warning btn-sm btn-action-3d">✏️</a>
-                                {% if session.get('rol') == 'admin' %}
-                                <a href="{{ url_for('eliminar_producto', id=p.id) }}" 
-                                   class="btn btn-danger btn-sm btn-action-3d"
-                                   onclick="return confirm('¿Estás seguro de eliminar este producto?')">🗑️</a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
+                    {% for p in productos %}
+                    <tr class="{% if p.stock < STOCK_MINIMO %}bajo-stock-row{% endif %}" data-producto-id="{{ p.id }}">
+                        <td>{{ p.id }}</td>
+                        <td><strong>{{ p.nombre }}</strong></td>
+                        <td>{{ p.categoria }}</td>
+                        <td>{{ p.marca }}</td>
+                        <td>
+                            {{ p.stock }}
+                            {% if p.stock < STOCK_MINIMO %}
+                            <span class="badge-stock-bajo">
+                                 Bajo ({{ p.stock }})
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>${{ "{:,.0f}".format(p.precio_unitario) }} COP</td>
+                        <td><strong>${{ "{:,.0f}".format(p.valor_total) }} COP</strong></td>
+                        <td class="text-center">
+                            <a href="{{ url_for('detalle_producto', id=p.id) }}" 
+                               class="btn btn-sm btn-table btn-info-table">
+                                <i class="bi bi-eye-fill"></i>
+                            </a>
+
+                            <a href="{{ url_for('editar_producto', id=p.id) }}" 
+                               class="btn btn-sm btn-table btn-warning-table">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+
+                            <button onclick="confirmarEliminar({{ p.id }}, '{{ p.nombre }}')" 
+                               class="btn btn-sm btn-table btn-danger-table"
+                               type="button">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </td>
+                    </tr>
                     {% else %}
-                        <tr>
-                            <td colspan="13" class="text-center" style="padding: 40px;">
-                                <h5 style="color: #6c757d;">📭 No hay productos registrados</h5>
-                                <p>Comienza agregando tu primer producto</p>
-                            </td>
-                        </tr>
-                    {% endif %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.5;"></i>
+                            <p class="mt-2">No hay productos registrados</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-<script>
-const tableScroll = document.getElementById('tableScroll');
-const scrollTop = document.getElementById('scrollTop');
-const scrollTopContent = document.getElementById('scrollTopContent');
+<!-- Modal de confirmación -->
+<div id="modalEliminar" class="modal-eliminar">
+    <div class="modal-eliminar-contenido">
+        <h3><i class="bi bi-exclamation-triangle-fill"></i> Confirmar Eliminación</h3>
+        <p id="mensajeEliminar"></p>
+        <div class="modal-eliminar-acciones">
+            <button onclick="cerrarModal()" class="btn-modal btn-modal-cancelar">Cancelar</button>
+            <button onclick="eliminarProducto()" class="btn-modal btn-modal-eliminar">Eliminar</button>
+        </div>
+    </div>
+</div>
 
-function updateScrollWidth() {
-    const tableWidth = tableScroll.scrollWidth;
-    scrollTopContent.style.width = tableWidth + 'px';
+<script>
+let productoAEliminar = null;
+
+function confirmarEliminar(id, nombre) {
+    productoAEliminar = id;
+    document.getElementById('mensajeEliminar').textContent = 
+        `¿Estás seguro de que deseas eliminar el producto "${nombre}"?`;
+    document.getElementById('modalEliminar').style.display = 'flex';
 }
 
-tableScroll.addEventListener('scroll', function() {
-    scrollTop.scrollLeft = tableScroll.scrollLeft;
-});
+function cerrarModal() {
+    document.getElementById('modalEliminar').style.display = 'none';
+    productoAEliminar = null;
+}
 
-scrollTop.addEventListener('scroll', function() {
-    tableScroll.scrollLeft = scrollTop.scrollLeft;
-});
+function eliminarProducto() {
+    if (!productoAEliminar) return;
+    
+    fetch('/productos/eliminar/' + productoAEliminar, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const fila = document.querySelector(`tr[data-producto-id="${productoAEliminar}"]`);
+            if (fila) {
+                fila.remove();
+            }
+            cerrarModal();
+            alert('✅ Producto eliminado exitosamente');
+            // Opcional: recargar la página
+            // location.reload();
+        } else {
+            alert('❌ Error: ' + (data.error || 'No se pudo eliminar el producto'));
+            cerrarModal();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Error al eliminar el producto');
+        cerrarModal();
+    });
+}
 
-window.addEventListener('load', updateScrollWidth);
-window.addEventListener('resize', updateScrollWidth);
-updateScrollWidth();
+// Cerrar modal al hacer clic fuera
+window.onclick = function(event) {
+    const modal = document.getElementById('modalEliminar');
+    if (event.target === modal) {
+        cerrarModal();
+    }
+}
 </script>
+
 {% endblock %}
