@@ -505,58 +505,7 @@
         <!-- TABLA -->
         <div class="tabla-glass">
             <div class="tabla-scroll">
-                <table class="tabla-ventas">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>FECHA</th>
-                            <th>HORA</th>
-                            <th>PRODUCTO</th>
-                            <th>CATEGORÍA</th>
-                            <th>CANTIDAD</th>
-                            <th>PRECIO UNIT.</th>
-                            <th>IVA 19%</th>
-                            <th>GANANCIA UNIT.</th>
-                            <th>GANANCIA TOTAL</th>
-                            <th>TOTAL</th>
-                            <th>USUARIO</th>
-                            <th>ACCIONES</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% if ventas %}
-                            {% for venta in ventas %}
-                            <tr>
-                                <td class="td-id">{{ venta.id }}</td>
-                                <td class="td-numero">{{ venta.fecha }}</td>
-                                <td class="td-numero">{{ venta.hora }}</td>
-                                <td class="td-producto">{{ venta.producto_nombre }}</td>
-                                <td class="td-categoria">{{ venta.categoria }}</td>
-                                <td class="td-numero">{{ venta.cantidad }}</td>
-                                <td class="td-numero">${{ "{:,.3f}".format(venta.precio_unitario) }} COP</td>
-                                <td class="td-iva">${{ "{:,.3f}".format(venta.iva_total or 0) }} COP</td>
-                                <td class="td-ganancia">${{ "{:,.3f}".format(venta.ganancia_unitaria or 0) }} COP</td>
-                                <td class="td-ganancia">${{ "{:,.3f}".format(venta.ganancia_total or 0) }} COP</td>
-                                <td class="td-total">${{ "{:,.3f}".format(venta.total) }} COP</td>
-                                <td class="td-usuario">{{ venta.usuario_nombre }}</td>
-                                <td>
-                                    <a href="{{ url_for('eliminar_venta', id=venta.id) }}" 
-                                    class="btn btn-danger btn-sm">
-                                    Eliminar
-                                </a>
-                            </td>
-                            </tr>
-                            {% endfor %}
-                        {% else %}
-                            <tr>
-                                <td colspan="12" class="no-ventas">
-                                    <i class="bi bi-inbox"></i>
-                                    <p>No hay ventas registradas</p>
-                                </td>
-                            </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
+                
             </div>
         </div>
 
