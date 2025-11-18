@@ -539,6 +539,7 @@
                                 <td class="td-ganancia">${{ "{:,.3f}".format(venta.ganancia_total or 0) }} COP</td>
                                 <td class="td-total">${{ "{:,.3f}".format(venta.total) }} COP</td>
                                 <td class="td-usuario">{{ venta.usuario_nombre }}</td>
+                                
                             </tr>
                             {% endfor %}
                         {% else %}
