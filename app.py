@@ -859,23 +859,7 @@ def editar_producto(id):
     return render_template("editar_producto.html", producto=producto)
 
 
-@app.route("/productos/<int:id>/eliminar")
-@login_required
-@role_required('admin')
-def eliminar_producto(id):
-    """Elimina un producto"""
-    producto = obtener_producto_por_id(id)
 
-    if not producto:
-        flash(f"El producto con el ID {id} no fue encontrado.", "error")
-        return redirect(url_for('lista_productos'))
-
-    eliminar_producto_db(id)
-
-    registrar_log('Producto eliminado', f"Producto: {producto['nombre']} (ID: {id})")
-
-    flash(f"El producto '{producto['nombre']}' fue eliminado con éxito.", "success")
-    return redirect(url_for('lista_productos'))
 
 
 # ---------------------------------------------------------------------------------
