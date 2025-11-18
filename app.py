@@ -1063,7 +1063,6 @@ def historial_ventas():
     )
 
     
-    
 
 @app.route('/ventas/eliminar/<int:id>', methods=['POST'])
 @login_required
