@@ -878,7 +878,7 @@ def editar_producto(id):
 def eliminar_producto(id):
     """Elimina un producto - VERSIÓN MEJORADA CON MANEJO DE VENTAS"""
     
-    try: 
+    try:
         # Buscar el producto
         producto = obtener_producto_por_id(id)
         
