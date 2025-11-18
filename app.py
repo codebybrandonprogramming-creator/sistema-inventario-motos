@@ -1,7 +1,6 @@
 
 # ===============================================================================
 # SISTEMA DE INVENTARIO DE REPUESTOS PARA MOTOS - MOTORREPUESTOS H&D
-# PARTE 1 DE 4 - CONFIGURACIÓN INICIAL Y FUNCIONES BASE
 # ===============================================================================
 
 from flask import Flask, request, render_template, redirect, url_for, flash, send_file, session
