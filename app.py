@@ -858,6 +858,7 @@ def editar_producto(id):
 
     return render_template("editar_producto.html", producto=producto)
 
+
 @app.route('/productos/eliminar/<int:id>', methods=['POST'])
 @login_required
 def eliminar_producto(id):
