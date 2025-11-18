@@ -1080,6 +1080,12 @@ def historial_ventas():
     )
 
 
+@app.route('/ventas/eliminar/<int:id>')
+def eliminar_venta(id):
+    cursor.execute("DELETE FROM ventas WHERE id = %s", (id,))
+    db.commit()
+    flash("Venta eliminada correctamente", "success")
+    return redirect(url_for('historial_ventas'))
 
 
 # ---------------------------------------------------------------------------------
