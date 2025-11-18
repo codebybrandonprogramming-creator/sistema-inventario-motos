@@ -391,3 +391,490 @@ def role_required(*roles):
         return decorated_function
     return decorator
 
+# ---------------------------------------------------------------------------------
+# RUTAS DE AUTENTICACIÓN
+# ---------------------------------------------------------------------------------
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Página de inicio de sesión"""
+    if 'user_id' in session:
+        return redirect(url_for('inicio'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        
+        if not username or not password:
+            flash('Por favor completa todos los campos.', 'error')
+            return redirect(url_for('login'))
+        
+        usuarios = cargar_usuarios()
+        usuario = next((u for u in usuarios if u['username'] == username), None)
+        
+        if not usuario:
+            flash('Usuario no encontrado.', 'error')
+            return redirect(url_for('login'))
+        
+        if not usuario.get('activo', True):
+            flash('Tu cuenta está desactivada. Contacta al administrador.', 'error')
+            return redirect(url_for('login'))
+        
+        if not check_password_hash(usuario['password'], password):
+            flash('Contraseña incorrecta.', 'error')
+            return redirect(url_for('login'))
+        
+        # Login exitoso
+        session['user_id'] = usuario['id']
+        session['username'] = usuario['username']
+        session['nombre_completo'] = usuario['nombre_completo']
+        session['rol'] = usuario['rol']
+        
+        registrar_log('Inicio de sesión', f"Usuario: {usuario['username']}")
+        
+        flash(f'¡Bienvenido {usuario["nombre_completo"]}!', 'success')
+        return redirect(url_for('inicio'))
+    
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    """Cerrar sesión"""
+    username = session.get('username', 'Usuario')
+    registrar_log('Cierre de sesión', f"Usuario: {username}")
+    
+    session.clear()
+    flash('Has cerrado sesión correctamente.', 'info')
+    return redirect(url_for('login'))
+
+
+# ---------------------------------------------------------------------------------
+# RUTAS DE GESTIÓN DE USUARIOS
+# ---------------------------------------------------------------------------------
+@app.route('/usuarios')
+@login_required
+@role_required('admin')
+def lista_usuarios():
+    """Lista de usuarios (solo admin)"""
+    usuarios = cargar_usuarios()
+    return render_template('usuarios/lista_usuarios.html', usuarios=usuarios, roles=ROLES)
+
+
+@app.route('/usuarios/nuevo', methods=['GET', 'POST'])
+@login_required
+@role_required('admin')
+def nuevo_usuario():
+    """Crear nuevo usuario (solo admin)"""
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        nombre_completo = request.form.get('nombre_completo', '').strip()
+        rol = request.form.get('rol', '')
+        
+        if not username or not password or not nombre_completo or not rol:
+            flash('Todos los campos son obligatorios.', 'error')
+            return redirect(url_for('nuevo_usuario'))
+        
+        if rol not in ROLES:
+            flash('Rol inválido.', 'error')
+            return redirect(url_for('nuevo_usuario'))
+        
+        usuarios = cargar_usuarios()
+        
+        # Verificar si el username ya existe
+        if any(u['username'] == username for u in usuarios):
+            flash(f'El usuario "{username}" ya existe.', 'error')
+            return redirect(url_for('nuevo_usuario'))
+        
+        # Crear nuevo usuario
+        usuario_id = crear_usuario(username, password, nombre_completo, rol)
+        
+        if usuario_id:
+            registrar_log('Usuario creado', f"Nuevo usuario: {username} ({ROLES[rol]})")
+            flash(f'Usuario "{username}" creado exitosamente.', 'success')
+            return redirect(url_for('lista_usuarios'))
+        else:
+            flash('Error al crear el usuario.', 'error')
+            return redirect(url_for('nuevo_usuario'))
+    
+    return render_template('usuarios/nuevo_usuario.html', roles=ROLES)
+
+
+@app.route('/usuarios/<int:id>/toggle')
+@login_required
+@role_required('admin')
+def toggle_usuario(id):
+    """Activar/desactivar usuario"""
+    usuario = obtener_usuario_por_id(id)
+    
+    if not usuario:
+        flash('Usuario no encontrado.', 'error')
+        return redirect(url_for('lista_usuarios'))
+    
+    # No permitir desactivar al propio usuario
+    if usuario['id'] == session.get('user_id'):
+        flash('No puedes desactivar tu propia cuenta.', 'error')
+        return redirect(url_for('lista_usuarios'))
+    
+    nuevo_estado = not usuario.get('activo', True)
+    actualizar_usuario_estado(id, nuevo_estado)
+    
+    estado = "activado" if nuevo_estado else "desactivado"
+    registrar_log(f'Usuario {estado}', f"Usuario: {usuario['username']}")
+    
+    flash(f'Usuario "{usuario["username"]}" {estado}.', 'success')
+    return redirect(url_for('lista_usuarios'))
+
+
+@app.route('/usuarios/<int:id>/eliminar')
+@login_required
+@role_required('admin')
+def eliminar_usuario(id):
+    """Eliminar usuario (solo admin)"""
+    usuario = obtener_usuario_por_id(id)
+    
+    if not usuario:
+        flash('Usuario no encontrado.', 'error')
+        return redirect(url_for('lista_usuarios'))
+    
+    # No permitir eliminar al propio usuario
+    if usuario['id'] == session.get('user_id'):
+        flash('No puedes eliminar tu propia cuenta.', 'error')
+        return redirect(url_for('lista_usuarios'))
+    
+    # No permitir eliminar al admin principal
+    if usuario['username'] == 'admin':
+        flash('No se puede eliminar el usuario administrador principal.', 'error')
+        return redirect(url_for('lista_usuarios'))
+    
+    eliminar_usuario_db(id)
+    
+    registrar_log('Usuario eliminado', f"Usuario: {usuario['username']}")
+    
+    flash(f'Usuario "{usuario["username"]}" eliminado.', 'success')
+    return redirect(url_for('lista_usuarios'))
+
+
+# ---------------------------------------------------------------------------------
+# GESTIÓN DE CONTRASEÑAS
+# ---------------------------------------------------------------------------------
+@app.route('/cambiar-password', methods=['GET', 'POST'])
+@login_required
+def cambiar_password():
+    """Permite al usuario cambiar su propia contraseña"""
+    if request.method == 'POST':
+        password_actual = request.form.get('password_actual', '')
+        password_nueva = request.form.get('password_nueva', '')
+        password_confirmar = request.form.get('password_confirmar', '')
+        
+        if not password_actual or not password_nueva or not password_confirmar:
+            flash('Todos los campos son obligatorios.', 'error')
+            return redirect(url_for('cambiar_password'))
+        
+        if password_nueva != password_confirmar:
+            flash('Las contraseñas nuevas no coinciden.', 'error')
+            return redirect(url_for('cambiar_password'))
+        
+        if len(password_nueva) < 6:
+            flash('La contraseña debe tener al menos 6 caracteres.', 'error')
+            return redirect(url_for('cambiar_password'))
+        
+        usuario = obtener_usuario_por_id(session['user_id'])
+        
+        if not usuario:
+            flash('Usuario no encontrado.', 'error')
+            return redirect(url_for('cambiar_password'))
+        
+        # Verificar contraseña actual
+        if not check_password_hash(usuario['password'], password_actual):
+            flash('La contraseña actual es incorrecta.', 'error')
+            return redirect(url_for('cambiar_password'))
+        
+        # Cambiar contraseña
+        actualizar_password_usuario(usuario['id'], password_nueva)
+        
+        registrar_log('Contraseña cambiada', f"Usuario: {usuario['username']}")
+        
+        flash('¡Contraseña actualizada exitosamente!', 'success')
+        return redirect(url_for('inicio'))
+    
+    return render_template('cambiar_password.html')
+
+
+@app.route('/usuarios/<int:id>/resetear-password', methods=['GET', 'POST'])
+@login_required
+@role_required('admin')
+def resetear_password_usuario(id):
+    """Admin puede resetear la contraseña de un usuario"""
+    usuario = obtener_usuario_por_id(id)
+    
+    if not usuario:
+        flash('Usuario no encontrado.', 'error')
+        return redirect(url_for('lista_usuarios'))
+    
+    if request.method == 'POST':
+        nueva_password = request.form.get('nueva_password', '')
+        confirmar_password = request.form.get('confirmar_password', '')
+        
+        if not nueva_password or not confirmar_password:
+            flash('Todos los campos son obligatorios.', 'error')
+            return redirect(url_for('resetear_password_usuario', id=id))
+        
+        if nueva_password != confirmar_password:
+            flash('Las contraseñas no coinciden.', 'error')
+            return redirect(url_for('resetear_password_usuario', id=id))
+        
+        if len(nueva_password) < 6:
+            flash('La contraseña debe tener al menos 6 caracteres.', 'error')
+            return redirect(url_for('resetear_password_usuario', id=id))
+        
+        actualizar_password_usuario(id, nueva_password)
+        
+        registrar_log('Contraseña reseteada por admin', f"Admin reseteó contraseña de: {usuario['username']}")
+        
+        flash(f'Contraseña de "{usuario["username"]}" actualizada exitosamente.', 'success')
+        return redirect(url_for('lista_usuarios'))
+    
+    return render_template('usuarios/resetear_password.html', usuario=usuario)
+
+
+@app.route('/logs')
+@login_required
+@role_required('admin', 'auditor')
+def ver_logs():
+    """Ver logs del sistema"""
+    logs = cargar_logs()
+    return render_template('logs.html', logs=logs)
+
+
+# --------------------------------------------------------------
+# 🔥 ELIMINAR UN SOLO LOG
+# --------------------------------------------------------------
+@app.route('/logs/eliminar/<int:id>', methods=['POST'])
+@login_required
+@role_required('admin')
+def eliminar_log(id):
+    """Elimina un log individual"""
+    query = "DELETE FROM logs WHERE id = %s"
+    ejecutar_query(query, (id,), commit=True)
+
+    registrar_log("Log eliminado", f"ID del log eliminado: {id}")
+    flash("Registro eliminado correctamente.", "success")
+    return redirect(url_for('ver_logs'))
+
+
+# --------------------------------------------------------------
+# 🔥 ELIMINAR TODOS LOS LOGS (LIMPIAR HISTORIAL)
+# --------------------------------------------------------------
+
+@app.route('/logs/limpiar', methods=['POST'])
+@login_required
+@role_required('admin')
+def limpiar_logs():
+    """Elimina todos los registros del historial y reinicia el AUTO_INCREMENT"""
+
+    # 1. Borrar todos los logs
+    ejecutar_query("DELETE FROM logs", commit=True)
+
+    # 2. Reiniciar el contador AUTO_INCREMENT a 1
+    ejecutar_query("ALTER TABLE logs AUTO_INCREMENT = 1", commit=True)
+
+    registrar_log("Historial limpiado", "Se eliminaron todos los logs y se reinició el AUTO_INCREMENT.")
+
+    flash("Historial limpiado correctamente. IDs reiniciados desde 1.", "success")
+    return redirect(url_for('ver_logs'))
+
+
+# ---------------------------------------------------------------------------------
+# RUTAS PRINCIPALES DE PRODUCTOS
+# ---------------------------------------------------------------------------------
+@app.route('/')
+@login_required
+def inicio():
+    """Página de inicio - redirige a lista de productos"""
+    return redirect(url_for('lista_productos'))
+
+
+@app.route('/productos', methods=['GET'])
+@login_required
+def lista_productos():
+    """Lista todos los productos con filtros y búsqueda"""
+    productos = cargar_productos()
+
+    # PARÁMETROS DEL BUSCADOR
+    query = request.args.get("q", "").lower().strip()
+    categoria = request.args.get("categoria", "").strip()
+    ordenar = request.args.get("ordenar", "")
+    solo_bajo_stock = request.args.get("solo_bajo_stock", "0") == "1"
+
+    # FILTRO POR NOMBRE
+    if query:
+        productos = [p for p in productos if query in p.get('nombre', '').lower()]
+
+    # FILTRO POR CATEGORÍA
+    if categoria:
+        productos = [p for p in productos if p.get('categoria') == categoria]
+
+    # FILTRO DE BAJO STOCK
+    if solo_bajo_stock:
+        productos = [p for p in productos if p.get('stock', 0) < STOCK_MINIMO]
+
+    # ORDENAMIENTO
+    if ordenar == "precio_asc":
+        productos = sorted(productos, key=lambda x: x.get("precio_unitario", 0))
+    elif ordenar == "precio_desc":
+        productos = sorted(productos, key=lambda x: x.get("precio_unitario", 0), reverse=True)
+    elif ordenar == "stock_asc":
+        productos = sorted(productos, key=lambda x: x.get("stock", 0))
+    elif ordenar == "stock_desc":
+        productos = sorted(productos, key=lambda x: x.get("stock", 0), reverse=True)
+
+    # CONTAR PRODUCTOS DE BAJO STOCK
+    todos_productos = cargar_productos()
+    bajo_stock_total = sum(1 for p in todos_productos if p.get('stock', 0) < STOCK_MINIMO)
+
+    # LISTA DE CATEGORÍAS PARA EL SELECT
+    categorias = sorted({p.get("categoria", "") for p in todos_productos})
+
+    return render_template(
+        "productos.html",
+        productos=productos,
+        categorias=categorias,
+        bajo_stock_total=bajo_stock_total,
+        solo_bajo_stock=solo_bajo_stock,
+        STOCK_MINIMO=STOCK_MINIMO
+    )
+
+
+@app.route('/productos/nuevo', methods=["GET", "POST"])
+@login_required
+@role_required('admin', 'vendedor')
+def nuevo_producto():
+    """Crea un nuevo producto"""
+    if request.method == "POST":
+        try:
+            nombre = request.form['nombre'].strip()
+            categoria = request.form['categoria'].strip()
+            marca = request.form.get('marca', '').strip()
+            stock = int(request.form['stock'])
+            precio_unitario = round(float(request.form['precio_unitario']), 3)
+            descripcion = request.form.get('descripcion', '').strip()
+            codigo_sku = request.form.get('codigo_sku', '').strip()
+            porcentaje_ganancia = float(request.form.get('porcentaje_ganancia', 0))
+
+            # Validaciones
+            if not nombre or not categoria:
+                flash("El nombre y la categoría son obligatorios.", "error")
+                return redirect(url_for('nuevo_producto'))
+
+            if stock < 0 or precio_unitario < 0:
+                flash("El stock y el precio no pueden ser negativos.", "error")
+                return redirect(url_for('nuevo_producto'))
+
+        except ValueError:
+            flash("Error en los datos del formulario. Verifica los valores numéricos.", "error")
+            return redirect(url_for('nuevo_producto'))
+        except KeyError:
+            flash("Faltan campos obligatorios en el formulario.", "error")
+            return redirect(url_for('nuevo_producto'))
+
+        # Calcular precio_venta basado en precio_unitario + IVA + ganancia
+        precio_con_iva = round(precio_unitario * 1.19, 2)
+        precio_venta = round(precio_con_iva * (1 + porcentaje_ganancia / 100), 2)
+
+        # Insertar en MySQL
+        query = """
+            INSERT INTO productos (nombre, categoria, marca, stock, precio_unitario, 
+                                   porcentaje_ganancia, precio_venta, descripcion, codigo_sku)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        params = (nombre, categoria, marca, stock, precio_unitario, 
+                  porcentaje_ganancia, precio_venta, descripcion, codigo_sku)
+        producto_id = ejecutar_query(query, params, commit=True)
+
+        if producto_id:
+            registrar_log('Producto creado', f"Producto: {nombre} (ID: {producto_id})")
+            flash(f"El producto '{nombre}' ha sido registrado con éxito.", "success")
+            return redirect(url_for('lista_productos'))
+        else:
+            flash("Error al guardar el producto en la base de datos.", "error")
+            return redirect(url_for('nuevo_producto'))
+
+    return render_template("crear_producto.html")
+
+
+@app.route('/productos/<int:id>', methods=["GET"])
+@login_required
+def detalle_producto(id):
+    """Muestra los detalles de un producto"""
+    producto = obtener_producto_por_id(id)
+
+    if not producto:
+        flash(f"El producto con el ID {id} no fue encontrado.", "error")
+        return redirect(url_for('lista_productos'))
+
+    return render_template("detalle_producto.html", producto=producto)
+
+
+@app.route('/productos/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'vendedor')
+def editar_producto(id):
+    """Edita un producto existente"""
+    producto = obtener_producto_por_id(id)
+
+    if not producto:
+        flash(f"El producto con el ID {id} no pudo ser encontrado.", "error")
+        return redirect(url_for('lista_productos'))
+
+    if request.method == 'POST':
+        try:
+            nombre = request.form['nombre'].strip()
+            categoria = request.form['categoria'].strip()
+            marca = request.form.get('marca', '').strip()
+            stock = int(request.form['stock'])
+            precio_unitario = round(float(request.form['precio_unitario']), 3)
+            descripcion = request.form.get('descripcion', '').strip()
+            codigo_sku = request.form.get('codigo_sku', '').strip()
+            porcentaje_ganancia = float(request.form.get('porcentaje_ganancia', 0))
+
+            # Validaciones
+            if stock < 0 or precio_unitario < 0:
+                flash("El stock y el precio no pueden ser negativos.", "error")
+                return redirect(url_for('editar_producto', id=id))
+
+            # Actualizar producto
+            actualizar_producto(id, nombre, categoria, marca, stock, precio_unitario, 
+                              descripcion, codigo_sku, porcentaje_ganancia)
+
+            registrar_log('Producto actualizado', f"Producto: {nombre} (ID: {id})")
+
+            flash(f"El producto '{nombre}' fue actualizado con éxito.", "success")
+            return redirect(url_for('lista_productos'))
+
+        except ValueError:
+            flash("Error en los datos del formulario.", "error")
+            return redirect(url_for('editar_producto', id=id))
+
+    return render_template("editar_producto.html", producto=producto)
+
+
+@app.route("/productos/<int:id>/eliminar")
+@login_required
+@role_required('admin')
+def eliminar_producto(id):
+    """Elimina un producto"""
+    producto = obtener_producto_por_id(id)
+
+    if not producto:
+        flash(f"El producto con el ID {id} no fue encontrado.", "error")
+        return redirect(url_for('lista_productos'))
+
+    eliminar_producto_db(id)
+
+    registrar_log('Producto eliminado', f"Producto: {producto['nombre']} (ID: {id})")
+
+    flash(f"El producto '{producto['nombre']}' fue eliminado con éxito.", "success")
+    return redirect(url_for('lista_productos'))
+
+    
