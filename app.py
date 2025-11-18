@@ -562,3 +562,320 @@ def resetear_password_usuario(id):
     
     return render_template('usuarios/resetear_password.html', usuario=usuario)
 
+@app.route('/logs')
+@login_required
+@role_required('admin', 'auditor')
+def ver_logs():
+    """Ver logs del sistema"""
+    logs = cargar_logs()
+    return render_template('logs.html', logs=logs)
+
+
+# --------------------------------------------------------------
+#  ELIMINAR UN SOLO LOG
+# --------------------------------------------------------------
+@app.route('/logs/eliminar/<int:id>', methods=['POST'])
+@login_required
+@role_required('admin')
+def eliminar_log(id):
+    """Elimina un log individual"""
+    query = "DELETE FROM logs WHERE id = %s"
+    ejecutar_query(query, (id,), commit=True)
+
+    registrar_log("Log eliminado", f"ID del log eliminado: {id}")
+    flash("Registro eliminado correctamente.", "success")
+    return redirect(url_for('ver_logs'))
+
+
+# --------------------------------------------------------------
+#  ELIMINAR TODOS LOS LOGS (LIMPIAR HISTORIAL)
+# --------------------------------------------------------------
+@app.route('/logs/limpiar', methods=['POST'])
+@login_required
+@role_required('admin')
+def limpiar_logs():
+    """Elimina todos los registros del historial y reinicia el AUTO_INCREMENT"""
+    # 1. Borrar todos los logs
+    ejecutar_query("DELETE FROM logs", commit=True)
+    # 2. Reiniciar el contador AUTO_INCREMENT a 1
+    ejecutar_query("ALTER TABLE logs AUTO_INCREMENT = 1", commit=True)
+    registrar_log("Historial limpiado", "Se eliminaron todos los logs y se reinició el AUTO_INCREMENT.")
+    flash("Historial limpiado correctamente. IDs reiniciados desde 1.", "success")
+    return redirect(url_for('ver_logs'))
+
+
+# ---------------------------------------------------------------------------------
+# RUTAS PRINCIPALES DE PRODUCTOS
+# ---------------------------------------------------------------------------------
+@app.route('/')
+@login_required
+def inicio():
+    """Página de inicio - redirige a lista de productos"""
+    return redirect(url_for('lista_productos'))
+
+
+@app.route('/productos', methods=['GET'])
+@login_required
+def lista_productos():
+    """Lista todos los productos con filtros y búsqueda"""
+    productos = cargar_productos()
+
+    # PARÁMETROS DEL BUSCADOR
+    query = request.args.get("q", "").lower().strip()
+    categoria = request.args.get("categoria", "").strip()
+    ordenar = request.args.get("ordenar", "")
+    solo_bajo_stock = request.args.get("solo_bajo_stock", "0") == "1"
+
+    # FILTRO POR NOMBRE
+    if query:
+        productos = [p for p in productos if query in p.get('nombre', '').lower()]
+
+    # FILTRO POR CATEGORÍA
+    if categoria:
+        productos = [p for p in productos if p.get('categoria') == categoria]
+
+    # FILTRO DE BAJO STOCK
+    if solo_bajo_stock:
+        productos = [p for p in productos if p.get('stock', 0) < STOCK_MINIMO]
+
+    # ORDENAMIENTO
+    if ordenar == "precio_asc":
+        productos = sorted(productos, key=lambda x: x.get("precio_unitario", 0))
+    elif ordenar == "precio_desc":
+        productos = sorted(productos, key=lambda x: x.get("precio_unitario", 0), reverse=True)
+    elif ordenar == "stock_asc":
+        productos = sorted(productos, key=lambda x: x.get("stock", 0))
+    elif ordenar == "stock_desc":
+        productos = sorted(productos, key=lambda x: x.get("stock", 0), reverse=True)
+
+    # CONTAR PRODUCTOS DE BAJO STOCK
+    todos_productos = cargar_productos()
+    bajo_stock_total = sum(1 for p in todos_productos if p.get('stock', 0) < STOCK_MINIMO)
+
+    # LISTA DE CATEGORÍAS PARA EL SELECT
+    categorias = sorted({p.get("categoria", "") for p in todos_productos})
+
+    return render_template(
+        "productos.html",
+        productos=productos,
+        categorias=categorias,
+        bajo_stock_total=bajo_stock_total,
+        solo_bajo_stock=solo_bajo_stock,
+        STOCK_MINIMO=STOCK_MINIMO
+    )
+
+
+@app.route('/productos/nuevo', methods=["GET", "POST"])
+@login_required
+@role_required('admin', 'vendedor')
+def nuevo_producto():
+    """Crea un nuevo producto"""
+    if request.method == "POST":
+        try:
+            nombre = request.form['nombre'].strip()
+            categoria = request.form['categoria'].strip()
+            marca = request.form.get('marca', '').strip()
+            stock = int(request.form['stock'])
+            precio_unitario = round(float(request.form['precio_unitario']), 3)
+            descripcion = request.form.get('descripcion', '').strip()
+
+            # Validaciones
+            if not nombre or not categoria:
+                flash("El nombre y la categoría son obligatorios.", "error")
+                return redirect(url_for('nuevo_producto'))
+
+            if stock < 0 or precio_unitario < 0:
+                flash("El stock y el precio no pueden ser negativos.", "error")
+                return redirect(url_for('nuevo_producto'))
+
+        except ValueError:
+            flash("Error en los datos del formulario. Verifica los valores numéricos.", "error")
+            return redirect(url_for('nuevo_producto'))
+        except KeyError:
+            flash("Faltan campos obligatorios en el formulario.", "error")
+            return redirect(url_for('nuevo_producto'))
+
+        # Insertar en MySQL
+        query = """
+            INSERT INTO productos (nombre, categoria, marca, stock, precio_unitario, descripcion)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        params = (nombre, categoria, marca, stock, precio_unitario, descripcion)
+        producto_id = ejecutar_query(query, params, commit=True)
+
+        if producto_id:
+            registrar_log('Producto creado', f"Producto: {nombre} (ID: {producto_id})")
+            flash(f"El producto '{nombre}' ha sido registrado con éxito.", "success")
+            return redirect(url_for('lista_productos'))
+        else:
+            flash("Error al guardar el producto en la base de datos.", "error")
+            return redirect(url_for('nuevo_producto'))
+
+    return render_template("crear_producto.html")
+
+
+@app.route('/productos/<int:id>', methods=["GET"])
+@login_required
+def detalle_producto(id):
+    """Muestra los detalles de un producto"""
+    producto = obtener_producto_por_id(id)
+
+    if not producto:
+        flash(f"El producto con el ID {id} no fue encontrado.", "error")
+        return redirect(url_for('lista_productos'))
+
+    return render_template("detalle_producto.html", producto=producto)
+
+
+@app.route('/productos/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'vendedor')
+def editar_producto(id):
+    """Edita un producto existente"""
+    producto = obtener_producto_por_id(id)
+
+    if not producto:
+        flash(f"El producto con el ID {id} no pudo ser encontrado.", "error")
+        return redirect(url_for('lista_productos'))
+
+    if request.method == 'POST':
+        try:
+            nombre = request.form['nombre'].strip()
+            categoria = request.form['categoria'].strip()
+            marca = request.form.get('marca', '').strip()
+            stock = int(request.form['stock'])
+            precio_unitario = round(float(request.form['precio_unitario']), 3)
+            descripcion = request.form.get('descripcion', '').strip()
+
+            # Validaciones
+            if stock < 0 or precio_unitario < 0:
+                flash("El stock y el precio no pueden ser negativos.", "error")
+                return redirect(url_for('editar_producto', id=id))
+
+            # Actualizar producto
+            actualizar_producto(id, nombre, categoria, marca, stock, precio_unitario, descripcion)
+
+            registrar_log('Producto actualizado', f"Producto: {nombre} (ID: {id})")
+
+            flash(f"El producto '{nombre}' fue actualizado con éxito.", "success")
+            return redirect(url_for('lista_productos'))
+
+        except ValueError:
+            flash("Error en los datos del formulario.", "error")
+            return redirect(url_for('editar_producto', id=id))
+
+    return render_template("editar_producto.html", producto=producto)
+
+
+#  RUTA CORREGIDA: ELIMINAR PRODUCTO CON JSON RESPONSE
+@app.route("/productos/<int:id>/eliminar", methods=['POST'])
+@login_required
+@role_required('admin')
+def eliminar_producto(id):
+    """Elimina un producto"""
+    producto = obtener_producto_por_id(id)
+
+    if not producto:
+        return jsonify({'success': False, 'message': 'Producto no encontrado'}), 404
+
+    eliminar_producto_db(id)
+    registrar_log('Producto eliminado', f"Producto: {producto['nombre']} (ID: {id})")
+
+    return jsonify({'success': True, 'message': f"El producto '{producto['nombre']}' fue eliminado con éxito."})
+
+
+# ---------------------------------------------------------------------------------
+# RUTAS DE VENTAS
+# ---------------------------------------------------------------------------------
+@app.route('/ventas/nueva', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'vendedor')
+def nueva_venta():
+    """Registra una nueva venta"""
+    productos = cargar_productos()
+
+    if request.method == "POST":
+        try:
+            producto_id = int(request.form['producto_id'])
+            cantidad = int(request.form['cantidad'])
+
+            if cantidad <= 0:
+                flash("La cantidad debe ser mayor a 0.", "error")
+                return redirect(url_for('nueva_venta'))
+
+        except (ValueError, KeyError):
+            flash("Datos inválidos en el formulario.", "error")
+            return redirect(url_for('nueva_venta'))
+
+        producto = obtener_producto_por_id(producto_id)
+
+        if not producto:
+            flash("Producto no encontrado.", "error")
+            return redirect(url_for('nueva_venta'))
+
+        # Validación de stock
+        if cantidad > producto['stock']:
+            flash(f"No puedes vender {cantidad} unidades. Stock disponible: {producto['stock']}.", "error")
+            return redirect(url_for('nueva_venta'))
+
+        # Calcular total
+        total_venta = round(cantidad * producto['precio_unitario'], 3)
+
+        # GUARDAR VENTA EN HISTORIAL
+        venta = {
+            'fecha': datetime.now().strftime('%Y-%m-%d'),
+            'hora': datetime.now().strftime('%H:%M:%S'),
+            'producto_id': producto['id'],
+            'producto_nombre': producto['nombre'],
+            'categoria': producto['categoria'],
+            'cantidad': cantidad,
+            'precio_unitario': producto['precio_unitario'],
+            'total': total_venta,
+            'usuario_id': session.get('user_id'),
+            'usuario_nombre': session.get('nombre_completo')
+        }
+        guardar_venta(venta)
+
+        registrar_log('Venta registrada', f"{cantidad} unidades de '{producto['nombre']}' por ${total_venta:,.3f}")
+
+        # Actualizar stock
+        nuevo_stock = producto['stock'] - cantidad
+        actualizar_stock_producto(producto_id, nuevo_stock)
+
+        flash(f" Venta registrada: {cantidad} unidades de '{producto['nombre']}' por ${total_venta:,.0f} COP", "success")
+        return redirect(url_for('lista_productos'))
+
+    return render_template("crear_venta.html", productos=productos)
+
+
+@app.route('/ventas/historial')
+@login_required
+def historial_ventas():
+    """Muestra el historial de ventas"""
+    ventas = cargar_ventas()
+
+    # Calcular total general
+    total_general = sum(v.get('total', 0) for v in ventas)
+
+    return render_template("historial_ventas.html", ventas=ventas, total_general=total_general)
+
+
+#  NUEVA RUTA: ELIMINAR VENTA
+@app.route('/ventas/<int:id>/eliminar', methods=['POST'])
+@login_required
+@role_required('admin')
+def eliminar_venta(id):
+    """Elimina una venta del historial"""
+    # Buscar la venta
+    query = "SELECT * FROM ventas WHERE id = %s"
+    venta = ejecutar_query(query, (id,), fetch_one=True)
+    
+    if not venta:
+        return jsonify({'success': False, 'message': 'Venta no encontrada'}), 404
+    
+    # Eliminar la venta
+    eliminar_venta_db(id)
+    
+    registrar_log('Venta eliminada', f"Venta ID: {id} - Producto: {venta.get('producto_nombre')}")
+    
+    return jsonify({'success': True, 'message': 'Venta eliminada correctamente'})
