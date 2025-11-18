@@ -221,17 +221,7 @@ def actualizar_stock_producto(producto_id, nuevo_stock):
     return ejecutar_query(query, (nuevo_stock, valor_total, producto_id), commit=True)
 
 
-def cargar_ventas():
-    """Carga todas las ventas desde MySQL"""
-    query = """
-        SELECT id, fecha, hora, producto_id, producto_nombre, categoria,
-               cantidad, precio_unitario, total, usuario_id, usuario_nombre,
-               fecha_registro
-        FROM ventas
-        ORDER BY fecha DESC, hora DESC
-    """
-    ventas = ejecutar_query(query, fetch_all=True)
-    return ventas if ventas else []
+
 
 
 def guardar_venta(venta):
