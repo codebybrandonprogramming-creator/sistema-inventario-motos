@@ -993,65 +993,7 @@ def nueva_venta():
 
 
 @app.route('/ventas/historial')
-@login_required
-def historial_ventas():
-    fecha_desde = request.args.get('fecha_desde')
-    fecha_hasta = request.args.get('fecha_hasta')
-    
-    conn = conectar_db()
-    cursor = conn.cursor()
-    
-    # Query base
-    query = """
-        SELECT 
-            v.id,
-            v.producto_id,
-            v.cantidad,
-            v.precio_unitario,
-            v.total,
-            v.iva_total,
-            v.ganancia_unitaria,
-            v.ganancia_total,
-            v.porcentaje_ganancia_aplicado,
-            v.usuario_id,
-            v.fecha,
-            p.nombre as producto_nombre,
-            u.nombre_usuario as usuario_nombre
-        FROM ventas v
-        JOIN productos p ON v.producto_id = p.id
-        JOIN usuarios u ON v.usuario_id = u.id
-        WHERE 1=1
-    """
-    
-    params = []
-    
-    # Filtros opcionales
-    if fecha_desde:
-        query += " AND DATE(v.fecha) >= %s"
-        params.append(fecha_desde)
-    
-    if fecha_hasta:
-        query += " AND DATE(v.fecha) <= %s"
-        params.append(fecha_hasta)
-    
-    query += " ORDER BY v.fecha DESC"
-    
-    cursor.execute(query, params)
-    ventas = cursor.fetchall()
-    
-    # Calcular totales
-    total_vendido = sum(v[4] for v in ventas)  # total
-    total_iva = sum(v[5] or 0 for v in ventas)  # iva_total
-    total_ganancias = sum(v[7] or 0 for v in ventas)  # ganancia_total
-    
-    cursor.close()
-    conn.close()
-    
-    return render_template('historial_ventas.html', 
-                         ventas=ventas,
-                         total_vendido=total_vendido,
-                         total_iva=total_iva,
-                         total_ganancias=total_ganancias)
+
 
 # ---------------------------------------------------------------------------------
 # DASHBOARD Y REPORTES
