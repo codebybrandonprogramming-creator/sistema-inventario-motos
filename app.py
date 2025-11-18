@@ -1040,3 +1040,4 @@ def historial_ventas():
         total_ganancias=total_ganancias,
         num_ventas=num_ventas
     )
+
