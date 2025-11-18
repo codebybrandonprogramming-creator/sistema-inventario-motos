@@ -1037,14 +1037,14 @@ def historial_ventas():
     fecha_desde = request.args.get('fecha_desde', '')
     fecha_hasta = request.args.get('fecha_hasta', '')
     
-    cursor.execute("""
-    SELECT v.id, v.fecha, v.hora, p.nombre, p.categoria, v.cantidad,
-           v.precio_unitario, v.iva, v.ganancia_unitaria
-    FROM ventas v
-    INNER JOIN productos p ON v.producto_id = p.id
-    ORDER BY v.id DESC
-""")
-
+    # Query base
+    query = """
+        SELECT id, fecha, hora, producto_id, producto_nombre, categoria,
+               cantidad, precio_unitario, total, iva_total, ganancia_unitaria,
+               ganancia_total, usuario_nombre
+        FROM ventas
+        WHERE 1=1
+    """
     
     params = []
     
