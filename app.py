@@ -1422,4 +1422,4 @@ def exportar_pdf_inventario():
 # RUN
 # ---------------------------------------------------------------------------------
 if __name__ == "__main__":
-    app.run(debug=True)def cargar_productos():
+    app.run(debug=True)
