@@ -249,10 +249,6 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(255, 82, 82, 0.5);
 }
-
-.text-muted {
-    color: rgba(255, 255, 255, 0.5);
-}
 </style>
 
 <div class="container">
@@ -293,7 +289,7 @@ body {
                     <th>Precio Unit.</th>
                     <th>Total</th>
                     <th>Usuario</th>
-                    <th class="text-center">Acciones</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -310,23 +306,16 @@ body {
                         <td class="total-col"><strong>${{ "{:,.0f}".format(venta.total) }} COP</strong></td>
                         <td>{{ venta.usuario_nombre or 'N/A' }}</td>
                         <td class="text-center">
-                            {% if session.rol == 'admin' %}
-                            <button type="button" onclick="eliminarVenta({{ venta.id }}, '{{ venta.producto_nombre|replace("'", "\\'") }}')" 
+                            <button onclick="eliminarVenta({{ venta.id }}, '{{ venta.producto_nombre }}')" 
                                     class="btn btn-sm btn-danger-table">
                                 <i class="bi bi-trash-fill"></i>
                             </button>
-                            {% else %}
-                            <span class="text-muted">-</span>
-                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="10" class="text-center py-4">
-                            <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.5;"></i>
-                            <p class="mt-2">No hay ventas registradas</p>
-                        </td>
+                        <td colspan="10" class="text-center">No hay ventas registradas</td>
                     </tr>
                 {% endif %}
             </tbody>
