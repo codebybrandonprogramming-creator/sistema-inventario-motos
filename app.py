@@ -1042,7 +1042,25 @@ def nueva_venta():
     return render_template('crear_venta.html', productos=productos)
 
 
+@app.route('/ventas/historial')
+@login_required
+def historial_ventas():
+    """Muestra el historial de ventas con todos los cálculos"""
+    ventas = cargar_ventas()
 
+    # Calcular totales
+    total_vendido = sum(float(v.get('total', 0)) for v in ventas)
+    total_iva = sum(float(v.get('iva_total', 0)) for v in ventas)
+    total_ganancias = sum(float(v.get('ganancia_total', 0)) for v in ventas)
+
+    return render_template(
+        'historial_ventas.html',
+        ventas=ventas,
+        total_vendido=total_vendido,
+        total_iva=total_iva,
+        total_ganancias=total_ganancias,
+        total_general=total_vendido
+    )
 
     
     params = []
