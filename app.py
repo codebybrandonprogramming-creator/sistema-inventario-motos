@@ -928,7 +928,118 @@ def eliminar_producto(id):
 # ---------------------------------------------------------------------------------
 # RUTAS DE VENTAS (🔥 ACTUALIZADO - PASO 7B)
 # ---------------------------------------------------------------------------------
-
+@app.route('/ventas/nueva', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'vendedor')
+def nueva_venta():
+    """Registra una nueva venta con cálculo correcto de IVA y ganancia"""
+    if request.method == 'POST':
+        try:
+            producto_id = int(request.form['producto_id'])
+            cantidad = int(request.form['cantidad'])
+            porcentaje_ganancia_general = float(request.form.get('porcentaje_ganancia_general', 0))
+            
+            # Validaciones básicas
+            if cantidad <= 0:
+                flash('La cantidad debe ser mayor a 0.', 'error')
+                return redirect(url_for('nueva_venta'))
+            
+            # Obtener producto
+            producto = obtener_producto_por_id(producto_id)
+            
+            if not producto:
+                flash('Producto no encontrado.', 'error')
+                return redirect(url_for('nueva_venta'))
+            
+            # Validar stock
+            if cantidad > producto['stock']:
+                flash(f'Stock insuficiente. Disponible: {producto["stock"]} unidades.', 'error')
+                return redirect(url_for('nueva_venta'))
+            
+            # ====== CÁLCULOS CORRECTOS ======
+            precio_base = float(producto['precio_unitario'])
+            precio_con_iva = round(precio_base * 1.19, 3)
+            
+            # Determinar qué % de ganancia usar
+            if porcentaje_ganancia_general > 0:
+                # Usar ganancia general ingresada
+                porcentaje_aplicado = porcentaje_ganancia_general
+            else:
+                # Usar ganancia del producto
+                porcentaje_aplicado = float(producto.get('porcentaje_ganancia', 0))
+            
+            # Calcular precio de venta final
+            precio_venta_unitario = round(precio_con_iva * (1 + porcentaje_aplicado / 100), 3)
+            
+            # Ganancia unitaria = precio venta - precio con IVA
+            ganancia_unitaria = round(precio_venta_unitario - precio_con_iva, 3)
+            
+            # Totales
+            subtotal = round(precio_base * cantidad, 3)
+            iva_total = round(subtotal * 0.19, 3)
+            ganancia_total = round(ganancia_unitaria * cantidad, 3)
+            total_venta = round(precio_venta_unitario * cantidad, 3)
+            
+            # ====== GUARDAR VENTA EN BD ======
+            venta = {
+                'fecha': datetime.now().strftime('%Y-%m-%d'),
+                'hora': datetime.now().strftime('%H:%M:%S'),
+                'producto_id': producto['id'],
+                'producto_nombre': producto['nombre'],
+                'categoria': producto['categoria'],
+                'cantidad': cantidad,
+                'precio_unitario': precio_venta_unitario,  # Precio de venta unitario
+                'total': total_venta,
+                'iva_total': iva_total,
+                'ganancia_unitaria': ganancia_unitaria,
+                'ganancia_total': ganancia_total,
+                'porcentaje_ganancia_aplicado': porcentaje_aplicado,
+                'usuario_id': session.get('user_id'),
+                'usuario_nombre': session.get('nombre_completo')
+            }
+            
+            venta_id = guardar_venta(venta)
+            
+            if venta_id:
+                # Actualizar stock
+                nuevo_stock = producto['stock'] - cantidad
+                actualizar_stock_producto(producto_id, nuevo_stock)
+                
+                # Registrar log
+                registrar_log(
+                    'Venta registrada',
+                    f"{cantidad} x {producto['nombre']} | "
+                    f"Subtotal: ${subtotal:,.3f} | IVA: ${iva_total:,.3f} | "
+                    f"Ganancia: ${ganancia_total:,.3f} | Total: ${total_venta:,.3f} COP"
+                )
+                
+                flash(
+                    f'✅ Venta registrada exitosamente:<br>'
+                    f'🛒 {cantidad} x {producto["nombre"]}<br>'
+                    f'💵 Subtotal: ${subtotal:,.3f} COP<br>'
+                    f'📊 IVA (19%): ${iva_total:,.3f} COP<br>'
+                    f'💰 Ganancia: ${ganancia_total:,.3f} COP<br>'
+                    f'💲 <strong>Total: ${total_venta:,.3f} COP</strong>',
+                    'success'
+                )
+                return redirect(url_for('historial_ventas'))
+            else:
+                flash('Error al guardar la venta.', 'error')
+                return redirect(url_for('nueva_venta'))
+            
+        except ValueError as e:
+            flash(f'Error en los datos: {str(e)}', 'error')
+            return redirect(url_for('nueva_venta'))
+        except KeyError as e:
+            flash(f'Campo faltante: {str(e)}', 'error')
+            return redirect(url_for('nueva_venta'))
+        except Exception as e:
+            flash(f'Error inesperado: {str(e)}', 'error')
+            return redirect(url_for('nueva_venta'))
+    
+    # GET - Mostrar formulario
+    productos = cargar_productos()
+    return render_template('crear_venta.html', productos=productos)
 
 
 @app.route('/ventas/historial')
