@@ -1,69 +1,6 @@
 # ENUNCIADO OFICIAL DEL SISTEMA DE INVENTARIO DE REPUESTOS PARA MOTOS
 
-# Desarrollar un Sistema de Inventario para un negocio de repuestos
-# de motocicletas, utilizando Flask, archivos JSON y Bootstrap.
-# El sistema debe permitir al dueño del negocio registrar, consultar y 
-# mantener actualizada la información de todos los productos en stock.
-
-# ---
-# OBJETIVO DEL SISTEMA
-
-# Crear una aplicación web que permita gestionar un inventario completo y 
-# organizado de repuestos de motos, con la posibilidad de agregar, 
-# listar, editar y eliminar productos de forma sencilla y profesional.
-
-# ---
-
-# FUNCIONALIDADES OBLIGATORIAS (VERSIÓN 1 – Profesional básica)
-# Registrar productos
-# ID del producto (generado automáticamente)
-# Nombre
-# Categoría (aceites, llantas, frenos, correas, kit de arrastre, bujías, rodamientos, cascos, etc.)
-# Marca
-# Stock disponible
-# Precio unitario
-# Descripción
-# Valor total (stock × precio unitario)
-
-
-# Listar productos
-# Mostrar todos los productos en una tabla
-# Ver botones de detalle, editar y eliminar
-
-# Ver detalle del producto
-# Mostrar toda la información completa
-
-
-# Editar productos
-# Permitir modificar nombre, categoría, marca, stock y precio
-# Recalcular valor total automáticamente
-
-# Eliminar productos
-
-# Persistencia en archivo JSON
-# Todos los cambios deben guardarse en data/productos.json
-
-
-# Interfaz profesional con Bootstrap
-# Diseño limpio, elegante y moderno
-# Cabecera fija con el nombre del sistema
-# Plantilla base con Jinja
-
-# ---
-
-# VERSIÓN 2 (Cuando terminemos lo básico) — Mejoras profesionales
-
-# Estas se agregarán después:
-# Buscador de productos
-# Filtro por categoría
-# Ordenar por precio
-# Alerta de bajo stock
-# Registro automático de ventas (restar stock sin hacerlo a mano)
-# Historial de movimientos (entradas/salidas)
-# Exportar reportes en PDF
-# Conexión a MySQL para manejo real en producción
-
-from flask import Flask, request, render_template, redirect, url_for, flash, send_file, session
+from flask import Flask, request, render_template, redirect, url_for, flash, send_file, session, jsonify
 import json
 import os
 from datetime import datetime
@@ -92,18 +29,6 @@ def get_db_connection():
 def ejecutar_query(query, params=None, commit=False, fetch_one=False, fetch_all=False):
     """
     Función auxiliar para ejecutar consultas SQL de forma segura.
-    
-    Args:
-        query: Consulta SQL con placeholders %s
-        params: Tupla con los parámetros
-        commit: True si es INSERT/UPDATE/DELETE
-        fetch_one: True para obtener un solo registro
-        fetch_all: True para obtener todos los registros
-    
-    Returns:
-        - Si fetch_one: Un diccionario o None
-        - Si fetch_all: Lista de diccionarios
-        - Si commit: ID del último registro insertado (lastrowid)
     """
     connection = None
     cursor = None
@@ -128,7 +53,7 @@ def ejecutar_query(query, params=None, commit=False, fetch_one=False, fetch_all=
         return None
         
     except Exception as e:
-        print(f"❌ Error en la base de datos: {e}")
+        print(f" Error en la base de datos: {e}")
         if commit and connection:
             connection.rollback()
         return None
@@ -250,6 +175,13 @@ def guardar_venta(venta):
     return ejecutar_query(query, params, commit=True)
 
 
+#  NUEVA FUNCIÓN: ELIMINAR VENTA
+def eliminar_venta_db(venta_id):
+    """Elimina una venta de MySQL"""
+    query = "DELETE FROM ventas WHERE id = %s"
+    return ejecutar_query(query, (venta_id,), commit=True)
+
+
 # ---------------------------------------------------------------------------------
 # FUNCIONES DE USUARIOS Y AUTENTICACIÓN
 # ---------------------------------------------------------------------------------
@@ -327,7 +259,6 @@ def obtener_usuario_por_id(usuario_id):
     """
     return ejecutar_query(query, (usuario_id,), fetch_one=True)
 
-
 def registrar_log(accion, detalle=""):
     """Registra una acción en los logs de MySQL"""
     query = """
@@ -351,7 +282,6 @@ def cargar_logs():
     FROM logs
     ORDER BY fecha_registro ASC
     """
-
     logs = ejecutar_query(query, fetch_all=True)
     return logs if logs else []
 
@@ -632,7 +562,6 @@ def resetear_password_usuario(id):
     
     return render_template('usuarios/resetear_password.html', usuario=usuario)
 
-
 @app.route('/logs')
 @login_required
 @role_required('admin', 'auditor')
@@ -643,7 +572,7 @@ def ver_logs():
 
 
 # --------------------------------------------------------------
-# 🔥 ELIMINAR UN SOLO LOG
+#  ELIMINAR UN SOLO LOG
 # --------------------------------------------------------------
 @app.route('/logs/eliminar/<int:id>', methods=['POST'])
 @login_required
@@ -659,23 +588,18 @@ def eliminar_log(id):
 
 
 # --------------------------------------------------------------
-# 🔥 ELIMINAR TODOS LOS LOGS (LIMPIAR HISTORIAL)
+#  ELIMINAR TODOS LOS LOGS (LIMPIAR HISTORIAL)
 # --------------------------------------------------------------
-
 @app.route('/logs/limpiar', methods=['POST'])
 @login_required
 @role_required('admin')
 def limpiar_logs():
     """Elimina todos los registros del historial y reinicia el AUTO_INCREMENT"""
-
     # 1. Borrar todos los logs
     ejecutar_query("DELETE FROM logs", commit=True)
-
     # 2. Reiniciar el contador AUTO_INCREMENT a 1
     ejecutar_query("ALTER TABLE logs AUTO_INCREMENT = 1", commit=True)
-
     registrar_log("Historial limpiado", "Se eliminaron todos los logs y se reinició el AUTO_INCREMENT.")
-
     flash("Historial limpiado correctamente. IDs reiniciados desde 1.", "success")
     return redirect(url_for('ver_logs'))
 
@@ -843,7 +767,8 @@ def editar_producto(id):
     return render_template("editar_producto.html", producto=producto)
 
 
-@app.route("/productos/<int:id>/eliminar")
+#  RUTA CORREGIDA: ELIMINAR PRODUCTO CON JSON RESPONSE
+@app.route("/productos/<int:id>/eliminar", methods=['POST'])
 @login_required
 @role_required('admin')
 def eliminar_producto(id):
@@ -851,15 +776,12 @@ def eliminar_producto(id):
     producto = obtener_producto_por_id(id)
 
     if not producto:
-        flash(f"El producto con el ID {id} no fue encontrado.", "error")
-        return redirect(url_for('lista_productos'))
+        return jsonify({'success': False, 'message': 'Producto no encontrado'}), 404
 
     eliminar_producto_db(id)
-
     registrar_log('Producto eliminado', f"Producto: {producto['nombre']} (ID: {id})")
 
-    flash(f"El producto '{producto['nombre']}' fue eliminado con éxito.", "success")
-    return redirect(url_for('lista_productos'))
+    return jsonify({'success': True, 'message': f"El producto '{producto['nombre']}' fue eliminado con éxito."})
 
 
 # ---------------------------------------------------------------------------------
@@ -920,7 +842,7 @@ def nueva_venta():
         nuevo_stock = producto['stock'] - cantidad
         actualizar_stock_producto(producto_id, nuevo_stock)
 
-        flash(f"✅ Venta registrada: {cantidad} unidades de '{producto['nombre']}' por ${total_venta:,.0f} COP", "success")
+        flash(f" Venta registrada: {cantidad} unidades de '{producto['nombre']}' por ${total_venta:,.0f} COP", "success")
         return redirect(url_for('lista_productos'))
 
     return render_template("crear_venta.html", productos=productos)
@@ -936,6 +858,27 @@ def historial_ventas():
     total_general = sum(v.get('total', 0) for v in ventas)
 
     return render_template("historial_ventas.html", ventas=ventas, total_general=total_general)
+
+
+#  NUEVA RUTA: ELIMINAR VENTA
+@app.route('/ventas/<int:id>/eliminar', methods=['POST'])
+@login_required
+@role_required('admin')
+def eliminar_venta(id):
+    """Elimina una venta del historial"""
+    # Buscar la venta
+    query = "SELECT * FROM ventas WHERE id = %s"
+    venta = ejecutar_query(query, (id,), fetch_one=True)
+    
+    if not venta:
+        return jsonify({'success': False, 'message': 'Venta no encontrada'}), 404
+    
+    # Eliminar la venta
+    eliminar_venta_db(id)
+    
+    registrar_log('Venta eliminada', f"Venta ID: {id} - Producto: {venta.get('producto_nombre')}")
+    
+    return jsonify({'success': True, 'message': 'Venta eliminada correctamente'})
 
 
 # ---------------------------------------------------------------------------------
@@ -1110,7 +1053,7 @@ def reporte_ventas_periodo():
     for v in ventas:
         fecha = v.get('fecha')   # este valor viene de MySQL como date o string
 
-        # 🔥 Convertir fecha a string YYYY-MM-DD
+        #  Convertir fecha a string YYYY-MM-DD
         if isinstance(fecha, datetime):
             fecha_str = fecha.strftime("%Y-%m-%d")
         elif hasattr(fecha, "strftime"):  
@@ -1173,7 +1116,6 @@ def reporte_inventario_total():
         total_unidades=total_unidades,
         valor_total=valor_total_inventario
     )
-
 
 # ---------------------------------------------------------------------------------
 # EXPORTACIONES: Excel y PDF
@@ -1421,5 +1363,5 @@ def exportar_pdf_inventario():
 # ---------------------------------------------------------------------------------
 # RUN
 # ---------------------------------------------------------------------------------
-if __name__ == "__main__":
+if __name__ == "___main___":
     app.run(debug=True)
