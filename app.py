@@ -861,46 +861,6 @@ def editar_producto(id):
 
 # AGREGA ESTA RUTA EN TU app.py (después de la función editar_producto)
 
-@app.route('/productos/eliminar/<int:id>', methods=['GET', 'POST'])
-@login_required
-def eliminar_producto(id):
-    """Eliminar producto - acepta GET y POST para debugging"""
-    
-    # Si es GET, redirigir a la lista de productos
-    if request.method == 'GET':
-        flash('Método no permitido. Usa el botón de eliminar.', 'warning')
-        return redirect(url_for('lista_productos'))
-    
-    # Si es POST, procesar la eliminación
-    try:
-        producto = obtener_producto_por_id(id)
-        
-        if not producto:
-            return jsonify({'success': False, 'error': 'Producto no encontrado'}), 404
-        
-        # Verificar ventas asociadas
-        query_ventas = "SELECT COUNT(*) as total FROM ventas WHERE producto_id = %s"
-        resultado = ejecutar_query(query_ventas, (id,), fetch_one=True)
-        ventas_asociadas = resultado['total'] if resultado else 0
-        
-        if ventas_asociadas > 0:
-            return jsonify({
-                'success': False, 
-                'error': f'No se puede eliminar. Tiene {ventas_asociadas} ventas asociadas'
-            }), 400
-        
-        # Eliminar el producto
-        resultado = eliminar_producto_db(id)
-        
-        if resultado is not None:
-            registrar_log('Producto eliminado', f"Producto: {producto['nombre']} (ID: {id})")
-            return jsonify({'success': True, 'message': 'Producto eliminado exitosamente'})
-        else:
-            return jsonify({'success': False, 'error': 'Error al eliminar el producto'}), 500
-    
-    except Exception as e:
-        print(f"❌ Error al eliminar producto: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 # ---------------------------------------------------------------------------------
