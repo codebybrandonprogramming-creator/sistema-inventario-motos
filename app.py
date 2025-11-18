@@ -1037,13 +1037,7 @@ def historial_ventas():
     fecha_desde = request.args.get('fecha_desde', '')
     fecha_hasta = request.args.get('fecha_hasta', '')
     
-    # Query base
-    query = """
-        SELECT id, fecha, hora, producto_id, producto_nombre, categoria,
-               cantidad, precio_unitario, total, iva_total, ganancia_unitaria,
-               ganancia_total, usuario_nombre
-        FROM ventas
-        WHERE 1=1
+    
     """
     
     params = []
