@@ -168,15 +168,6 @@ def cargar_productos():
     return productos if productos else []
 
 
-def obtener_producto_por_id(producto_id):
-    """Obtiene un producto específico por su ID"""
-    query = """
-        SELECT id, nombre, categoria, marca, stock, precio_unitario, 
-               descripcion, valor_total, fecha_creacion, fecha_actualizacion
-        FROM productos
-        WHERE id = %s
-    """
-    return ejecutar_query(query, (producto_id,), fetch_one=True)
 
 
 def actualizar_producto(producto_id, nombre, categoria, marca, stock, precio_unitario, descripcion):
