@@ -377,7 +377,10 @@
                             </a>
 
                             <!-- ÚNICA LÍNEA MODIFICADA: ahora el nombre va entre comillas -->
-                            
+                            <button onclick='eliminarProducto({{ p.id }}, "{{ p.nombre }}")'
+        class="btn btn-sm btn-table btn-danger-table">
+    <i class="bi bi-trash-fill"></i>
+</button>
                         </td>
                     </tr>
                     {% else %}
