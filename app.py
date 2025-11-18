@@ -258,3 +258,4 @@ def obtener_usuario_por_id(usuario_id):
         WHERE id = %s
     """
     return ejecutar_query(query, (usuario_id,), fetch_one=True)
+
