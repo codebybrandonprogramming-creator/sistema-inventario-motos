@@ -179,19 +179,6 @@ def obtener_producto_por_id(producto_id):
     """
     return ejecutar_query(query, (producto_id,), fetch_one=True)
 
-def actualizar_producto(producto_id, nombre, categoria, marca, stock, precio_unitario, descripcion):
-    """Actualiza un producto existente en MySQL"""
-    valor_total = round(stock * precio_unitario, 3)
-    
-    query = """
-        UPDATE productos 
-        SET nombre = %s, categoria = %s, marca = %s, stock = %s, 
-            precio_unitario = %s, descripcion = %s, valor_total = %s,
-            fecha_actualizacion = NOW()
-        WHERE id = %s
-    """
-    params = (nombre, categoria, marca, stock, precio_unitario, descripcion, valor_total, producto_id)
-    return ejecutar_query(query, params, commit=True)
 
 
 def eliminar_producto_db(producto_id):
