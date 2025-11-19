@@ -74,15 +74,15 @@
                         </td>
                         <td class="text-center">{{ venta.cantidad }}</td>
                         <td>${{ "{:,.3f}".format(venta.precio_unitario) }} COP</td>
-                        <td class="text-warning">${{ "{:,.3f}".format(venta.iva_total if venta.iva_total else (venta.precio_unitario * 0.19 * venta.cantidad)) }} COP</td>
-                        <td class="text-info">{{ venta.porcentaje_ganancia if venta.porcentaje_ganancia is not none else 0 }}%</td>
-                        <td class="text-success">${{ "{:,.3f}".format(venta.ganancia_unitaria if venta.ganancia_unitaria else 0) }} COP</td>
-                        <td class="text-success"><strong>${{ "{:,.3f}".format(venta.ganancia_total if venta.ganancia_total else 0) }} COP</strong></td>
+                        <td class="text-warning">${{ "{:,.3f}".format(venta.iva_total or 0) }} COP</td>
+                        <td class="text-info">{{ venta.porcentaje_ganancia_aplicado or 0 }}%</td>
+                        <td class="text-success">${{ "{:,.3f}".format(venta.ganancia_unitaria or 0) }} COP</td>
+                        <td class="text-success"><strong>${{ "{:,.3f}".format(venta.ganancia_total or 0) }} COP</strong></td>
                         <td class="total-col"><strong>${{ "{:,.3f}".format(venta.total) }} COP</strong></td>
                         <td>{{ venta.usuario_nombre or 'N/A' }}</td>
                         <td>
                             <form method="POST" action="{{ url_for('eliminar_venta', id=venta.id) }}" style="display:inline;" 
-                                  onsubmit="return confirm('¿Eliminar esta venta? ⚠️ El stock NO se restaurará automáticamente.');">
+                                  onsubmit="return confirm('¿Eliminar esta venta?');">
                                 <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
                             </form>
                         </td>
