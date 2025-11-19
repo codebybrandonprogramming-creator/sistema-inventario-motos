@@ -1113,7 +1113,145 @@ def eliminar_venta(id):
     return redirect(url_for('historial_ventas'))
 
 
+@app.route('/ventas/<int:id>/detalle')
+@login_required
+def detalle_venta(id):
+    """Muestra los detalles de una venta específica"""
+    query = """
+        SELECT 
+            v.id, v.fecha, v.hora, v.producto_id, v.producto_nombre,
+            v.categoria, v.cantidad, v.precio_unitario, v.iva_total,
+            v.porcentaje_ganancia, v.ganancia_unitaria, v.ganancia_total,
+            v.total, v.usuario_id, v.usuario_nombre, v.fecha_registro
+        FROM ventas v
+        WHERE v.id = %s
+    """
+    venta = ejecutar_query(query, (id,), fetch_one=True)
+    
+    if not venta:
+        flash('Venta no encontrada.', 'error')
+        return redirect(url_for('historial_ventas'))
+    
+    venta_dict = dict(venta)
+    venta_dict['iva_total'] = venta_dict.get('iva_total') or 0
+    venta_dict['porcentaje_ganancia'] = venta_dict.get('porcentaje_ganancia') or 0
+    venta_dict['ganancia_unitaria'] = venta_dict.get('ganancia_unitaria') or 0
+    venta_dict['ganancia_total'] = venta_dict.get('ganancia_total') or 0
+    
+    return render_template('detalle_venta.html', venta=venta_dict)
 
+
+@app.route('/ventas/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'vendedor')
+def editar_venta(id):
+    """Edita una venta existente"""
+    if request.method == 'GET':
+        query = """
+            SELECT 
+                v.id, v.fecha, v.hora, v.producto_id, v.producto_nombre,
+                v.categoria, v.cantidad, v.precio_unitario, v.iva_total,
+                v.porcentaje_ganancia, v.ganancia_unitaria, v.ganancia_total,
+                v.total, v.usuario_id, v.usuario_nombre
+            FROM ventas v
+            WHERE v.id = %s
+        """
+        venta = ejecutar_query(query, (id,), fetch_one=True)
+        
+        if not venta:
+            flash('Venta no encontrada.', 'error')
+            return redirect(url_for('historial_ventas'))
+        
+        productos = cargar_productos()
+        return render_template('editar_venta.html', venta=dict(venta), productos=productos)
+    
+    # POST - Actualizar venta
+    try:
+        producto_id = int(request.form['producto_id'])
+        cantidad = int(request.form['cantidad'])
+        ganancia_general = float(request.form.get('porcentaje_ganancia_general', 0))
+        
+        if cantidad <= 0:
+            flash("La cantidad debe ser mayor a 0.", "error")
+            return redirect(url_for('editar_venta', id=id))
+    except (ValueError, KeyError):
+        flash("Datos inválidos.", "error")
+        return redirect(url_for('editar_venta', id=id))
+    
+    venta_actual = ejecutar_query(
+        "SELECT producto_id, cantidad FROM ventas WHERE id = %s",
+        (id,),
+        fetch_one=True
+    )
+    
+    if not venta_actual:
+        flash("Venta no encontrada.", "error")
+        return redirect(url_for('historial_ventas'))
+    
+    producto = obtener_producto_por_id(producto_id)
+    
+    if not producto:
+        flash("Producto no encontrado.", "error")
+        return redirect(url_for('editar_venta', id=id))
+    
+    diferencia_stock = venta_actual['cantidad'] - cantidad
+    nuevo_stock = producto['stock'] + diferencia_stock
+    
+    if nuevo_stock < 0:
+        flash(f"Stock insuficiente. Disponible: {producto['stock']} unidades.", "error")
+        return redirect(url_for('editar_venta', id=id))
+    
+    precio_base = float(producto['precio_unitario'])
+    iva_unitario = round(precio_base * 0.19, 3)
+    precio_con_iva = round(precio_base + iva_unitario, 3)
+    iva_total = round(iva_unitario * cantidad, 3)
+    
+    porcentaje_ganancia = ganancia_general if ganancia_general > 0 else float(producto.get('porcentaje_ganancia', 0))
+    
+    if porcentaje_ganancia > 0:
+        precio_venta_unitario = round(precio_con_iva * (1 + porcentaje_ganancia / 100), 3)
+    else:
+        precio_venta_unitario = precio_con_iva
+    
+    ganancia_unitaria = round(precio_venta_unitario - precio_con_iva, 3)
+    ganancia_total = round(ganancia_unitaria * cantidad, 3)
+    total_venta = round(precio_venta_unitario * cantidad, 3)
+    
+    query_update = """
+        UPDATE ventas SET
+            producto_id = %s,
+            producto_nombre = %s,
+            categoria = %s,
+            cantidad = %s,
+            precio_unitario = %s,
+            iva_total = %s,
+            porcentaje_ganancia = %s,
+            ganancia_unitaria = %s,
+            ganancia_total = %s,
+            total = %s
+        WHERE id = %s
+    """
+    
+    ejecutar_query(
+        query_update,
+        (producto_id, producto['nombre'], producto['categoria'], 
+         cantidad, precio_base, iva_total, porcentaje_ganancia, 
+         ganancia_unitaria, ganancia_total, total_venta, id),
+        commit=True
+    )
+    
+    actualizar_stock_producto(producto_id, nuevo_stock)
+    
+    if venta_actual['producto_id'] != producto_id:
+        producto_anterior = obtener_producto_por_id(venta_actual['producto_id'])
+        if producto_anterior:
+            stock_anterior_nuevo = producto_anterior['stock'] + venta_actual['cantidad']
+            actualizar_stock_producto(venta_actual['producto_id'], stock_anterior_nuevo)
+    
+    registrar_log('Venta editada', f"ID: {id} | Producto: {producto['nombre']} x{cantidad}")
+    
+    flash(f"Venta #{id} actualizada exitosamente.", "success")
+    return redirect(url_for('historial_ventas'))
 
 
 
