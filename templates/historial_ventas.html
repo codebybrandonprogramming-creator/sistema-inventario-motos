@@ -269,13 +269,13 @@
                     {% if ventas %}
                         {% for venta in ventas %}
                         <tr>
-                            <td style="text-align: center;">
-    <form method="POST" action="{{ url_for('eliminar_venta', id=venta.id) }}" style="display: inline;" onsubmit="return confirm('¿Estás seguro de eliminar esta venta?');">
-        <button type="submit" class="btn btn-sm btn-danger">
-            <i class="bi bi-trash"></i> Eliminar
-        </button>
-    </form>
-</td>
+                            <td style="text-align: center;"><strong>{{ venta.id }}</strong></td>
+                            <td>{{ venta.fecha }}</td>
+                            <td>{{ venta.hora }}</td>
+                            <td>
+                                <strong style="color: #2c3e50;">{{ venta.producto_nombre }}</strong><br>
+                                <span class="categoria-badge">{{ venta.categoria }}</span>
+                            </td>
                             <td style="text-align: center;"><strong>{{ venta.cantidad }}</strong></td>
                             <td style="text-align: right;">${{ venta.precio_unitario|formato_colombiano(3) }} COP</td>
                             <td class="text-warning" style="text-align: right;">${{ (venta.iva_total if venta.iva_total else 0)|formato_colombiano(3) }} COP</td>
