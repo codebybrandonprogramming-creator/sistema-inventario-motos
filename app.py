@@ -710,3 +710,407 @@ def limpiar_logs():
     return redirect(url_for('ver_logs'))
 
 
+# ---------------------------------------------------------------------------------
+# RUTAS PRINCIPALES DE PRODUCTOS
+# ---------------------------------------------------------------------------------
+@app.route('/')
+@login_required
+def inicio():
+    """Página de inicio - redirige a lista de productos"""
+    return redirect(url_for('lista_productos'))
+
+
+@app.route('/productos', methods=['GET'])
+@login_required
+def lista_productos():
+    """Lista todos los productos con filtros y búsqueda"""
+    productos = cargar_productos()
+
+    query = request.args.get("q", "").lower().strip()
+    categoria = request.args.get("categoria", "").strip()
+    ordenar = request.args.get("ordenar", "")
+    solo_bajo_stock = request.args.get("solo_bajo_stock", "0") == "1"
+
+    if query:
+        productos = [p for p in productos if query in p.get('nombre', '').lower()]
+
+    if categoria:
+        productos = [p for p in productos if p.get('categoria') == categoria]
+
+    if solo_bajo_stock:
+        productos = [p for p in productos if p.get('stock', 0) < STOCK_MINIMO]
+
+    if ordenar == "precio_asc":
+        productos = sorted(productos, key=lambda x: x.get("precio_unitario", 0))
+    elif ordenar == "precio_desc":
+        productos = sorted(productos, key=lambda x: x.get("precio_unitario", 0), reverse=True)
+    elif ordenar == "stock_asc":
+        productos = sorted(productos, key=lambda x: x.get("stock", 0))
+    elif ordenar == "stock_desc":
+        productos = sorted(productos, key=lambda x: x.get("stock", 0), reverse=True)
+
+    todos_productos = cargar_productos()
+    bajo_stock_total = sum(1 for p in todos_productos if p.get('stock', 0) < STOCK_MINIMO)
+    categorias = sorted({p.get("categoria", "") for p in todos_productos})
+
+    return render_template(
+        "productos.html",
+        productos=productos,
+        categorias=categorias,
+        bajo_stock_total=bajo_stock_total,
+        solo_bajo_stock=solo_bajo_stock,
+        STOCK_MINIMO=STOCK_MINIMO
+    )
+
+
+@app.route('/productos/nuevo', methods=["GET", "POST"])
+@login_required
+@role_required('admin', 'vendedor')
+def nuevo_producto():
+    """Crea un nuevo producto"""
+    if request.method == "POST":
+        try:
+            nombre = request.form['nombre'].strip()
+            categoria = request.form['categoria'].strip()
+            marca = request.form.get('marca', '').strip()
+            stock = int(request.form['stock'])
+            precio_unitario = round(float(request.form['precio_unitario']), 3)
+            descripcion = request.form.get('descripcion', '').strip()
+            codigo_sku = request.form.get('codigo_sku', '').strip()
+            porcentaje_ganancia = float(request.form.get('porcentaje_ganancia', 0))
+
+            if not nombre or not categoria:
+                flash("El nombre y la categoría son obligatorios.", "error")
+                return redirect(url_for('nuevo_producto'))
+
+            if stock < 0 or precio_unitario < 0:
+                flash("El stock y el precio no pueden ser negativos.", "error")
+                return redirect(url_for('nuevo_producto'))
+
+        except ValueError:
+            flash("Error en los datos del formulario. Verifica los valores numéricos.", "error")
+            return redirect(url_for('nuevo_producto'))
+        except KeyError:
+            flash("Faltan campos obligatorios en el formulario.", "error")
+            return redirect(url_for('nuevo_producto'))
+
+        precio_con_iva = round(precio_unitario * 1.19, 3)
+        precio_venta = round(precio_con_iva * (1 + porcentaje_ganancia / 100), 3)
+
+        query = """
+            INSERT INTO productos (nombre, categoria, marca, stock, precio_unitario, 
+                                   porcentaje_ganancia, precio_venta, descripcion, codigo_sku)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        params = (nombre, categoria, marca, stock, precio_unitario, 
+                  porcentaje_ganancia, precio_venta, descripcion, codigo_sku)
+        producto_id = ejecutar_query(query, params, commit=True)
+
+        if producto_id:
+            registrar_log('Producto creado', f"Producto: {nombre} (ID: {producto_id})")
+            flash(f"El producto '{nombre}' ha sido registrado con éxito.", "success")
+            return redirect(url_for('lista_productos'))
+        else:
+            flash("Error al guardar el producto en la base de datos.", "error")
+            return redirect(url_for('nuevo_producto'))
+
+    return render_template("crear_producto.html")
+
+
+@app.route('/productos/<int:id>', methods=["GET"])
+@login_required
+def detalle_producto(id):
+    """Muestra los detalles de un producto"""
+    producto = obtener_producto_por_id(id)
+
+    if not producto:
+        flash(f"El producto con el ID {id} no fue encontrado.", "error")
+        return redirect(url_for('lista_productos'))
+
+    return render_template("detalle_producto.html", producto=producto)
+
+
+@app.route('/productos/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'vendedor')
+def editar_producto(id):
+    """Edita un producto existente"""
+    producto = obtener_producto_por_id(id)
+
+    if not producto:
+        flash(f"El producto con el ID {id} no pudo ser encontrado.", "error")
+        return redirect(url_for('lista_productos'))
+
+    if request.method == 'POST':
+        try:
+            nombre = request.form['nombre'].strip()
+            categoria = request.form['categoria'].strip()
+            marca = request.form.get('marca', '').strip()
+            stock = int(request.form['stock'])
+            precio_unitario = round(float(request.form['precio_unitario']), 3)
+            descripcion = request.form.get('descripcion', '').strip()
+            codigo_sku = request.form.get('codigo_sku', '').strip()
+            porcentaje_ganancia = float(request.form.get('porcentaje_ganancia', 0))
+
+            if stock < 0 or precio_unitario < 0:
+                flash("El stock y el precio no pueden ser negativos.", "error")
+                return redirect(url_for('editar_producto', id=id))
+
+            actualizar_producto(id, nombre, categoria, marca, stock, precio_unitario, 
+                              descripcion, codigo_sku, porcentaje_ganancia)
+
+            registrar_log('Producto actualizado', f"Producto: {nombre} (ID: {id})")
+
+            flash(f"El producto '{nombre}' fue actualizado con éxito.", "success")
+            return redirect(url_for('lista_productos'))
+
+        except ValueError:
+            flash("Error en los datos del formulario.", "error")
+            return redirect(url_for('editar_producto', id=id))
+
+    return render_template("editar_producto.html", producto=producto)
+
+
+@app.route("/productos/eliminar/<int:id>", methods=['POST'])
+@login_required
+@role_required('admin')
+def eliminar_producto(id):
+    """Elimina un producto - VERSIÓN MEJORADA CON MANEJO DE VENTAS Y RESET AUTOMÁTICO"""
+    
+    try:
+        producto = obtener_producto_por_id(id)
+        
+        if not producto:
+            return jsonify({
+                'success': False, 
+                'error': 'Producto no encontrado'
+            }), 404
+        
+        query_ventas = "SELECT COUNT(*) as total FROM ventas WHERE producto_id = %s"
+        resultado = ejecutar_query(query_ventas, (id,), fetch_one=True)
+        
+        ventas_asociadas = resultado['total'] if resultado else 0
+        
+        if ventas_asociadas > 0:
+            return jsonify({
+                'success': False,
+                'error': f'No se puede eliminar. Tiene {ventas_asociadas} venta(s) asociada(s)',
+                'ventas_asociadas': ventas_asociadas
+            }), 400
+        
+        query_eliminar = "DELETE FROM productos WHERE id = %s"
+        ejecutar_query(query_eliminar, (id,), commit=True)
+        
+        registrar_log('Producto eliminado', f"Producto: {producto['nombre']} (ID: {id})")
+        
+        count_query = "SELECT COUNT(*) as total FROM productos"
+        count_result = ejecutar_query(count_query, fetch_one=True)
+        
+        mensaje = 'Producto eliminado exitosamente'
+        
+        if count_result and count_result.get('total', 0) == 0:
+            reset_query = "ALTER TABLE productos AUTO_INCREMENT = 1"
+            ejecutar_query(reset_query, commit=True)
+            registrar_log('IDs reseteados', 'AUTO_INCREMENT reiniciado automáticamente')
+            mensaje = 'Producto eliminado. IDs reseteados a 1 (no quedan productos)'
+        
+        return jsonify({
+            'success': True,
+            'message': mensaje
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error al eliminar producto: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+# ---------------------------------------------------------------------------------
+# RUTAS DE VENTAS (🔥 CORREGIDO)
+# ---------------------------------------------------------------------------------
+@app.route('/ventas/nueva', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'vendedor')
+def nueva_venta():
+    """Registra una nueva venta"""
+    productos = cargar_productos()
+
+    if request.method == "POST":
+        try:
+            producto_id = int(request.form['producto_id'])
+            cantidad = int(request.form['cantidad'])
+            
+            ganancia_general = request.form.get('porcentaje_ganancia_general', '').strip()
+            ganancia_general = float(ganancia_general) if ganancia_general else 0
+
+            if cantidad <= 0:
+                flash("La cantidad debe ser mayor a 0.", "error")
+                return redirect(url_for('nueva_venta'))
+
+        except (ValueError, KeyError):
+            flash("Datos inválidos en el formulario.", "error")
+            return redirect(url_for('nueva_venta'))
+
+        producto = obtener_producto_por_id(producto_id)
+
+        if not producto:
+            flash("Producto no encontrado.", "error")
+            return redirect(url_for('nueva_venta'))
+
+        if cantidad > producto['stock']:
+            flash(f"No puedes vender {cantidad} unidades. Stock disponible: {producto['stock']}.", "error")
+            return redirect(url_for('nueva_venta'))
+
+        precio_base = producto['precio_unitario']
+        iva_unitario = precio_base * 0.19
+        precio_con_iva = precio_base + iva_unitario
+        
+        if ganancia_general > 0:
+            porcentaje_ganancia = ganancia_general
+        else:
+            porcentaje_ganancia = producto.get('porcentaje_ganancia', 0)
+        
+        ganancia_unitaria = precio_con_iva * (porcentaje_ganancia / 100)
+        precio_venta_unitario = precio_con_iva + ganancia_unitaria
+        
+        subtotal = precio_base * cantidad
+        iva_total = iva_unitario * cantidad
+        ganancia_total = ganancia_unitaria * cantidad
+        total_venta = precio_venta_unitario * cantidad
+        
+        venta = {
+            'fecha': datetime.now().strftime('%Y-%m-%d'),
+            'hora': datetime.now().strftime('%H:%M:%S'),
+            'producto_id': producto['id'],
+            'producto_nombre': producto['nombre'],
+            'categoria': producto['categoria'],
+            'cantidad': cantidad,
+            'precio_unitario': round(precio_base, 3),
+            'iva_unitario': round(iva_unitario, 3),
+            'precio_con_iva': round(precio_con_iva, 3),
+            'porcentaje_ganancia': round(porcentaje_ganancia, 3),
+            'ganancia_unitaria': round(ganancia_unitaria, 3),
+            'precio_venta_unitario': round(precio_venta_unitario, 3),
+            'subtotal': round(subtotal, 3),
+            'iva_total': round(iva_total, 3),
+            'ganancia_total': round(ganancia_total, 3),
+            'total': round(total_venta, 3),
+            'usuario_id': session.get('user_id'),
+            'usuario_nombre': session.get('nombre_completo')
+        }
+        
+        resultado = guardar_venta(venta)
+        
+        if resultado:
+            registrar_log(
+                'Venta registrada', 
+                f"{cantidad} unidades de '{producto['nombre']}' - Total: ${total_venta:,.3f} COP"
+            )
+
+            nuevo_stock = producto['stock'] - cantidad
+            actualizar_stock_producto(producto_id, nuevo_stock)
+
+            flash(
+                f"✅ Venta registrada: {cantidad} unidades de '{producto['nombre']}' por ${total_venta:,.0f} COP", 
+                "success"
+            )
+            
+            # 🔥 REDIRIGIR AL HISTORIAL DE VENTAS
+            return redirect(url_for('historial_ventas'))
+        else:
+            flash("Error al guardar la venta en la base de datos.", "error")
+            return redirect(url_for('nueva_venta'))
+
+    return render_template("crear_venta.html", productos=productos)
+
+
+# 🔥 FUNCIÓN CORREGIDA DEL HISTORIAL DE VENTAS
+@app.route('/ventas/historial')
+@login_required
+def historial_ventas():
+    """Muestra el historial de ventas con filtros"""
+    fecha_desde = request.args.get('fecha_desde', '')
+    fecha_hasta = request.args.get('fecha_hasta', '')
+    
+    query = """
+        SELECT 
+            v.id,
+            v.fecha,
+            v.hora,
+            v.producto_id,
+            v.producto_nombre,
+            v.categoria,
+            v.cantidad,
+            v.precio_unitario,
+            v.total,
+            v.iva_total,
+            v.ganancia_unitaria,
+            v.ganancia_total,
+            v.porcentaje_ganancia,
+            v.usuario_id,
+            v.usuario_nombre,
+            v.fecha_registro
+        FROM ventas v
+        WHERE 1=1
+    """
+    
+    params = []
+    
+    if fecha_desde:
+        query += " AND v.fecha >= %s"
+        params.append(fecha_desde)
+    
+    if fecha_hasta:
+        query += " AND v.fecha <= %s"
+        params.append(fecha_hasta)
+    
+    query += " ORDER BY v.fecha DESC, v.hora DESC"
+    
+    ventas = ejecutar_query(query, tuple(params) if params else None, fetch_all=True)
+
+    # 🔥 CRÍTICO: Convertir y renombrar columna
+    ventas_procesadas = []
+    if ventas:
+        for v in ventas:
+            venta_dict = dict(v)
+            venta_dict['porcentaje_ganancia_aplicado'] = venta_dict.get('porcentaje_ganancia', 0)
+            ventas_procesadas.append(venta_dict)
+    
+    total_vendido = sum(v.get('total', 0) for v in ventas_procesadas)
+    total_iva = sum(v.get('iva_total', 0) for v in ventas_procesadas)
+    total_ganancias = sum(v.get('ganancia_total', 0) for v in ventas_procesadas)
+    num_ventas = len(ventas_procesadas)
+
+    return render_template(
+        'historial_ventas.html',
+        ventas=ventas_procesadas,
+        total_vendido=total_vendido,
+        total_general=total_vendido,
+        total_iva=total_iva,
+        total_ganancias=total_ganancias,
+        num_ventas=num_ventas
+    )
+
+
+@app.route('/ventas/eliminar/<int:id>', methods=['POST'])
+@login_required
+@role_required('admin')
+def eliminar_venta(id):
+    """Elimina una venta del historial"""
+    try:
+        query = "DELETE FROM ventas WHERE id = %s"
+        ejecutar_query(query, (id,), commit=True)
+        
+        registrar_log('Venta eliminada', f'ID de venta eliminada: {id}')
+        
+        if reiniciar_autoincrement_ventas():
+            flash('Venta eliminada. IDs reiniciados a 1 (no quedan ventas).', 'success')
+        else:
+            flash('Venta eliminada correctamente.', 'success')
+            
+    except Exception as e:
+        flash(f'Error al eliminar la venta: {str(e)}', 'error')
+    
+    return redirect(url_for('historial_ventas'))
