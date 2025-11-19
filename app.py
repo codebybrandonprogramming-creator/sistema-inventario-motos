@@ -997,7 +997,98 @@ def nueva_venta():
 
 
 # 🔥 FUNCIÓN CORREGIDA DEL HISTORIAL DE VENTAS
+@app.route('/ventas/historial')
+@login_required
+def historial_ventas():
+    """Muestra el historial de ventas con filtros"""
+    fecha_desde = request.args.get('fecha_desde', '')
+    fecha_hasta = request.args.get('fecha_hasta', '')
+    
+    # ✅ SOLO seleccionar columnas que EXISTEN en la tabla
+    query = """
+        SELECT 
+            v.id,
+            v.fecha,
+            v.hora,
+            v.producto_id,
+            v.producto_nombre,
+            v.categoria,
+            v.cantidad,
+            v.precio_unitario,
+            v.iva_total,
+            v.porcentaje_ganancia,
+            v.ganancia_unitaria,
+            v.ganancia_total,
+            v.total,
+            v.usuario_id,
+            v.usuario_nombre,
+            v.fecha_registro
+        FROM ventas v
+        WHERE 1=1
+    """
+    
+    params = []
+    
+    # Aplicar filtros si existen
+    if fecha_desde:
+        query += " AND v.fecha >= %s"
+        params.append(fecha_desde)
+    
+    if fecha_hasta:
+        query += " AND v.fecha <= %s"
+        params.append(fecha_hasta)
+    
+    query += " ORDER BY v.id ASC"
+    
+    # Ejecutar query
+    ventas = ejecutar_query(query, tuple(params) if params else None, fetch_all=True)
 
+    # Procesar ventas y asegurar valores por defecto
+    ventas_procesadas = []
+    if ventas:
+        for v in ventas:
+            venta_dict = dict(v) if isinstance(v, dict) else {
+                'id': v[0],
+                'fecha': v[1],
+                'hora': v[2],
+                'producto_id': v[3],
+                'producto_nombre': v[4],
+                'categoria': v[5],
+                'cantidad': v[6],
+                'precio_unitario': v[7],
+                'iva_total': v[8],
+                'porcentaje_ganancia': v[9],
+                'ganancia_unitaria': v[10],
+                'ganancia_total': v[11],
+                'total': v[12],
+                'usuario_id': v[13],
+                'usuario_nombre': v[14],
+                'fecha_registro': v[15]
+            }
+            
+            # Asegurar que campos numéricos tengan valores por defecto
+            venta_dict['iva_total'] = venta_dict.get('iva_total') or 0
+            venta_dict['porcentaje_ganancia'] = venta_dict.get('porcentaje_ganancia') or 0
+            venta_dict['ganancia_unitaria'] = venta_dict.get('ganancia_unitaria') or 0
+            venta_dict['ganancia_total'] = venta_dict.get('ganancia_total') or 0
+            
+            ventas_procesadas.append(venta_dict)
+    
+    # Calcular totales generales
+    total_vendido = sum(float(v.get('total', 0)) for v in ventas_procesadas)
+    total_iva = sum(float(v.get('iva_total', 0)) for v in ventas_procesadas)
+    total_ganancias = sum(float(v.get('ganancia_total', 0)) for v in ventas_procesadas)
+    num_ventas = len(ventas_procesadas)
+
+    return render_template(
+        'historial_ventas.html',
+        ventas=ventas_procesadas,
+        total_vendido=total_vendido,
+        total_general=total_vendido,  # Alias por compatibilidad
+        total_iva=total_iva,
+        total_ganancias=total_ganancias,
+        num_ventas=num_ventas
+    )
 
 
 @app.route('/ventas/eliminar/<int:id>', methods=['POST'])
