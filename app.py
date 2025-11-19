@@ -298,6 +298,7 @@ def cargar_ventas():
     ventas = ejecutar_query(query, fetch_all=True)
     return ventas if ventas else []
 
+
 def guardar_venta(venta):
     """Guarda una nueva venta en MySQL con IVA y ganancia desglosados"""
     query = """
