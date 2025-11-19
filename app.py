@@ -253,7 +253,20 @@ def reiniciar_autoincrement_ventas():
         return False
 
 
-
+def cargar_ventas():
+    """Carga todas las ventas desde MySQL"""
+    query = """
+        SELECT id, fecha, hora, producto_id, producto_nombre, categoria,
+               cantidad, precio_unitario, iva_unitario, precio_con_iva,
+               porcentaje_ganancia, precio_venta_unitario, subtotal, total,
+               iva_total, ganancia_unitaria, ganancia_total, 
+               porcentaje_ganancia_aplicado, usuario_id, usuario_nombre,
+               fecha_registro
+        FROM ventas
+        ORDER BY fecha DESC, hora DESC
+    """
+    ventas = ejecutar_query(query, fetch_all=True)
+    return ventas if ventas else []
 
 def guardar_venta(venta):
     """Guarda una nueva venta en MySQL con todos los campos calculados"""
