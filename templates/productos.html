@@ -434,6 +434,7 @@
                         {% set precio_base = p.precio_unitario|float %}
                         {% set iva = (precio_base * 0.19) %}
                         {% set precio_con_iva = (precio_base * 1.19) %}
+
                         {% set valor_total_con_iva = (p.stock * precio_con_iva) %}
                         
                         <tr data-producto-id="{{ p.id }}">
