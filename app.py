@@ -75,6 +75,7 @@ from flask_wtf import CSRFProtect
 
 
 app = Flask(__name__)
+
 app.secret_key = "dev_secret_key_change_in_production"
 
 # Headers de seguridad
