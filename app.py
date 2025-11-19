@@ -252,6 +252,7 @@ def reiniciar_autoincrement_productos():
     except Exception as e:
         print(f"❌ Error al reiniciar AUTO_INCREMENT: {e}")
         return False
+    
 
 def reiniciar_autoincrement_productos():
     """Reinicia el AUTO_INCREMENT de la tabla productos si está vacía"""
