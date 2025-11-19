@@ -901,7 +901,66 @@ def editar_producto(id):
 
 # Reemplaza tu función eliminar_producto en app.py con esta:
 
-
+@app.route("/productos/eliminar/<int:id>", methods=['POST'])
+@login_required
+@role_required('admin')
+def eliminar_producto(id):
+    """Elimina un producto - VERSIÓN MEJORADA CON MANEJO DE VENTAS Y RESET AUTOMÁTICO"""
+    
+    try:
+        # Buscar el producto
+        producto = obtener_producto_por_id(id)
+        
+        if not producto:
+            return jsonify({
+                'success': False, 
+                'error': 'Producto no encontrado'
+            }), 404
+        
+        # Verificar si tiene ventas asociadas
+        query_ventas = "SELECT COUNT(*) as total FROM ventas WHERE producto_id = %s"
+        resultado = ejecutar_query(query_ventas, (id,), fetch_one=True)
+        
+        ventas_asociadas = resultado['total'] if resultado else 0
+        
+        if ventas_asociadas > 0:
+            return jsonify({
+                'success': False,
+                'error': f'No se puede eliminar. Tiene {ventas_asociadas} venta(s) asociada(s)',
+                'ventas_asociadas': ventas_asociadas
+            }), 400
+        
+        # Eliminar el producto
+        query_eliminar = "DELETE FROM productos WHERE id = %s"
+        ejecutar_query(query_eliminar, (id,), commit=True)
+        
+        registrar_log('Producto eliminado', f"Producto: {producto['nombre']} (ID: {id})")
+        
+        # 🔥 NUEVO: Verificar si era el último producto y resetear IDs
+        count_query = "SELECT COUNT(*) as total FROM productos"
+        count_result = ejecutar_query(count_query, fetch_one=True)
+        
+        mensaje = 'Producto eliminado exitosamente'
+        
+        if count_result and count_result.get('total', 0) == 0:
+            # Si no quedan productos, resetear AUTO_INCREMENT
+            reset_query = "ALTER TABLE productos AUTO_INCREMENT = 1"
+            ejecutar_query(reset_query, commit=True)
+            registrar_log('IDs reseteados', 'AUTO_INCREMENT reiniciado automáticamente')
+            mensaje = 'Producto eliminado. IDs reseteados a 1 (no quedan productos)'
+        
+        return jsonify({
+            'success': True,
+            'message': mensaje
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error al eliminar producto: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+    
 # ---------------------------------------------------------------------------------
 # RUTAS DE VENTAS (🔥 ACTUALIZADO - PASO 7B)
 # ---------------------------------------------------------------------------------
