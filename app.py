@@ -1038,7 +1038,7 @@ def historial_ventas():
         query += " AND v.fecha <= %s"
         params.append(fecha_hasta)
     
-    query += " ORDER BY v.fecha DESC, v.hora DESC"
+    
     
     # Ejecutar query
     ventas = ejecutar_query(query, tuple(params) if params else None, fetch_all=True)
