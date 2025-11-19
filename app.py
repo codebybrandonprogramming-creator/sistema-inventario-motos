@@ -1171,8 +1171,8 @@ def historial_ventas():
             porcentaje_ganancia = round(porcentaje_guardado)
             
             else:
-    # Recalcular si está en 0 (ventas antiguas o sin dato)
-    # if precio_real > 0:
+                # Recalcular si está en 0 (ventas antiguas o sin dato)
+if precio_real > 0:
         porcentaje_ganancia = round(((precio_venta - precio_real) / precio_real) * 100)
     else:
         porcentaje_ganancia = 0
