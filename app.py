@@ -1114,3 +1114,5 @@ def eliminar_venta(id):
         flash(f'Error al eliminar la venta: {str(e)}', 'error')
     
     return redirect(url_for('historial_ventas'))
+
+
