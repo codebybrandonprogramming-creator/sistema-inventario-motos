@@ -86,7 +86,7 @@ def get_db_connection():
         password=os.getenv('DB_PASSWORD', ''),
         database=os.getenv('DB_NAME', 'inventario_repuestos'),
         cursorclass=pymysql.cursors.DictCursor
-    )
+    )pip
 
 
 def ejecutar_query(query, params=None, commit=False, fetch_one=False, fetch_all=False):
