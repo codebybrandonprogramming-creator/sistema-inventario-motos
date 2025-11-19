@@ -1,0 +1,66 @@
+[
+    {
+        "id": 1,
+        "fecha": "2025-11-16",
+        "hora": "04:37:14",
+        "usuario": "admin",
+        "accion": "Inicio de sesión",
+        "detalle": "Usuario: admin"
+    },
+    {
+        "id": 2,
+        "fecha": "2025-11-16",
+        "hora": "04:38:55",
+        "usuario": "admin",
+        "accion": "Cierre de sesión",
+        "detalle": "Usuario: admin"
+    },
+    {
+        "id": 3,
+        "fecha": "2025-11-16",
+        "hora": "05:14:20",
+        "usuario": "admin",
+        "accion": "Inicio de sesión",
+        "detalle": "Usuario: admin"
+    },
+    {
+        "id": 4,
+        "fecha": "2025-11-16",
+        "hora": "05:15:45",
+        "usuario": "admin",
+        "accion": "Contraseña cambiada",
+        "detalle": "Usuario: admin"
+    },
+    {
+        "id": 5,
+        "fecha": "2025-11-16",
+        "hora": "05:30:43",
+        "usuario": "admin",
+        "accion": "Inicio de sesión",
+        "detalle": "Usuario: admin"
+    },
+    {
+        "id": 6,
+        "fecha": "2025-11-16",
+        "hora": "13:50:33",
+        "usuario": "admin",
+        "accion": "Inicio de sesión",
+        "detalle": "Usuario: admin"
+    },
+    {
+        "id": 7,
+        "fecha": "2025-11-16",
+        "hora": "13:50:50",
+        "usuario": "admin",
+        "accion": "Cierre de sesión",
+        "detalle": "Usuario: admin"
+    },
+    {
+        "id": 8,
+        "fecha": "2025-11-16",
+        "hora": "13:51:55",
+        "usuario": "admin",
+        "accion": "Inicio de sesión",
+        "detalle": "Usuario: admin"
+    }
+]

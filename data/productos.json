@@ -1,0 +1,192 @@
+[
+    {
+        "id": 1,
+        "nombre": "Bujía NGK CR7HSA",
+        "categoria": "Bujías ",
+        "marca": "NGK",
+        "stock": 21,
+        "precio_unitario": 18000.0,
+        "descripcion": "Bujía para motos 4T de baja cilindrada\r\n",
+        "valor_total": 378000.0
+    },
+    {
+        "id": 2,
+        "nombre": "Aceite 20W50 Mineral 1L",
+        "categoria": "Aceites",
+        "marca": "Motul",
+        "stock": 4,
+        "precio_unitario": 38500.0,
+        "descripcion": "Aceite mineral para motores 4 tiempos\r\n                ",
+        "valor_total": 154000.0
+    },
+    {
+        "id": 3,
+        "nombre": "Filtro de Aceite Pulsar 180",
+        "categoria": "Filtros",
+        "marca": "Bajaj",
+        "stock": 13,
+        "precio_unitario": 22000.0,
+        "descripcion": "Filtro original Bajaj DTS-i.",
+        "valor_total": 286000.0
+    },
+    {
+        "id": 4,
+        "nombre": "Kit de Arrastre KTM Duke 200",
+        "categoria": "Kits de Arrastre",
+        "marca": "KTM",
+        "stock": 4,
+        "precio_unitario": 285000.0,
+        "descripcion": "                                                                                Catalina, piñón y cadena reforzada\r\n                \r\n                \r\n                \r\n                ",
+        "valor_total": 1140000.0
+    },
+    {
+        "id": 5,
+        "nombre": "Cadena Reforzada 428H",
+        "categoria": "Kits de Arrastre",
+        "marca": "DID",
+        "stock": 12,
+        "precio_unitario": 59000.0,
+        "descripcion": "Cadena 428H de alta resistencia ",
+        "valor_total": 708000.0
+    },
+    {
+        "id": 6,
+        "nombre": "Piñón 14T Universal",
+        "categoria": "Kits de Arrastre",
+        "marca": "Eagle",
+        "stock": 24,
+        "precio_unitario": 15500.0,
+        "descripcion": "Piñón delantero 14T universal",
+        "valor_total": 372000.0
+    },
+    {
+        "id": 7,
+        "nombre": "Catalina 42T Pulsar 135",
+        "categoria": "Kits de Arrastre",
+        "marca": "Tecnoracing",
+        "stock": 2,
+        "precio_unitario": 28000.0,
+        "descripcion": "Catalina en acero endurecido",
+        "valor_total": 56000.0
+    },
+    {
+        "id": 8,
+        "nombre": "Patillas de Freno AKT 125",
+        "categoria": "Frenos",
+        "marca": "Frenokit",
+        "stock": 20,
+        "precio_unitario": 26000.0,
+        "descripcion": "Pastillas cerámicas delantero/disco",
+        "valor_total": 520000.0
+    },
+    {
+        "id": 9,
+        "nombre": "Disco de Freno Pulsar NS200",
+        "categoria": "Frenos",
+        "marca": "Bajaj",
+        "stock": 13,
+        "precio_unitario": 160000.0,
+        "descripcion": "Disco 260 mm ventilado",
+        "valor_total": 2080000.0
+    },
+    {
+        "id": 10,
+        "nombre": "Liquido de Freno DOT 4 250ml",
+        "categoria": "Frenos",
+        "marca": "Prestone",
+        "stock": 10,
+        "precio_unitario": 14000.0,
+        "descripcion": "Liquido de frenos DOT4 alta temperatura.",
+        "valor_total": 140000.0
+    },
+    {
+        "id": 11,
+        "nombre": "Llanta Delantera 90/90-17",
+        "categoria": "Llantas",
+        "marca": "Pirelli",
+        "stock": 7,
+        "precio_unitario": 172000.0,
+        "descripcion": "Llanta deportiva de buena adherencia.",
+        "valor_total": 1204000.0
+    },
+    {
+        "id": 12,
+        "nombre": "Llanta Trasera 120/80-17",
+        "categoria": "Llantas",
+        "marca": "IRC",
+        "stock": 6,
+        "precio_unitario": 195000.0,
+        "descripcion": "Doble compuesto de larga duración.",
+        "valor_total": 1170000.0
+    },
+    {
+        "id": 14,
+        "nombre": "Bombillo LED H4 6500K",
+        "categoria": "Eléctricos ",
+        "marca": "Osram",
+        "stock": 9,
+        "precio_unitario": 48000.0,
+        "descripcion": "Luz LED blanca de alto rendimiento.",
+        "valor_total": 432000.0
+    },
+    {
+        "id": 15,
+        "nombre": "Batería 12V 7Ah Libre",
+        "categoria": "Eléctricos ",
+        "marca": "Yuasa",
+        "stock": 5,
+        "precio_unitario": 110000.0,
+        "descripcion": "Batería sellada de larga duración.",
+        "valor_total": 550000.0
+    },
+    {
+        "id": 16,
+        "nombre": "Relé de Direccionales Universal",
+        "categoria": "Eléctricos ",
+        "marca": "Eagle",
+        "stock": 18,
+        "precio_unitario": 9500.0,
+        "descripcion": "Relé electrónico universal.",
+        "valor_total": 171000.0
+    },
+    {
+        "id": 17,
+        "nombre": "Manubrio Deportivo Negro",
+        "categoria": "Accesorios",
+        "marca": "ProRace",
+        "stock": 10,
+        "precio_unitario": 39000.0,
+        "descripcion": "Manubrio tipo Racing en acero.",
+        "valor_total": 390000.0
+    },
+    {
+        "id": 18,
+        "nombre": "Espejos Deportivos Carbono",
+        "categoria": "Accesorios",
+        "marca": "EvoRace",
+        "stock": 8,
+        "precio_unitario": 54000.0,
+        "descripcion": "Espejos con acabado carbono.",
+        "valor_total": 432000.0
+    },
+    {
+        "id": 19,
+        "nombre": "Slider Protector de Motor Universal",
+        "categoria": "Accesorios",
+        "marca": "TechGuard",
+        "stock": 10,
+        "precio_unitario": 90000.0,
+        "descripcion": "Protectores para caída.",
+        "valor_total": 900000.0
+    },
+    {
+        "id": 20,
+        "nombre": "Portaplaca Universal",
+        "categoria": "Accesorios",
+        "marca": "RacingPro",
+        "stock": 9,
+        "precio_unitario": 22000.0,
+        "descripcion": "Portaplaca metálico ajustable.",
+        "valor_total": 198000.0
+    }
+]

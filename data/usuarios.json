@@ -1,0 +1,11 @@
+[
+    {
+        "id": 1,
+        "username": "admin",
+        "password": "scrypt:32768:8:1$JCWSqp5IcpgTIZys$0064143595c086a56a93392be07d38133f6c508e347abdd39dd4a955129aefa64f1e8e7f1852b0405fb5e1cf8e3118e18e141ca5a11d79c2cfd97da8be3e4288",
+        "nombre_completo": "Administrador",
+        "rol": "admin",
+        "fecha_creacion": "2025-11-16 04:37:13",
+        "activo": true
+    }
+]

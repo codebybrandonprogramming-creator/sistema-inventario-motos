@@ -1,18 +1,36 @@
 # Python
-__pycache__/
-*.pyc
-*.pyo
+_pycache_/
+*.py[cod]
+*$py.class
+*.so
+.Python
 venv/
+ENV/
 env/
+*.egg-info/
 
-# Base de datos (opcional)
-data/
+# Flask
+instance/
+.webassets-cache
 
-# Scripts temporales
-resetear_admin.py
-actualizar_admin.py
-generar_presentacion.py
+# Base de datos
+*.db
+*.sqlite
+*.sql
+
+# Configuración
+.env
+config.py
 
 # IDEs
 .vscode/
+.idea/
+*.swp
+*.swo
 
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
