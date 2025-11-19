@@ -1122,7 +1122,7 @@ def historial_ventas():
         total_venta = v.get('total', 0) or 0
         
         # Calcular IVA (19% del total de venta)
-        iva_total = round(total_venta * 0.19, 3)
+        
         
         # Calcular ganancia unitaria y total
         ganancia_unitaria = round(precio_venta - precio_real, 3)
