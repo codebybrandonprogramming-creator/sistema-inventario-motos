@@ -324,7 +324,7 @@ function calcularTotal() {
     // MOSTRAR SIN DECIMALES + COP
     document.getElementById('resumen-subtotal').textContent = '$' + Math.round(subtotal).toLocaleString('es-CO') + ' COP';
     document.getElementById('resumen-iva').textContent = '$' + Math.round(ivaTotal).toLocaleString('es-CO') + ' COP';
-    document.getElementById('resumen-ganancia').textContent = '$' + gananciaTotal.toLocaleString('es-CO', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' COP';
+    document.getElementById('resumen-ganancia').textContent = '$' + gananciaTotal.toLocaleString('es-CO', {minimumFractionDigits: , maximumFractionDigits: 0}) + ' COP';
     document.getElementById('resumen-total').textContent = '$' + Math.round(totalVenta).toLocaleString('es-CO') + ' COP';
     
     document.getElementById('resumenVenta').style.display = 'block';
