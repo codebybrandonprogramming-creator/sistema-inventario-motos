@@ -1182,7 +1182,7 @@ def historial_ventas():
 
 
 # ========== FUNCIÓN PARA ELIMINAR VENTAS ==========
-)
+
 
 
 # ========== CORRECCIÓN FUNCIÓN ELIMINAR PRODUCTO ==========
