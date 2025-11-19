@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+{% block title %}Lista de Productos{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+    
+    .lista-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .lista-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+        animation: fadeInDown 0.6s ease;
+    }
+    
+    .lista-title {
+        color: #ffffff;
+        font-size: 2.5rem;
+        font-weight: 800;
+        text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .lista-title i {
+        font-size: 3rem;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .btn-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-premium {
+        background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+        border: none;
+        border-radius: 15px;
+        padding: 0.9rem 2rem;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #333;
+        box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-premium:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(255, 215, 0, 0.6);
+        color: #333;
+    }
+    
+    .btn-success-premium {
+        background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+        color: #ffffff;
+    }
+    
+    .btn-success-premium:hover {
+        box-shadow: 0 10px 30px rgba(0, 255, 136, 0.6);
+        color: #ffffff;
+    }
+    
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .alert-glass {
+        background: rgba(255, 193, 7, 0.2);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 193, 7, 0.5);
+        border-radius: 15px;
+        padding: 1rem 1.5rem;
+        color: #ffffff;
+        font-weight: 700;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        margin-bottom: 1.5rem;
+        animation: fadeInUp 0.6s ease;
+    }
+    
+    .filtros-glass {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        animation: fadeInUp 0.7s ease;
+    }
+    
+    .filtro-input {
+        background: rgba(255, 255, 255, 0.95);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 12px;
+        padding: 0.8rem 1.2rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #333;
+        transition: all 0.3s ease;
+    }
+    
+    .filtro-input:focus {
+        outline: none;
+        border-color: #ffd700;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+    }
+    
+    .btn-filtrar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 0.8rem 2rem;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #ffffff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-filtrar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+    
+    .checkbox-glass {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #ffffff;
+        font-weight: 600;
+        margin-top: 0.8rem;
+    }
+    
+    .tabla-glass {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: fadeInUp 0.9s ease;
+    }
+    
+    .table-premium {
+        margin: 0;
+        color: #ffffff;
+    }
+    
+    .table-premium thead {
+        background: rgba(0, 0, 0, 0.3);
+    }
+    
+    .table-premium thead th {
+        padding: 1.2rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border: none;
+        color: #ffd700;
+    }
+    
+    .table-premium tbody tr {
+        background: rgba(255, 255, 255, 0.05);
+        transition: all 0.3s ease;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .table-premium tbody tr:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: scale(1.01);
+    }
+    
+    .table-premium tbody td {
+        padding: 1rem;
+        font-weight: 600;
+        border: none;
+        vertical-align: middle;
+    }
+    
+    .bajo-stock-row {
+        background: rgba(255, 82, 82, 0.2) !important;
+        border-left: 4px solid #ff5252 !important;
+    }
+    
+    .badge-stock-bajo {
+        background: linear-gradient(135deg, #ff5252 0%, #cc0000 100%);
+        color: #ffffff;
+        padding: 0.4rem 0.8rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        display: inline-block;
+        margin-top: 0.3rem;
+    }
+    
+    .btn-table {
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-weight: 700;
+        border: none;
+        transition: all 0.3s ease;
+        margin: 0 0.2rem;
+    }
+    
+    .btn-table:hover {
+        transform: translateY(-2px);
+    }
+    
+    .btn-info-table {
+        background: linear-gradient(135deg, #00bfff 0%, #0080ff 100%);
+        color: #ffffff;
+    }
+    
+    .btn-warning-table {
+        background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+        color: #333;
+    }
+    
+    .btn-danger-table {
+        background: linear-gradient(135deg, #ff5252 0%, #cc0000 100%);
+        color: #ffffff;
+    }
+</style>
+
+<div class="lista-container">
+    <div class="lista-header">
+        <div class="lista-title">
+            <i class="bi bi-box2-heart-fill"></i>
+            Lista de Productos
+        </div>
+        <div class="btn-actions">
+            <a href="{{ url_for('nuevo_producto') }}" class="btn btn-premium">
+                <i class="bi bi-plus-circle-fill"></i> Agregar Nuevo Producto
+            </a>
+        </div>
+    </div>
+
+    {% if bajo_stock_total > 0 %}
+    <div class="alert-glass">
+        ⚠️ <strong>Alerta:</strong> Hay {{ bajo_stock_total }} productos con stock menor a {{ STOCK_MINIMO }} unidades.
+    </div>
+    {% endif %}
+
+    <!-- FILTROS -->
+    <form method="GET" class="filtros-glass">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label>🔍 Buscar por nombre</label>
+                <input name="q"
+                       class="form-control filtro-input"
+                       placeholder="Ej: Filtro"
+                       value="{{ request.args.get('q', '') }}">
+            </div>
+
+            <div class="col-md-3">
+                <label>📁 Todas las categorías</label>
+                <select name="categoria" class="form-select filtro-input">
+                    <option value="">-- Todas las categorías --</option>
+                    {% for c in categorias %}
+                    <option value="{{ c }}"
+                        {% if request.args.get('categoria') == c %}selected{% endif %}>
+                        {{ c }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label>📊 Ordenar por...</label>
+                <select name="ordenar" class="form-select filtro-input">
+                    <option value="">-- Sin ordenar -</option>
+                    <option value="precio_asc" {% if request.args.get('ordenar') == 'precio_asc' %}selected{% endif %}>Precio ↑</option>
+                    <option value="precio_desc" {% if request.args.get('ordenar') == 'precio_desc' %}selected{% endif %}>Precio ↓</option>
+                    <option value="stock_asc" {% if request.args.get('ordenar') == 'stock_asc' %}selected{% endif %}>Stock ↑</option>
+                    <option value="stock_desc" {% if request.args.get('ordenar') == 'stock_desc' %}selected{% endif %}>Stock ↓</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn btn-filtrar">🔍 Aplicar</button>
+            </div>
+
+            <div class="col-md-12">
+                <label class="checkbox-glass">
+                    <input type="checkbox" name="solo_bajo_stock" value="1"
+                        {% if request.args.get('solo_bajo_stock') == "1" %}checked{% endif %}>
+                    ⚠️ Solo bajo stock
+                </label>
+            </div>
+        </div>
+    </form>
+
+    <!-- TABLA SIN COLUMNAS DE GANANCIA -->
+    <div class="tabla-glass">
+        <div class="table-responsive">
+            <table class="table table-premium table-hover">
+                <thead>
+                    <tr>
+                        <th>CÓDIGO SKU</th>
+                        <th>PRODUCTO</th>
+                        <th>CATEGORÍA</th>
+                        <th>STOCK</th>
+                        <th>PRECIO UNIT.</th>
+                        <th>IVA (19%)</th>
+                        <th>PRECIO + IVA</th>
+                        <th>PRECIO VENTA</th>
+                        <th>VALOR TOTAL CON IVA</th>
+                        <th>ACCIONES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in productos %}
+                    <tr class="{% if p.stock < STOCK_MINIMO %}bajo-stock-row{% endif %}">
+                        <td>{{ p.codigo_sku or 'N/A' }}</td>
+                        <td><strong>{{ p.nombre }}</strong></td>
+                        <td>{{ p.categoria }}</td>
+                        <td>
+                            {% if p.stock < STOCK_MINIMO %}
+                                <span class="badge-stock-bajo">
+                                    ⚠️ {{ p.stock }}
+                                </span>
+                            {% else %}
+                                ✅ {{ p.stock }}
+                            {% endif %}
+                        </td>
+                        <td>${{ "{:,.3f}".format(p.precio_unitario) }} COP</td>
+                        <td>${{ "{:,.3f}".format(p.precio_unitario * 0.19) }} COP</td>
+                        <td>${{ "{:,.3f}".format(p.precio_unitario * 1.19) }} COP</td>
+                        <td>${{ "{:,.3f}".format(p.precio_venta or (p.precio_unitario * 1.19)) }} COP</td>
+                        <td><strong>${{ "{:,.3f}".format((p.precio_venta or (p.precio_unitario * 1.19)) * p.stock) }} COP</strong></td>
+                        <td class="text-center">
+                            <a href="{{ url_for('detalle_producto', id=p.id) }}" 
+                               class="btn btn-sm btn-table btn-info-table">
+                                👁️
+                            </a>
+
+                            <a href="{{ url_for('editar_producto', id=p.id) }}" 
+                               class="btn btn-sm btn-table btn-warning-table">
+                                ✏️
+                            </a>
+
+                            <a href="{{ url_for('eliminar_producto', id=p.id) }}" 
+                               class="btn btn-sm btn-table btn-danger-table"
+                               onclick="return confirm('¿Eliminar este producto?')">
+                                🗑️
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="10" class="text-center py-4">
+                            <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.5;"></i>
+                            <p class="mt-2">No hay productos registrados</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
