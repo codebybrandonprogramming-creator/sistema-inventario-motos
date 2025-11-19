@@ -435,7 +435,7 @@
                         {% set precio_base = p.precio_unitario|float %}
                         {% set iva = (precio_base * 0.19) %}
                         {% set precio_con_iva = (precio_base * 1.19) %}
-                        
+                        {% set valor_total_con_iva = (p.stock * precio_con_iva) 
                         {% set precio_venta = (p.precio_venta|float) if p.precio_venta else precio_con_iva %}
                         {% set valor_total_con_iva = (p.stock * precio_con_iva) %}
                         
