@@ -994,6 +994,8 @@ def nueva_venta():
             return redirect(url_for('nueva_venta'))
 
     return render_template("crear_venta.html", productos=productos)
+
+
 # 🔥 FUNCIÓN CORREGIDA DEL HISTORIAL DE VENTAS
 @app.route('/ventas/historial')
 @login_required
