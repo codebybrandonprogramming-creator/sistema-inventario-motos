@@ -928,7 +928,107 @@ def eliminar_producto(id):
 # ---------------------------------------------------------------------------------
 # RUTAS DE VENTAS (🔥 CORREGIDO)
 # ---------------------------------------------------------------------------------
+@app.route('/ventas/nueva', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'vendedor')
+def nueva_venta():
+    """Registra una nueva venta"""
+    productos = cargar_productos()
 
+    if request.method == "POST":
+        try:
+            producto_id = int(request.form['producto_id'])
+            cantidad = int(request.form['cantidad'])
+            porcentaje_ganancia = float(request.form.get('porcentaje_ganancia', 0))
+
+            if cantidad <= 0:
+                flash("La cantidad debe ser mayor a 0.", "error")
+                return redirect(url_for('nueva_venta'))
+
+        except (ValueError, KeyError):
+            flash("Datos inválidos en el formulario.", "error")
+            return redirect(url_for('nueva_venta'))
+
+        producto = obtener_producto_por_id(producto_id)
+
+        if not producto:
+            flash("Producto no encontrado.", "error")
+            return redirect(url_for('nueva_venta'))
+
+        # Validación de stock
+        if cantidad > producto['stock']:
+            flash(f"No puedes vender {cantidad} unidades. Stock disponible: {producto['stock']}.", "error")
+            return redirect(url_for('nueva_venta'))
+
+        # CÁLCULOS COMPLETOS
+        IVA_COLOMBIA = 0.19  # 19%
+        
+        # 1. Precio base del producto
+        precio_unitario = round(producto['precio_unitario'], 3)
+        
+        # 2. Calcular IVA unitario
+        iva_unitario = round(precio_unitario * IVA_COLOMBIA, 3)
+        
+        # 3. Precio con IVA incluido
+        precio_con_iva = round(precio_unitario + iva_unitario, 3)
+        
+        # 4. Ganancia unitaria (porcentaje sobre precio + IVA)
+        ganancia_unitaria = round(precio_con_iva * (porcentaje_ganancia / 100), 3)
+        
+        # 5. Precio de venta unitario (precio + IVA + ganancia)
+        precio_venta_unitario = round(precio_con_iva + ganancia_unitaria, 3)
+        
+        # 6. Subtotal (precio base × cantidad)
+        subtotal = round(precio_unitario * cantidad, 3)
+        
+        # 7. IVA total
+        iva_total = round(iva_unitario * cantidad, 3)
+        
+        # 8. Ganancia total
+        ganancia_total = round(ganancia_unitaria * cantidad, 3)
+        
+        # 9. Total de la venta (precio de venta × cantidad)
+        total = round(precio_venta_unitario * cantidad, 3)
+
+        # GUARDAR VENTA EN HISTORIAL
+        venta = {
+            'fecha': datetime.now().strftime('%Y-%m-%d'),
+            'hora': datetime.now().strftime('%H:%M:%S'),
+            'producto_id': producto['id'],
+            'producto_nombre': producto['nombre'],
+            'categoria': producto['categoria'],
+            'cantidad': cantidad,
+            'precio_unitario': precio_unitario,
+            'iva_unitario': iva_unitario,
+            'precio_con_iva': precio_con_iva,
+            'porcentaje_ganancia': porcentaje_ganancia,
+            'precio_venta_unitario': precio_venta_unitario,
+            'subtotal': subtotal,
+            'total': total,
+            'iva_total': iva_total,
+            'ganancia_unitaria': ganancia_unitaria,
+            'ganancia_total': ganancia_total,
+            'porcentaje_ganancia_aplicado': porcentaje_ganancia,
+            'usuario_id': session.get('user_id'),
+            'usuario_nombre': session.get('nombre_completo')
+        }
+        
+        resultado = guardar_venta(venta)
+        
+        if not resultado:
+            flash("Error al guardar la venta en la base de datos.", "error")
+            return redirect(url_for('nueva_venta'))
+
+        registrar_log('Venta registrada', f"{cantidad} unidades de '{producto['nombre']}' por ${total:,.3f}")
+
+        # Actualizar stock
+        nuevo_stock = producto['stock'] - cantidad
+        actualizar_stock_producto(producto_id, nuevo_stock)
+
+        flash(f" Venta registrada: {cantidad} unidades de '{producto['nombre']}' por ${total:,.0f} COP", "success")
+        return redirect(url_for('historial_ventas'))
+
+    return render_template("crear_venta.html", productos=productos)
 
 
 # 🔥 FUNCIÓN CORREGIDA DEL HISTORIAL DE VENTAS
