@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Inventario Profesional{% endblock %}</title>
+
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-5-theme/1.3.0/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- CSS Personalizado -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    
+    <style>
+        /* ESTILOS ESPECÍFICOS PARA EL NAVBAR */
+        .navbar-glass {
+            background: rgba(17, 25, 45, 0.7) !important;
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            padding: 1.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .brand-section-glass {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .logo-3d-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        }
+
+        .logo-3d-svg {
+            width: 100px;
+            height: 100px;
+            filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5));
+            animation: float-logo 4s ease-in-out infinite;
+        }
+
+        @keyframes float-logo {
+            0%, 100% { transform: translateY(0px) rotateY(0deg); }
+            50% { transform: translateY(-10px) rotateY(180deg); }
+        }
+
+        .logo-3d-container::before {
+            content: '';
+            position: absolute;
+            inset: -15px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.3) 0%, transparent 70%);
+            animation: pulse-glow 2.5s ease-in-out infinite;
+            border-radius: 50%;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .title-glass-3d {
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #64c8ff 0%, #00aaff 50%, #64c8ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 4px 15px rgba(100, 200, 255, 0.5));
+            animation: glow-title 3s ease-in-out infinite;
+            margin: 0;
+        }
+
+        @keyframes glow-title {
+            0%, 100% { filter: drop-shadow(0 4px 15px rgba(100, 200, 255, 0.5)); }
+            50% { filter: drop-shadow(0 6px 30px rgba(100, 200, 255, 0.8)); }
+        }
+
+        .subtitle-glass-3d {
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: #f093fb;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px rgba(240, 147, 251, 0.6);
+            margin: 0.5rem 0 0 0;
+        }
+
+        .gear-3d-container {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+
+        .gear-3d-svg {
+            width: 80px;
+            height: 80px;
+            animation: rotate-gear 6s linear infinite;
+            filter: drop-shadow(0 0 20px rgba(100, 200, 255, 0.6));
+        }
+
+        @keyframes rotate-gear {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* NAVEGACIÓN MODERNA */
+        .nav-glass-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .nav-link-glass {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1.2rem 1rem;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 18px;
+            color: #ffffff !important;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link-glass::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-link-glass:hover::before {
+            left: 100%;
+        }
+
+        .nav-link-glass:hover {
+            transform: translateY(-5px) scale(1.02);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(102, 126, 234, 0.5);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-icon-glass {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #64c8ff, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            transition: transform 0.3s;
+        }
+
+        .nav-link-glass:hover .nav-icon-glass {
+            transform: scale(1.2) rotate(10deg);
+        }
+
+        /* SELECTOR DE TEMA */
+        .theme-selector-glass {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(17, 25, 45, 0.7);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50px;
+            padding: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            z-index: 9999;
+        }
+
+        .theme-btn-glass {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .theme-btn-glass:hover {
+            transform: scale(1.15);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .theme-btn-glass.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.3);
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+        }
+
+        /* USER INFO GLASS */
+        .user-info-glass {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(17, 25, 45, 0.7);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            z-index: 9999;
+        }
+
+        .user-avatar-glass {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .user-name-glass {
+            font-weight: 700;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .user-role-glass {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .title-glass-3d {
+                font-size: 2rem;
+                letter-spacing: 4px;
+            }
+
+            .subtitle-glass-3d {
+                font-size: 1rem;
+            }
+
+            .logo-3d-svg, .gear-3d-svg {
+                width: 60px;
+                height: 60px;
+            }
+
+            .nav-glass-container {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            }
+
+            .user-info-glass {
+                position: static;
+                margin: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Selector de Tema -->
+    <div class="theme-selector-glass">
+        <button class="theme-btn-glass active" title="Modo Elegante">
+            <i class="bi bi-stars"></i>
+        </button>
+        <button class="theme-btn-glass" title="Modo Trabajo">
+            <i class="bi bi-brightness-high-fill"></i>
+        </button>
+        <button class="theme-btn-glass" title="Modo Oscuro">
+            <i class="bi bi-moon-stars-fill"></i>
+        </button>
+    </div>
+
+    <!-- Info Usuario -->
+    <div class="user-info-glass">
+        <div class="user-avatar-glass">
+            <i class="bi bi-person-fill"></i>
+        </div>
+        <div>
+            <div class="user-name-glass">{{ session.get('nombre_completo', 'Usuario') }}</div>
+            <div class="user-role-glass">
+                {% if session.get('rol') == 'admin' %}
+                    <i class="bi bi-shield-fill-check"></i> Admin
+                {% elif session.get('rol') == 'vendedor' %}
+                    <i class="bi bi-cart-fill"></i> Vendedor
+                {% else %}
+                    <i class="bi bi-eye-fill"></i> Auditor
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Principal -->
+    <nav class="navbar-glass">
+        <div class="container">
+            <div class="brand-section-glass">
+                <!-- Logo 3D -->
+                <div class="logo-3d-container">
+                    <svg class="logo-3d-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="100" cy="100" r="90" fill="url(#logo-grad)" opacity="0.2"/>
+                        <circle cx="100" cy="100" r="70" fill="none" stroke="url(#logo-grad)" stroke-width="4"/>
+                        <path d="M 70 100 L 100 70 L 130 100 L 100 130 Z" fill="url(#logo-grad)"/>
+                        <circle cx="100" cy="100" r="25" fill="#ffffff" opacity="0.4"/>
+                    </svg>
+                </div>
+
+                <div class="text-center">
+                    <h1 class="title-glass-3d">INVENTARIO</h1>
+                    <h2 class="subtitle-glass-3d">Moto Repuesto H & D</h2>
+                </div>
+
+                <!-- Engranaje 3D -->
+                <div class="gear-3d-container">
+                    <svg class="gear-3d-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="gear-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#64c8ff;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#2196f3;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <g transform="translate(100, 100)">
+                            <g id="teeth">
+                                <rect x="-6" y="-70" width="12" height="18" rx="2" fill="url(#gear-grad)"/>
+                                <g transform="rotate(45)">
+                                    <rect x="-6" y="-70" width="12" height="18" rx="2" fill="url(#gear-grad)"/>
+                                </g>
+                                <g transform="rotate(90)">
+                                    <rect x="-6" y="-70" width="12" height="18" rx="2" fill="url(#gear-grad)"/>
+                                </g>
+                                <g transform="rotate(135)">
+                                    <rect x="-6" y="-70" width="12" height="18" rx="2" fill="url(#gear-grad)"/>
+                                </g>
+                                <g transform="rotate(180)">
+                                    <rect x="-6" y="-70" width="12" height="18" rx="2" fill="url(#gear-grad)"/>
+                                </g>
+                                <g transform="rotate(225)">
+                                    <rect x="-6" y="-70" width="12" height="18" rx="2" fill="url(#gear-grad)"/>
+                                </g>
+                                <g transform="rotate(270)">
+                                    <rect x="-6" y="-70" width="12" height="18" rx="2" fill="url(#gear-grad)"/>
+                                </g>
+                                <g transform="rotate(315)">
+                                    <rect x="-6" y="-70" width="12" height="18" rx="2" fill="url(#gear-grad)"/>
+                                </g>
+                            </g>
+                            <circle cx="0" cy="0" r="50" fill="url(#gear-grad)"/>
+                            <circle cx="0" cy="0" r="25" fill="#ffffff" opacity="0.4"/>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Navegación -->
+            <div class="nav-glass-container">
+                <a href="{{ url_for('lista_productos') }}" class="nav-link-glass">
+                    <i class="bi bi-box-seam nav-icon-glass"></i>
+                    <span>Productos</span>
+                </a>
+
+                <a href="{{ url_for('dashboard') }}" class="nav-link-glass">
+                    <i class="bi bi-graph-up-arrow nav-icon-glass"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                {% if session.get('rol') in ['admin', 'vendedor'] %}
+                <a href="{{ url_for('nuevo_producto') }}" class="nav-link-glass">
+                    <i class="bi bi-plus-circle nav-icon-glass"></i>
+                    <span>Nuevo Producto</span>
+                </a>
+                {% endif %}
+
+                {% if session.get('rol') in ['admin', 'vendedor'] %}
+                <a href="{{ url_for('nueva_venta') }}" class="nav-link-glass">
+                    <i class="bi bi-cart-plus nav-icon-glass"></i>
+                    <span>Registrar Venta</span>
+                </a>
+                {% endif %}
+
+                <a href="{{ url_for('historial_ventas') }}" class="nav-link-glass">
+                    <i class="bi bi-clock-history nav-icon-glass"></i>
+                    <span>Historial de Ventas</span>
+                </a>
+
+                <a href="{{ url_for('reporte_inventario_total') }}" class="nav-link-glass">
+                    <i class="bi bi-file-earmark-bar-graph nav-icon-glass"></i>
+                    <span>Inventario Total</span>
+                </a>
+
+                {% if session.get('rol') == 'admin' %}
+                <a href="{{ url_for('lista_usuarios') }}" class="nav-link-glass">
+                    <i class="bi bi-people-fill nav-icon-glass"></i>
+                    <span>Usuarios</span>
+                </a>
+                {% endif %}
+
+                {% if session.get('rol') in ['admin', 'auditor'] %}
+                <a href="{{ url_for('ver_logs') }}" class="nav-link-glass">
+                    <i class="bi bi-journal-text nav-icon-glass"></i>
+                    <span>Logs</span>
+                </a>
+                {% endif %}
+
+                <a href="{{ url_for('cambiar_password') }}" class="nav-link-glass">
+                    <i class="bi bi-key nav-icon-glass"></i>
+                    <span>Cambiar Contraseña</span>
+                </a>
+
+                <a href="{{ url_for('logout') }}" class="nav-link-glass" style="background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4);">
+                    <i class="bi bi-box-arrow-right nav-icon-glass"></i>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container py-5">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-glass alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
