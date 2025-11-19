@@ -224,40 +224,7 @@ def cargar_ventas():
     ventas = ejecutar_query(query, fetch_all=True)
     return ventas if ventas else []
 
-def guardar_venta(venta):
-    """Guarda una nueva venta en MySQL con todos los campos calculados"""
-    query = """
-        INSERT INTO ventas (
-            fecha, hora, producto_id, producto_nombre, categoria,
-            cantidad, precio_unitario, iva_unitario, precio_con_iva,
-            porcentaje_ganancia, precio_venta_unitario, subtotal, total,
-            iva_total, ganancia_unitaria, ganancia_total, 
-            porcentaje_ganancia_aplicado, usuario_id, usuario_nombre
-        )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """
-    params = (
-        venta['fecha'],
-        venta['hora'],
-        venta['producto_id'],
-        venta['producto_nombre'],
-        venta['categoria'],
-        venta['cantidad'],
-        venta['precio_unitario'],
-        venta['iva_unitario'],
-        venta['precio_con_iva'],
-        venta['porcentaje_ganancia'],
-        venta['precio_venta_unitario'],
-        venta['subtotal'],
-        venta['total'],
-        venta['iva_total'],
-        venta['ganancia_unitaria'],
-        venta['ganancia_total'],
-        venta['porcentaje_ganancia_aplicado'],
-        venta.get('usuario_id'),
-        venta.get('usuario_nombre')
-    )
-    return ejecutar_query(query, params, commit=True)
+
     # ---------------------------------------------------------------------------------
 # FUNCIONES DE USUARIOS Y AUTENTICACIÓN
 # ---------------------------------------------------------------------------------
