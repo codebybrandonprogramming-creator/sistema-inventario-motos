@@ -76,6 +76,25 @@ from flask_wtf import CSRFProtect
 
 app = Flask(__name__)
 
+# Filtro personalizado para formato colombiano
+@app.template_filter('formato_colombiano')
+def formato_colombiano(valor, decimales=3):
+    """
+    Formatea números al estilo colombiano: punto para miles, coma para decimales
+    Ejemplo: 95000.436 -> "95.000,436"
+    """
+    if valor is None:
+        valor = 0
+    
+    # Formatear con los decimales especificados
+    formato = f"{{:,.{decimales}f}}"
+    texto = formato.format(float(valor))
+    
+    # Cambiar coma por punto (miles) y punto por coma (decimales)
+    texto = texto.replace(',', 'TEMP').replace('.', ',').replace('TEMP', '.')
+    
+    return texto
+
 app.secret_key = "dev_secret_key_change_in_production"
 
 # Headers de seguridad
