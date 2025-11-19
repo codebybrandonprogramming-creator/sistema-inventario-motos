@@ -82,6 +82,7 @@ def set_security_headers(response):
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     return response
+
 # ---------------------------------------------------------------------------------
 # CONFIGURACIÓN Y CONEXIÓN A MYSQL
 # ---------------------------------------------------------------------------------
