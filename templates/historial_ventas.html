@@ -75,7 +75,7 @@
                         <td class="text-center">{{ venta.cantidad }}</td>
                         <td>${{ "{:,.3f}".format(venta.precio_unitario) }} COP</td>
                         <td class="text-warning">${{ "{:,.3f}".format(venta.iva_total or 0) }} COP</td>
-                        <td class="text-info">{{ "{:.3f}".format(venta.porcentaje_ganancia_aplicado or 0) }}%</td>
+                        <
                         <td class="text-success">${{ "{:,.3f}".format(venta.ganancia_unitaria or 0) }} COP</td>
                         <td class="text-success"><strong>${{ "{:,.3f}".format(venta.ganancia_total or 0) }} COP</strong></td>
                         <td class="total-col"><strong>${{ "{:,.3f}".format(venta.total) }} COP</strong></td>
