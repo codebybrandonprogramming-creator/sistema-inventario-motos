@@ -135,6 +135,7 @@ def ejecutar_query(query, params=None, commit=False, fetch_one=False, fetch_all=
     if commit and connection:
         connection.rollback()
     return None
+
     finally:
         if cursor:
             cursor.close()
