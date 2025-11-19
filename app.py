@@ -2124,45 +2124,6 @@ def exportar_rentabilidad_excel():
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-
-
-
-@app.route('/reportes/rentabilidad')
-@login_required
-def reporte_rentabilidad():
-    """Reporte de rentabilidad"""
-    productos = cargar_productos()
-    ventas = cargar_ventas()
-    
-    # Calcular rentabilidad por producto
-    rentabilidad_productos = []
-    
-    for p in productos:
-        ventas_producto = [v for v in ventas if v.get('producto_id') == p.get('id')]
-        total_vendido = sum(v.get('total', 0) for v in ventas_producto)
-        cantidad_vendida = sum(v.get('cantidad', 0) for v in ventas_producto)
-        
-        if cantidad_vendida > 0:
-            rentabilidad_productos.append({
-                'producto': p.get('nombre'),
-                'cantidad_vendida': cantidad_vendida,
-                'ingresos': total_vendido,
-                'stock_actual': p.get('stock'),
-                'valor_inventario': p.get('valor_total')
-            })
-    
-    # Ordenar por ingresos
-    rentabilidad_productos = sorted(
-        rentabilidad_productos,
-        key=lambda x: x['ingresos'],
-        reverse=True
-    )
-    
-    return render_template(
-        'reportes/reporte_rentabilidad.html',
-        rentabilidad=rentabilidad_productos
-    )
-
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
