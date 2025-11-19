@@ -273,9 +273,9 @@ def guardar_venta(venta):
         venta['precio_unitario'],
         venta['total'],
         venta.get('iva_total', 3),
-        venta.get('ganancia_unitaria', 0),
-        venta.get('ganancia_total', 0),
-        venta.get('porcentaje_ganancia_aplicado', 0),
+        venta.get('ganancia_unitaria', 3),
+        venta.get('ganancia_total', 3),
+        venta.get('porcentaje_ganancia_aplicado', 3),
         venta.get('usuario_id'),
         venta.get('usuario_nombre')
     )
