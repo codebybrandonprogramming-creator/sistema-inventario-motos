@@ -222,7 +222,7 @@
         <div class="stat-card">
             <div class="stat-icon">💰</div>
             <div class="stat-label">Total Vendido</div>
-            <div class="stat-value">${{ total_general|formato_colombiano(0) }} COP</div>
+            <div class="stat-value">${{ "{:,.0f}".format(total_general) }} COP</div>
         </div>
         
         <div class="stat-card">
@@ -233,8 +233,8 @@
         
         <div class="stat-card">
             <div class="stat-icon">🏛️</div>
-            <div class="stat-label">IVA Total</div>
-            <div class="stat-value">${{ total_iva|formato_colombiano(0) }} COP</div>
+            <div class="stat-label">Total IVA</div>
+            <div class="stat-value">${{ total_iva|formato_colombiano(3) }} COP</div>
         </div>
         
         <div class="stat-card">
