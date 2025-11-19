@@ -1815,6 +1815,131 @@ def exportar_iva_excel():
     )
 
 
+@app.route('/reportes/rentabilidad')
+@login_required
+def reporte_rentabilidad():
+    """Reporte de productos más rentables"""
+    fecha_desde = request.args.get('fecha_desde', '')
+    fecha_hasta = request.args.get('fecha_hasta', '')
+    ordenar = request.args.get('ordenar', 'ganancia')
+    
+    # Query base
+    query = """
+        SELECT 
+            v.producto_id,
+            p.nombre,
+            p.categoria,
+            COUNT(*) as num_ventas,
+            SUM(v.cantidad) as cantidad_vendida,
+            SUM(v.total) as total_vendido,
+            AVG(v.ganancia_unitaria) as ganancia_unitaria_promedio,
+            SUM(v.ganancia_total) as ganancia_total
+        FROM ventas v
+        JOIN productos p ON v.producto_id = p.id
+        WHERE 1=1
+    """
+    
+    params = []
+    
+    # Filtros
+    if fecha_desde:
+        query += " AND DATE(v.fecha) >= %s"
+        params.append(fecha_desde)
+    
+    if fecha_hasta:
+        query += " AND DATE(v.fecha) <= %s"
+        params.append(fecha_hasta)
+    
+    query += " GROUP BY v.producto_id, p.nombre, p.categoria"
+    
+    # Ordenar
+    if ordenar == 'cantidad':
+        query += " ORDER BY cantidad_vendida DESC"
+    else:
+        query += " ORDER BY ganancia_total DESC"
+    
+    resultados = ejecutar_query(query, tuple(params) if params else None, fetch_all=True)
+    
+    # Procesar resultados
+    productos_rentables = []
+    ganancia_total = 0
+    unidades_vendidas = 0
+    
+    if resultados:
+        for r in resultados:
+            ganancia_tot = r['ganancia_total'] or 0
+            total_vend = r['total_vendido'] or 0
+            
+            # Calcular % de margen
+            if total_vend > 0:
+                margen = (ganancia_tot / total_vend) * 100
+            else:
+                margen = 0
+            
+            productos_rentables.append({
+                'producto_id': r['producto_id'],
+                'nombre': r['nombre'],
+                'categoria': r['categoria'],
+                'num_ventas': r['num_ventas'],
+                'cantidad_vendida': r['cantidad_vendida'],
+                'total_vendido': total_vend,
+                'ganancia_unitaria_promedio': r['ganancia_unitaria_promedio'] or 0,
+                'ganancia_total': ganancia_tot,
+                'margen_porcentaje': margen
+            })
+            
+            ganancia_total += ganancia_tot
+            unidades_vendidas += r['cantidad_vendida']
+    
+    # Rentabilidad por categoría
+    query_cat = """
+        SELECT 
+            p.categoria,
+            COUNT(DISTINCT v.producto_id) as num_productos,
+            SUM(v.cantidad) as unidades_vendidas,
+            SUM(v.ganancia_total) as ganancia_total
+        FROM ventas v
+        JOIN productos p ON v.producto_id = p.id
+        WHERE 1=1
+    """
+    
+    params_cat = []
+    
+    if fecha_desde:
+        query_cat += " AND DATE(v.fecha) >= %s"
+        params_cat.append(fecha_desde)
+    
+    if fecha_hasta:
+        query_cat += " AND DATE(v.fecha) <= %s"
+        params_cat.append(fecha_hasta)
+    
+    query_cat += " GROUP BY p.categoria ORDER BY ganancia_total DESC"
+    
+    resultados_cat = ejecutar_query(query_cat, tuple(params_cat) if params_cat else None, fetch_all=True)
+    
+    rentabilidad_categorias = []
+    if resultados_cat:
+        for r in resultados_cat:
+            ganancia_cat = r['ganancia_total'] or 0
+            num_prod = r['num_productos']
+            
+            rentabilidad_categorias.append({
+                'categoria': r['categoria'],
+                'num_productos': num_prod,
+                'unidades_vendidas': r['unidades_vendidas'],
+                'ganancia_total': ganancia_cat,
+                'ganancia_promedio': ganancia_cat / num_prod if num_prod > 0 else 0
+            })
+    
+    return render_template(
+        'reportes/reporte_rentabilidad.html',
+        productos_rentables=productos_rentables,
+        rentabilidad_categorias=rentabilidad_categorias,
+        ganancia_total=ganancia_total,
+        total_productos=len(productos_rentables),
+        unidades_vendidas=unidades_vendidas
+    )
+
 
 @app.route('/reportes/rentabilidad/excel')
 @login_required
