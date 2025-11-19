@@ -2267,6 +2267,34 @@ def page_not_found(e):
 def internal_server_error(e):
     return render_template('500.html'), 500
 
+
+# AGREGA esta ruta en app.py si no la tienes:
+
+@app.route('/ventas/<int:id>/eliminar', methods=['POST'])
+@login_required
+@role_required('admin')
+def eliminar_venta(id):
+    """Elimina una venta del historial (solo admin)"""
+    # Obtener la venta antes de eliminarla para el log
+    query = "SELECT * FROM ventas WHERE id = %s"
+    venta = ejecutar_query(query, (id,), fetch_one=True)
+    
+    if not venta:
+        flash('Venta no encontrada.', 'error')
+        return redirect(url_for('historial_ventas'))
+    
+    # Eliminar la venta
+    query_delete = "DELETE FROM ventas WHERE id = %s"
+    ejecutar_query(query_delete, (id,), commit=True)
+    
+    registrar_log(
+        'Venta eliminada', 
+        f"ID: {id} - Producto: {venta.get('producto_nombre')} - Cantidad: {venta.get('cantidad')} - Total: ${venta.get('total', 0):,.3f}"
+    )
+    
+    flash(f'✅ Venta eliminada correctamente. ⚠️ Recuerda ajustar el stock manualmente si es necesario.', 'success')
+    return redirect(url_for('historial_ventas'))
+
 # ---------------------------------------------------------------------------------
 # RUN
 # ---------------------------------------------------------------------------------
