@@ -132,7 +132,7 @@ def ejecutar_query(query, params=None, commit=False, fetch_one=False, fetch_all=
         # Registrar en archivo de log
         import logging
         logging.error(f"Error DB: {e}")
-    if commit and connection:
+        if commit and connection:
         connection.rollback()
     return None
     finally:
