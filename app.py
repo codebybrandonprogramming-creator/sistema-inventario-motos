@@ -2126,21 +2126,7 @@ def exportar_rentabilidad_excel():
     )
 
 
-@app.route('/reportes/iva')
-@login_required
-def reporte_iva():
-    """Reporte de IVA"""
-    ventas = cargar_ventas()
-    
-    total_ventas = sum(v.get('total', 0) for v in ventas)
-    iva_19 = total_ventas * 0.19
-    
-    return render_template(
-        'reportes/reporte_iva.html',
-        ventas=ventas,
-        total_ventas=total_ventas,
-        iva_19=iva_19
-    )
+
 
 @app.route('/reportes/rentabilidad')
 @login_required
