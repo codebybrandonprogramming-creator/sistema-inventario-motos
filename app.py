@@ -1212,52 +1212,7 @@ def eliminar_venta(id):
 
 
 # ========== CORRECCIÓN FUNCIÓN ELIMINAR PRODUCTO ==========
-@app.route("/productos/eliminar/<int:id>", methods=['POST'])
-@login_required
-@role_required('admin')
-def eliminar_producto(id):
-    """Elimina un producto - CON VALIDACIÓN DE VENTAS"""
-    
-    try:
-        # Buscar el producto
-        producto = obtener_producto_por_id(id)
-        
-        if not producto:
-            return jsonify({
-                'success': False, 
-                'error': 'Producto no encontrado'
-            }), 404
-        
-        # Verificar si tiene ventas asociadas
-        query_ventas = "SELECT COUNT(*) as total FROM ventas WHERE producto_id = %s"
-        resultado = ejecutar_query(query_ventas, (id,), fetch_one=True)
-        
-        ventas_asociadas = resultado['total'] if resultado else 0
-        
-        if ventas_asociadas > 0:
-            return jsonify({
-                'success': False,
-                'error': f'No se puede eliminar. Tiene {ventas_asociadas} venta(s) asociada(s).\n\nPrimero elimina las ventas desde el Historial de Ventas.',
-                'ventas_asociadas': ventas_asociadas
-            }), 400
-        
-        # Eliminar el producto
-        query_eliminar = "DELETE FROM productos WHERE id = %s"
-        ejecutar_query(query_eliminar, (id,), commit=True)
-        
-        registrar_log('Producto eliminado', f"Producto: {producto['nombre']} (ID: {id})")
-        
-        return jsonify({
-            'success': True,
-            'message': 'Producto eliminado exitosamente'
-        }), 200
-        
-    except Exception as e:
-        print(f"❌ Error al eliminar producto: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+
 
 
 @app.route('/ventas/eliminar/<int:id>', methods=['POST'])
