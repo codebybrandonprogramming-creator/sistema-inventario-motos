@@ -186,6 +186,7 @@ def actualizar_producto(producto_id, nombre, categoria, marca, stock, precio_uni
     """Actualiza un producto existente en MySQL"""
     valor_total = round(stock * precio_unitario, 3)
     
+    
     # Calcular precio_venta basado en precio_unitario + IVA + ganancia
     precio_con_iva = round(precio_unitario * 1.19, 3)
     precio_venta = round(precio_con_iva * (1 + porcentaje_ganancia / 100), 3)
