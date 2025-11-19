@@ -253,7 +253,7 @@ def reiniciar_autoincrement_ventas():
         return False
 
 
-def cargar_ventas():
+
     """Carga todas las ventas desde MySQL con todos los campos"""
     query = """
         SELECT 
@@ -261,7 +261,7 @@ def cargar_ventas():
             cantidad, precio_unitario, total, iva_total,
             ganancia_unitaria, ganancia_total, porcentaje_ganancia,
             usuario_id, usuario_nombre, fecha_registro
-        FROM ventas
+        FROM ventasdef cargar_ventas():
         ORDER BY fecha DESC, hora DESC
     """
     ventas = ejecutar_query(query, fetch_all=True)
