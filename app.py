@@ -71,7 +71,7 @@ from collections import defaultdict
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql
-from 
+from flask
 
 app = Flask(__name__)
 app.secret_key = "dev_secret_key_change_in_production"
