@@ -256,7 +256,7 @@
                         <th>PRODUCTO</th>
                         <th style="text-align: center;">CANTIDAD</th>
                         <th style="text-align: right;">PRECIO UNIT.</th>
-                        <th style="text-align: right;">IVA (19%)</th>
+                        <th style="text-align: right;">IVA TOTAL</th>
                         <th style="text-align: center;">% GANANCIA</th>
                         <th style="text-align: right;">GANANCIA UNIT.</th>
                         <th style="text-align: right;">GANANCIA TOTAL</th>
@@ -278,10 +278,10 @@
                             </td>
                             <td style="text-align: center;"><strong>{{ venta.cantidad }}</strong></td>
                             <td style="text-align: right;">${{ venta.precio_unitario|formato_colombiano(3) }} COP</td>
-                            <td class="text-warning" style="text-align: right;">${{ venta.iva_unitario|formato_colombiano(3) }} COP</td>
-                            <td class="text-info" style="text-align: center; font-size: 1.05rem;">{{ venta.porcentaje_ganancia_aplicado|int }}%</td>
-                            <td class="text-success" style="text-align: right;">${{ venta.ganancia_unitaria|formato_colombiano(3) }} COP</td>
-                            <td class="text-success" style="text-align: right;"><strong>${{ venta.ganancia_total|formato_colombiano(3) }} COP</strong></td>
+                            <td class="text-warning" style="text-align: right;">${{ (venta.iva_total if venta.iva_total else 0)|formato_colombiano(3) }} COP</td>
+                            <td class="text-info" style="text-align: center; font-size: 1.05rem;">{{ (venta.porcentaje_ganancia if venta.porcentaje_ganancia else 0)|round(1) }}%</td>
+                            <td class="text-success" style="text-align: right;">${{ (venta.ganancia_unitaria if venta.ganancia_unitaria else 0)|formato_colombiano(3) }} COP</td>
+                            <td class="text-success" style="text-align: right;"><strong>${{ (venta.ganancia_total if venta.ganancia_total else 0)|formato_colombiano(3) }} COP</strong></td>
                             <td class="text-purple" style="text-align: right; font-size: 1.1rem;">${{ venta.total|formato_colombiano(3) }} COP</td>
                             <td><strong>{{ venta.usuario_nombre or 'N/A' }}</strong></td>
                             <td style="text-align: center;">
