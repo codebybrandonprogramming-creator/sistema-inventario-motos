@@ -3,65 +3,47 @@
 {% block title %}Historial de Ventas{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container-fluid py-4">
     <div class="header-section">
         <h1>📊 Historial de Ventas</h1>
-        <a href="{{ url_for('registrar_venta') }}" class="btn btn-primary">+ Nueva Venta</a>
+        <a href="{{ url_for('nueva_venta') }}" class="btn btn-primary">+ Nueva Venta</a>
     </div>
 
-    <!-- Filtros -->
-    <div class="filter-section">
-        <form method="GET" class="filter-form">
-            <div class="filter-group">
-                <label>Fecha Desde:</label>
-                <input type="date" name="fecha_desde" value="{{ request.args.get('fecha_desde', '') }}" class="form-control">
-            </div>
-            <div class="filter-group">
-                <label>Fecha Hasta:</label>
-                <input type="date" name="fecha_hasta" value="{{ request.args.get('fecha_hasta', '') }}" class="form-control">
-            </div>
-            <div class="filter-group">
-                <button type="submit" class="btn btn-info">🔍 Filtrar</button>
-                <a href="{{ url_for('historial_ventas') }}" class="btn btn-secondary">Limpiar</a>
-            </div>
-        </form>
-    </div>
-
-    <!-- Resumen General con Efectos 3D -->
+    <!-- Resumen General -->
     <div class="summary-cards">
-        <div class="summary-card summary-card-3d">
-            <div class="summary-icon summary-icon-gold">💰</div>
+        <div class="summary-card">
+            <div class="summary-icon">💰</div>
             <div class="summary-content">
                 <h3>Total Vendido</h3>
-                <p class="summary-value">${{ "{:,.2f}".format(total_vendido) }} COP</p>
+                <p>${{ "{:,.3f}".format(total_general) }} COP</p>
             </div>
         </div>
-        <div class="summary-card summary-card-3d">
-            <div class="summary-icon summary-icon-green">📈</div>
+        <div class="summary-card">
+            <div class="summary-icon">📈</div>
             <div class="summary-content">
                 <h3>Total Ganancias</h3>
-                <p class="summary-value text-success">${{ "{:,.2f}".format(total_ganancias) }} COP</p>
+                <p class="text-success">${{ "{:,.3f}".format(total_ganancias) }} COP</p>
             </div>
         </div>
-        <div class="summary-card summary-card-3d">
-            <div class="summary-icon summary-icon-orange">🏛️</div>
+        <div class="summary-card">
+            <div class="summary-icon">🏛️</div>
             <div class="summary-content">
                 <h3>IVA Total</h3>
-                <p class="summary-value text-warning">${{ "{:,.2f}".format(total_iva) }} COP</p>
+                <p class="text-warning">${{ "{:,.3f}".format(total_iva) }} COP</p>
             </div>
         </div>
-        <div class="summary-card summary-card-3d">
-            <div class="summary-icon summary-icon-blue">🛒</div>
+        <div class="summary-card">
+            <div class="summary-icon">🛒</div>
             <div class="summary-content">
                 <h3>Total Ventas</h3>
-                <p class="summary-value">{{ ventas|length }}</p>
+                <p>{{ ventas|length }}</p>
             </div>
         </div>
     </div>
 
-    <!-- Tabla de Ventas con Diseño 3D -->
-    <div class="table-responsive table-3d-container">
-        <table class="table table-3d">
+    <!-- Tabla de Ventas -->
+    <div class="table-responsive">
+        <table class="table">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -75,28 +57,40 @@
                     <th>Ganancia Unit.</th>
                     <th>Ganancia Total</th>
                     <th>Total Venta</th>
+                    <th>Usuario</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% if ventas %}
                     {% for venta in ventas %}
-                    <tr class="table-row-hover">
-                        <td>{{ venta[0] }}</td>
-                        <td>{{ venta[10].strftime('%d/%m/%Y') if venta[10] else 'N/A' }}</td>
-                        <td>{{ venta[10].strftime('%H:%M') if venta[10] else 'N/A' }}</td>
-                        <td><strong>{{ venta[11] }}</strong></td>
-                        <td class="text-center">{{ venta[2] }}</td>
-                        <td>${{ "{:,.2f}".format(venta[3]) }} COP</td>
-                        <td class="text-warning">${{ "{:,.2f}".format(venta[5] or 0) }} COP</td>
-                        <td class="text-info">{{ "{:.2f}".format(venta[8] or 0) }}%</td>
-                        <td class="text-success">${{ "{:,.2f}".format(venta[6] or 0) }} COP</td>
-                        <td class="text-success"><strong>${{ "{:,.2f}".format(venta[7] or 0) }} COP</strong></td>
-                        <td class="total-col"><strong>${{ "{:,.2f}".format(venta[4]) }} COP</strong></td>
+                    <tr>
+                        <td>{{ venta.id }}</td>
+                        <td>{{ venta.fecha }}</td>
+                        <td>{{ venta.hora }}</td>
+                        <td>
+                            <strong>{{ venta.producto_nombre }}</strong><br>
+                            <small class="text-muted">{{ venta.categoria }}</small>
+                        </td>
+                        <td class="text-center">{{ venta.cantidad }}</td>
+                        <td>${{ "{:,.3f}".format(venta.precio_unitario) }} COP</td>
+                        <td class="text-warning">${{ "{:,.3f}".format(venta.iva_total or 0) }} COP</td>
+                        <td class="text-info">{{ "{:.3f}".format(venta.porcentaje_ganancia_aplicado or 0) }}%</td>
+                        <td class="text-success">${{ "{:,.3f}".format(venta.ganancia_unitaria or 0) }} COP</td>
+                        <td class="text-success"><strong>${{ "{:,.3f}".format(venta.ganancia_total or 0) }} COP</strong></td>
+                        <td class="total-col"><strong>${{ "{:,.3f}".format(venta.total) }} COP</strong></td>
+                        <td>{{ venta.usuario_nombre or 'N/A' }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('eliminar_venta', id=venta.id) }}" style="display:inline;" 
+                                  onsubmit="return confirm('¿Eliminar esta venta?');">
+                                <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
+                            </form>
+                        </td>
                     </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="11" class="text-center no-data">No hay ventas registradas</td>
+                        <td colspan="13" class="text-center">No hay ventas registradas</td>
                     </tr>
                 {% endif %}
             </tbody>
@@ -105,119 +99,142 @@
 </div>
 
 <style>
-/* Variables para modo claro/oscuro */
-:root {
-    --bg-card: #ffffff;
-    --text-primary: #2c3e50;
-    --text-secondary: #666;
-    --border-color: #e0e0e0;
-    --hover-bg: #f8f9fa;
-    --shadow-light: rgba(0, 0, 0, 0.1);
-    --shadow-medium: rgba(0, 0, 0, 0.15);
-    --shadow-dark: rgba(0, 0, 0, 0.2);
-}
-
-[data-theme="dark"] {
-    --bg-card: #2d3436;
-    --text-primary: #ffffff;
-    --text-secondary: #b2bec3;
-    --border-color: #4a4a4a;
-    --hover-bg: #3d4446;
-    --shadow-light: rgba(0, 0, 0, 0.3);
-    --shadow-medium: rgba(0, 0, 0, 0.4);
-    --shadow-dark: rgba(0, 0, 0, 0.5);
-}
-
-.filter-section {
-    background: var(--bg-card);
-    padding: 20px;
-    border-radius: 15px;
-    margin: 20px 0;
-    box-shadow: 0 4px 15px var(--shadow-light);
-}
-
-.filter-form {
+.header-section {
     display: flex;
-    gap: 15px;
-    align-items: end;
-    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
 }
 
-.filter-group {
-    flex: 1;
-    min-width: 200px;
-}
-
-.filter-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 600;
-    color: var(--text-secondary);
+.header-section h1 {
+    margin: 0;
+    color: #2c3e50;
 }
 
 .summary-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
-    margin: 30px 0;
+    margin: 20px 0;
 }
 
-/* EFECTO 3D PARA LAS TARJETAS */
-.summary-card-3d {
-    background: var(--bg-card);
-    border-radius: 20px;
-    padding: 25px;
+.summary-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     display: flex;
     align-items: center;
-    gap: 20px;
-    position: relative;
-    transform-style: preserve-3d;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 
-        0 10px 30px var(--shadow-light),
-        0 1px 8px var(--shadow-medium),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    gap: 15px;
+    transition: transform 0.2s;
 }
 
-.summary-card-3d::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
-    border-radius: 20px;
-    z-index: 1;
-}
-
-.summary-card-3d:hover {
-    transform: translateY(-10px) scale(1.02);
-    box-shadow: 
-        0 20px 50px var(--shadow-medium),
-        0 5px 20px var(--shadow-dark),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+.summary-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 .summary-icon {
-    font-size: 50px;
-    width: 80px;
-    height: 80px;
+    font-size: 40px;
+    width: 60px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 20px;
-    position: relative;
-    z-index: 2;
-    transition: transform 0.3s ease;
-    box-shadow: 
-        0 8px 20px var(--shadow-light),
-        inset 0 2px 4px rgba(255, 255, 255, 0.2);
+    background: #f8f9fa;
+    border-radius: 10px;
 }
 
-.summary-card-3d:hover .summary-icon {
-    transform: scale(1.1) rotateY(10deg);
+.summary-content h3 {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+    font-weight: 600;
 }
 
-.summary-icon-gold {
-    background: linear-gradient(135deg, #f
+.summary-content p {
+    margin: 5px 0 0 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.table-responsive {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.table th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap;
+}
+
+.table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-muted {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.text-warning {
+    color: #f39c12;
+}
+
+.text-success {
+    color: #27ae60;
+}
+
+.text-info {
+    color: #3498db;
+}
+
+.total-col {
+    color: #8e44ad;
+    font-weight: 700;
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+</style>
+{% endblock %}
