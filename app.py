@@ -238,6 +238,23 @@ def actualizar_stock_producto(producto_id, nuevo_stock):
 
 def reiniciar_autoincrement_productos():
     """Reinicia el AUTO_INCREMENT de la tabla productos si está vacía"""
+    try:
+        # Verificar si hay productos
+        count_query = "SELECT COUNT(*) as total FROM productos"
+        result = ejecutar_query(count_query, fetch_one=True)
+        
+        if result and result.get('total', 0) == 0:
+            # Si no hay productos, reiniciar AUTO_INCREMENT a 1
+            reset_query = "ALTER TABLE productos AUTO_INCREMENT = 1"
+            ejecutar_query(reset_query, commit=True)
+            return True
+        return False
+    except Exception as e:
+        print(f"❌ Error al reiniciar AUTO_INCREMENT: {e}")
+        return False
+
+def reiniciar_autoincrement_productos():
+    """Reinicia el AUTO_INCREMENT de la tabla productos si está vacía"""
     # Verificar si la tabla está vacía
     count_query = "SELECT COUNT(*) as total FROM productos"
     result = ejecutar_query(count_query, fetch_one=True)
