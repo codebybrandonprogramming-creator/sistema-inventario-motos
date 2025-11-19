@@ -708,3 +708,5 @@ def limpiar_logs():
     registrar_log("Historial limpiado", "Se eliminaron todos los logs y se reinició el AUTO_INCREMENT.")
     flash("Historial limpiado correctamente. IDs reiniciados desde 1.", "success")
     return redirect(url_for('ver_logs'))
+
+
