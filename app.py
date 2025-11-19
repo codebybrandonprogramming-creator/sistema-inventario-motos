@@ -192,7 +192,7 @@ def actualizar_producto(producto_id, nombre, categoria, marca, stock, precio_uni
 
     if stock < 0 or precio_unitario < 0:
         flash("El stock y el precio no pueden ser negativos.", "error")
-    return redirect(url_for('editar_producto', id=id))
+        return redirect(url_for('editar_producto', id=id))
     
     query = """
         UPDATE productos 
