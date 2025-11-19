@@ -1115,6 +1115,8 @@ def nueva_venta():
 # Reemplaza tu función historial_ventas() en app.py con esta:
 
 
+
+
 @app.route('/ventas/eliminar/<int:id>', methods=['POST'])
 @login_required
 @role_required('admin')
