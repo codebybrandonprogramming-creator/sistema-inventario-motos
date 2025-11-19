@@ -1170,7 +1170,7 @@ def historial_ventas():
             # Usar el porcentaje guardado
             porcentaje_ganancia = round(porcentaje_guardado)
             
-            else:
+        else:
             
         if precio_real > 0:
             
