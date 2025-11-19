@@ -191,7 +191,7 @@ def actualizar_producto(producto_id, nombre, categoria, marca, stock, precio_uni
     precio_venta = round(precio_con_iva * (1 + porcentaje_ganancia / 100), 3)
 
     if stock < 0 or precio_unitario < 0:
-    flash("El stock y el precio no pueden ser negativos.", "error")
+        flash("El stock y el precio no pueden ser negativos.", "error")
     return redirect(url_for('editar_producto', id=id))
     
     query = """
