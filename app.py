@@ -72,7 +72,24 @@ from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql
 from flask_wtf import CSRFProtect
+import logging
+from logging.handlers import RotatingFileHandler
+import os
 
+# Crear carpeta de logs si no existe
+if not os.path.exists('logs'):
+    os.mkdir('logs')
+
+# Configurar logging
+file_handler = RotatingFileHandler('logs/aplicacion.log', maxBytes=10240, backupCount=10)
+file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+))
+file_handler.setLevel(logging.INFO)
+app.logger.addHandler(file_handler)
+
+app.logger.setLevel(logging.INFO)
+app.logger.info('Inicio de aplicación')
 
 app = Flask(__name__)
 app.secret_key = "dev_secret_key_change_in_production"
