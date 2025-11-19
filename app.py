@@ -75,7 +75,13 @@ import pymysql
 app = Flask(__name__)
 app.secret_key = "dev_secret_key_change_in_production"
 
-
+# Headers de seguridad
+@app.after_request
+def set_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
 # ---------------------------------------------------------------------------------
 # CONFIGURACIÓN Y CONEXIÓN A MYSQL
 # ---------------------------------------------------------------------------------
