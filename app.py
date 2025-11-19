@@ -302,3 +302,6 @@ def guardar_venta(venta):
         venta.get('usuario_nombre')
     )
     return ejecutar_query(query, params, commit=True)
+
+
+    
