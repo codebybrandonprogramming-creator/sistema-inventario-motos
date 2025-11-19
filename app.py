@@ -268,40 +268,6 @@ def cargar_ventas():
     return ventas if ventas else []
 
 
-def guardar_venta(venta):
-    """Guarda una nueva venta en MySQL con IVA y ganancia desglosados"""
-    query = """
-        INSERT INTO ventas (
-            fecha, hora, producto_id, producto_nombre, categoria,
-            cantidad, precio_unitario, 
-            iva_unitario, precio_con_iva, porcentaje_ganancia, 
-            ganancia_unitaria, precio_venta_unitario,
-            subtotal, iva_total, ganancia_total, total,
-            usuario_id, usuario_nombre
-        )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """
-    params = (
-        venta['fecha'],
-        venta['hora'],
-        venta['producto_id'],
-        venta['producto_nombre'],
-        venta['categoria'],
-        venta['cantidad'],
-        venta['precio_unitario'],
-        venta.get('iva_unitario', 0),
-        venta.get('precio_con_iva', 0),
-        venta.get('porcentaje_ganancia', 0),
-        venta.get('ganancia_unitaria', 0),
-        venta.get('precio_venta_unitario', 0),
-        venta.get('subtotal', 0),
-        venta.get('iva_total', 0),
-        venta.get('ganancia_total', 0),
-        venta['total'],
-        venta.get('usuario_id'),
-        venta.get('usuario_nombre')
-    )
-    return ejecutar_query(query, params, commit=True)
 
 
     # ---------------------------------------------------------------------------------
