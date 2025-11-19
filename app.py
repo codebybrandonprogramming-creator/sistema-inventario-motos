@@ -252,6 +252,22 @@ def reiniciar_autoincrement_productos():
     except Exception as e:
         print(f"❌ Error al reiniciar AUTO_INCREMENT: {e}")
         return False
+
+
+def reiniciar_autoincrement_ventas():
+    """Reinicia el AUTO_INCREMENT de la tabla ventas si está vacía"""
+    try:
+        count_query = "SELECT COUNT(*) as total FROM ventas"
+        result = ejecutar_query(count_query, fetch_one=True)
+        
+        if result and result.get('total', 0) == 0:
+            reset_query = "ALTER TABLE ventas AUTO_INCREMENT = 1"
+            ejecutar_query(reset_query, commit=True)
+            return True
+        return False
+    except Exception as e:
+        print(f"❌ Error al reiniciar AUTO_INCREMENT de ventas: {e}")
+        return False
     
 
 def reiniciar_autoincrement_productos():
