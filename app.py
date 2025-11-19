@@ -1117,7 +1117,7 @@ def nueva_venta():
 def historial_ventas():
     """Muestra el historial de ventas con datos corregidos"""
     
-    # Consulta que trae el precio unitario REAL del producto desde la tabla productos
+    # Consulta que trae TODOS los datos incluyendo el porcentaje guardado
     query = """
         SELECT 
             v.id,
@@ -1128,11 +1128,12 @@ def historial_ventas():
             v.categoria,
             v.cantidad,
             p.precio_unitario AS precio_unitario_real,
-            (v.total / v.cantidad) AS precio_venta_unitario,
+            v.precio_unitario AS precio_venta_unitario,
             v.total,
             v.usuario_id,
             v.usuario_nombre,
-            v.fecha_registro
+            v.fecha_registro,
+            v.porcentaje_ganancia_aplicado
         FROM ventas v
         LEFT JOIN productos p ON v.producto_id = p.id
         ORDER BY v.fecha DESC, v.hora DESC
@@ -1143,7 +1144,7 @@ def historial_ventas():
     if not ventas_raw:
         ventas_raw = []
     
-    # Calcular métricas para cada venta
+    # Procesar cada venta
     ventas_procesadas = []
     total_general = 0
     total_ganancias = 0
@@ -1155,26 +1156,24 @@ def historial_ventas():
         cantidad = v.get('cantidad', 0) or 0
         total_venta = v.get('total', 0) or 0
         
-        # Calcular IVA (19% del total de venta)
-        # Calcular IVA (extraer el 19% que ya está incluido en el precio)
+        # Calcular IVA (extraer el 19% que ya está incluido)
         iva_total = round(total_venta * (0.19 / 1.19), 3)
         
-        # Calcular ganancia unitaria y total
+        # Calcular ganancia
         ganancia_unitaria = round(precio_venta - precio_real, 3)
         ganancia_total = round(ganancia_unitaria * cantidad, 3)
         
-        # Calcular porcentaje de ganancia (sin decimales) ⬅️ NÚMERO ENTERO
-        if precio_real > 0:
-            porcentaje_ganancia = round(((precio_venta - precio_real) / precio_real) * 100)
-        else:
-            porcentaje_ganancia = 0
+        # 🔥 USAR EL PORCENTAJE GUARDADO (no recalcular)
+        porcentaje_ganancia = v.get('porcentaje_ganancia_aplicado', 0) or 0
+        # Asegurar que sea número entero
+        porcentaje_ganancia = round(porcentaje_ganancia)
         
         # Acumular totales
         total_general += total_venta
         total_ganancias += ganancia_total
         total_iva += iva_total
         
-        # Crear DICCIONARIO (no tupla) con el formato esperado por el template
+        # Crear diccionario
         ventas_procesadas.append({
             'id': v.get('id'),
             'fecha': v.get('fecha'),
@@ -1182,9 +1181,9 @@ def historial_ventas():
             'producto_nombre': v.get('producto_nombre'),
             'categoria': v.get('categoria'),
             'cantidad': cantidad,
-            'precio_unitario': precio_real,  # ⬅️ PRECIO REAL DEL PRODUCTO
+            'precio_unitario': precio_real,
             'iva_total': iva_total,
-            'porcentaje_ganancia_aplicado': porcentaje_ganancia,  # ⬅️ SIN DECIMALES
+            'porcentaje_ganancia_aplicado': porcentaje_ganancia,  # 🔥 DEL REGISTRO
             'ganancia_unitaria': ganancia_unitaria,
             'ganancia_total': ganancia_total,
             'total': total_venta,
@@ -1194,7 +1193,7 @@ def historial_ventas():
     return render_template(
         "historial_ventas.html",
         ventas=ventas_procesadas,
-        total_general=total_general,  # ⬅️ ESTA VARIABLE FALTABA
+        total_general=total_general,
         total_ganancias=total_ganancias,
         total_iva=total_iva
     )
