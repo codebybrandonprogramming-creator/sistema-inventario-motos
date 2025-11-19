@@ -1181,13 +1181,6 @@ def historial_ventas():
     )
 
 
-
-
-
-
-# ========== CORRECCIÓN FUNCIÓN ELIMINAR PRODUCTO ==========
-
-
 @app.route('/ventas/eliminar/<int:id>', methods=['POST'])
 @login_required
 @role_required('admin')
