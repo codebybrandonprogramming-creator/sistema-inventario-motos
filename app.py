@@ -1569,7 +1569,6 @@ def exportar_pdf_inventario():
         mimetype="application/pdf"
     )
 
-
 @app.route('/reportes/iva')
 @login_required
 def reporte_iva():
