@@ -237,6 +237,8 @@ def actualizar_stock_producto(producto_id, nuevo_stock):
     return ejecutar_query(query, (nuevo_stock, valor_total, producto_id), commit=True)
 
 
+
+
 def cargar_ventas():
     """Carga todas las ventas desde MySQL con todos los campos"""
     query = """
