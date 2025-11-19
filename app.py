@@ -1181,7 +1181,7 @@ def historial_ventas():
     )
 
 
-# ========== FUNCIÓN PARA ELIMINAR VENTAS ==========
+
 
 
 
