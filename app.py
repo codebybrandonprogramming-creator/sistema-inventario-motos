@@ -1104,79 +1104,65 @@ def historial_ventas():
         ORDER BY v.fecha DESC, v.hora DESC
     """
     
-    ventas = ejecutar_query(query, fetch_all=True)
+    ventas_raw = ejecutar_query(query, fetch_all=True)
     
-    if not ventas:
-        ventas = []
+    if not ventas_raw:
+        ventas_raw = []
     
     # Calcular métricas para cada venta
     ventas_procesadas = []
-    total_vendido = 0
+    total_general = 0
     total_ganancias = 0
     total_iva = 0
     
-    for v in ventas:
+    for v in ventas_raw:
         precio_real = v.get('precio_unitario_real', 0) or 0
         precio_venta = v.get('precio_venta_unitario', 0) or 0
         cantidad = v.get('cantidad', 0) or 0
         total_venta = v.get('total', 0) or 0
         
         # Calcular IVA (19% del total de venta)
-        iva_total = round(total_venta * 0.19, 2)
+        iva_total = round(total_venta * 0.19, 3)
         
         # Calcular ganancia unitaria y total
-        ganancia_unitaria = round(precio_venta - precio_real, 2)
-        ganancia_total = round(ganancia_unitaria * cantidad, 2)
+        ganancia_unitaria = round(precio_venta - precio_real, 3)
+        ganancia_total = round(ganancia_unitaria * cantidad, 3)
         
-        # Calcular porcentaje de ganancia (sin decimales)
+        # Calcular porcentaje de ganancia (sin decimales) ⬅️ NÚMERO ENTERO
         if precio_real > 0:
             porcentaje_ganancia = round(((precio_venta - precio_real) / precio_real) * 100)
         else:
             porcentaje_ganancia = 0
         
         # Acumular totales
-        total_vendido += total_venta
+        total_general += total_venta
         total_ganancias += ganancia_total
         total_iva += iva_total
         
-        # Crear tupla con el formato esperado por el template
-        ventas_procesadas.append((
-            v.get('id'),                    # 0 - ID
-            v.get('fecha'),                 # 1 - Fecha
-            cantidad,                       # 2 - Cantidad
-            precio_real,                    # 3 - Precio Unitario REAL
-            total_venta,                    # 4 - Total Venta
-            iva_total,                      # 5 - IVA
-            ganancia_unitaria,              # 6 - Ganancia Unitaria
-            ganancia_total,                 # 7 - Ganancia Total
-            porcentaje_ganancia,            # 8 - % Ganancia (entero)
-            v.get('categoria'),             # 9 - Categoría
-            v.get('fecha_registro'),        # 10 - Fecha Registro
-            v.get('producto_nombre'),       # 11 - Nombre Producto
-            v.get('usuario_nombre')         # 12 - Usuario
-        ))
+        # Crear DICCIONARIO (no tupla) con el formato esperado por el template
+        ventas_procesadas.append({
+            'id': v.get('id'),
+            'fecha': v.get('fecha'),
+            'hora': v.get('hora'),
+            'producto_nombre': v.get('producto_nombre'),
+            'categoria': v.get('categoria'),
+            'cantidad': cantidad,
+            'precio_unitario': precio_real,  # ⬅️ PRECIO REAL DEL PRODUCTO
+            'iva_total': iva_total,
+            'porcentaje_ganancia_aplicado': porcentaje_ganancia,  # ⬅️ SIN DECIMALES
+            'ganancia_unitaria': ganancia_unitaria,
+            'ganancia_total': ganancia_total,
+            'total': total_venta,
+            'usuario_nombre': v.get('usuario_nombre')
+        })
     
     return render_template(
         "historial_ventas.html",
         ventas=ventas_procesadas,
-        total_vendido=total_vendido,
+        total_general=total_general,  # ⬅️ ESTA VARIABLE FALTABA
         total_ganancias=total_ganancias,
         total_iva=total_iva
     )
-    
-
-@app.route('/ventas/eliminar/<int:id>', methods=['POST'])
-@login_required
-@role_required('admin')
-def eliminar_venta(id):
-    """Elimina una venta del historial"""
-    query = "DELETE FROM ventas WHERE id = %s"
-    ejecutar_query(query, (id,), commit=True)
-    
-    registrar_log('Venta eliminada', f'ID de venta eliminada: {id}')
-    flash('Venta eliminada correctamente.', 'success')
-    return redirect(url_for('historial_ventas'))
-
 
 # ---------------------------------------------------------------------------------
 # DASHBOARD Y REPORTES
