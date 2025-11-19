@@ -79,7 +79,14 @@ app.secret_key = "dev_secret_key_change_in_production"
 # ---------------------------------------------------------------------------------
 # CONFIGURACIÓN Y CONEXIÓN A MYSQL
 # ---------------------------------------------------------------------------------
-
+def get_db_connection():
+    return pymysql.connect(
+        host=os.getenv('DB_HOST', '127.0.0.1'),
+        user=os.getenv('DB_USER', 'root'),
+        password=os.getenv('DB_PASSWORD', ''),
+        database=os.getenv('DB_NAME', 'inventario_repuestos'),
+        cursorclass=pymysql.cursors.DictCursor
+    )
 
 
 def ejecutar_query(query, params=None, commit=False, fetch_one=False, fetch_all=False):
