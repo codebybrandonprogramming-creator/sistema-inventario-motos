@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Historial de Ventas{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4">📊 Historial de Ventas</h2>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{{ url_for('nueva_venta') }}" class="btn btn-success">
+            ➕ Nueva Venta
+        </a>
+        <a href="{{ url_for('lista_productos') }}" class="btn btn-secondary">
+            ← Volver a Productos
+        </a>
+    </div>
+
+    {% if ventas %}
+        <div class="alert alert-info">
+            <strong>Total de ventas registradas:</strong> {{ ventas|length }}
+            <br>
+            <strong>Ingresos totales:</strong> ${{ "{:,.0f}".format(total_general) }} COP
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>FECHA</th>
+                        <th>HORA</th>
+                        <th>PRODUCTO</th>
+                        <th>CANTIDAD</th>
+                        <th>PRECIO UNIT.</th>
+                        <th>IVA (19%)</th>
+                        <th>% GANANCIA</th>
+                        <th>GANANCIA UNIT.</th>
+                        <th>GANANCIA TOTAL</th>
+                        <th>TOTAL VENTA</th>
+                        <th>USUARIO</th>
+                        <th>ACCIONES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in ventas %}
+                    <tr>
+                        <td>{{ v.id }}</td>
+                        <td>{{ v.fecha }}</td>
+                        <td>{{ v.hora }}</td>
+                        <td>
+                            <strong>{{ v.producto_nombre }}</strong>
+                            <br>
+                            <small class="text-muted">{{ v.categoria }}</small>
+                        </td>
+                        <td class="text-center">{{ v.cantidad }}</td>
+                        <td class="text-end">${{ "{:,.0f}".format(v.precio_unitario) }} COP</td>
+                        <td class="text-end text-warning">
+                            <strong>${{ "{:,.0f}".format(v.iva_total or (v.precio_unitario * 0.19 * v.cantidad)) }} COP</strong>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-info">{{ v.porcentaje_ganancia or 0 }}%</span>
+                        </td>
+                        <td class="text-end text-success">
+                            ${{ "{:,.0f}".format(v.ganancia_unitaria or 0) }} COP
+                        </td>
+                        <td class="text-end text-success">
+                            <strong>${{ "{:,.0f}".format(v.ganancia_total or 0) }} COP</strong>
+                        </td>
+                        <td class="text-end">
+                            <strong class="text-primary">${{ "{:,.0f}".format(v.total) }} COP</strong>
+                        </td>
+                        <td>{{ v.usuario_nombre or 'Sistema' }}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-danger" 
+                                    onclick="confirmarEliminar({{ v.id }}, '{{ v.producto_nombre }}')">
+                                🗑️
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-secondary">
+                    <tr>
+                        <th colspan="10" class="text-end">TOTAL GENERAL:</th>
+                        <th class="text-end">
+                            <strong class="text-success">${{ "{:,.0f}".format(total_general) }} COP</strong>
+                        </th>
+                        <th colspan="2"></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            <strong>⚠️ No hay ventas registradas.</strong>
+            <br>
+            <a href="{{ url_for('nueva_venta') }}" class="btn btn-success mt-2">Registrar primera venta</a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function confirmarEliminar(id, producto) {
+    if (confirm(`¿Estás seguro de eliminar la venta del producto "${producto}"?\n\n⚠️ ADVERTENCIA: El stock NO se restaurará automáticamente.`)) {
+        window.location.href = `/ventas/${id}/eliminar`;
+    }
+}
+</script>
+{% endblock %}
