@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+
+{% block title %}Historial de Ventas{% endblock %}
+
+{% block content %}
+
+<style>
+    /* ========== CONTENEDOR PRINCIPAL ========== */
+    .ventas-modern {
+        padding: 2rem;
+        animation: fadeIn 0.6s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* ========== HEADER MODERNO ========== */
+    .header-ventas-modern {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border-radius: 25px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+    }
+    
+    .header-ventas-modern h1 {
+        color: #ffffff;
+        font-size: 2.5rem;
+        font-weight: 900;
+        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .btn-nueva-venta {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        border-radius: 15px;
+        padding: 1rem 2rem;
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 1.1rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.8rem;
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-nueva-venta:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(16, 185, 129, 0.6);
+        color: #ffffff;
+    }
+    
+    /* ========== TARJETAS ESTADÍSTICAS ========== */
+    .stats-modern {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-modern {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        animation: slideUp 0.6s ease backwards;
+    }
+    
+    .stat-modern:nth-child(1) { animation-delay: 0.1s; }
+    .stat-modern:nth-child(2) { animation-delay: 0.2s; }
+    .stat-modern:nth-child(3) { animation-delay: 0.3s; }
+    .stat-modern:nth-child(4) { animation-delay: 0.4s; }
+    
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .stat-modern:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    .stat-icon-modern {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+    
+    .stat-label-modern {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-value-modern {
+        color: #ffffff;
+        font-size: 2rem;
+        font-weight: 900;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* ========== TABLA MODERNA ========== */
+    .tabla-modern {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 0;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        animation: slideUp 0.7s ease 0.5s backwards;
+    }
+    
+    .tabla-scroll-modern {
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: 600px;
+    }
+    
+    .tabla-scroll-modern::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+    }
+    
+    .tabla-scroll-modern::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+    }
+    
+    .tabla-scroll-modern::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+    }
+    
+    .table-modern {
+        width: 100%;
+        min-width: 1400px;
+        border-collapse: collapse;
+    }
+    
+    .table-modern thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .table-modern thead th {
+        padding: 1.2rem 1rem;
+        color: #ffffff;
+        font-weight: 900;
+        font-size: 0.85rem;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-right: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .table-modern thead th:last-child {
+        border-right: none;
+    }
+    
+    .table-modern tbody tr {
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s ease;
+    }
+    
+    .table-modern tbody tr:nth-child(even) {
+        background: rgba(255, 255, 255, 0.04);
+    }
+    
+    .table-modern tbody tr:hover {
+        background: rgba(102, 126, 234, 0.15);
+        transform: translateX(5px);
+        box-shadow: -4px 0 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .table-modern tbody td {
+        padding: 1rem;
+        color: #ffffff;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-align: center;
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .table-modern tbody td:last-child {
+        border-right: none;
+    }
+    
+    .td-id { color: #60a5fa; font-weight: 800; }
+    .td-producto { text-align: left !important; color: #ffffff; }
+    .td-categoria { color: #a0a0a0; font-size: 0.85rem; }
+    .td-iva { color: #fb923c; font-weight: 700; }
+    .td-ganancia { color: #4ade80; font-weight: 700; }
+    .td-total { color: #fbbf24; font-weight: 900; font-size: 1rem; }
+    
+    .btn-eliminar {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        color: #ffffff;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+    
+    .btn-eliminar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(239, 68, 68, 0.5);
+    }
+    
+    .no-ventas {
+        text-align: center;
+        padding: 4rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .no-ventas i {
+        font-size: 4rem;
+        opacity: 0.3;
+        display: block;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="ventas-modern">
+    <!-- HEADER -->
+    <div class="header-ventas-modern">
+        <h1>
+            📊 Historial de Ventas
+        </h1>
+        <a href="{{ url_for('nueva_venta') }}" class="btn-nueva-venta">
+            <i class="bi bi-plus-circle-fill"></i>
+            Nueva Venta
+        </a>
+    </div>
+
+    <!-- ESTADÍSTICAS -->
+    <div class="stats-modern">
+        <div class="stat-modern">
+            <span class="stat-icon-modern">💰</span>
+            <div class="stat-label-modern">Total Vendido</div>
+            <div class="stat-value-modern">${{ "{:,.3f}".format(total_vendido) }} COP</div>
+        </div>
+
+        <div class="stat-modern">
+            <span class="stat-icon-modern">📈</span>
+            <div class="stat-label-modern">Total Ganancias</div>
+            <div class="stat-value-modern">${{ "{:,.3f}".format(total_ganancias) }} COP</div>
+        </div>
+
+        <div class="stat-modern">
+            <span class="stat-icon-modern">🏛️</span>
+            <div class="stat-label-modern">IVA Total</div>
+            <div class="stat-value-modern">${{ "{:,.3f}".format(total_iva) }} COP</div>
+        </div>
+
+        <div class="stat-modern">
+            <span class="stat-icon-modern">🛒</span>
+            <div class="stat-label-modern">Total Ventas</div>
+            <div class="stat-value-modern">{{ num_ventas }}</div>
+        </div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="tabla-modern">
+        <div class="tabla-scroll-modern">
+            <table class="table-modern">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>FECHA</th>
+                        <th>HORA</th>
+                        <th>PRODUCTO</th>
+                        <th>CATEGORÍA</th>
+                        <th>CANTIDAD</th>
+                        <th>PRECIO UNIT.</th>
+                        <th>IVA 19%</th>
+                        <th>% GANANCIA</th>
+                        <th>GANANCIA UNIT.</th>
+                        <th>GANANCIA TOTAL</th>
+                        <th>TOTAL</th>
+                        <th>USUARIO</th>
+                        <th>ACCIONES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if ventas %}
+                        {% for venta in ventas %}
+                        <tr>
+                            <td class="td-id">{{ venta.id }}</td>
+                            <td>{{ venta.fecha }}</td>
+                            <td>{{ venta.hora }}</td>
+                            <td class="td-producto"><strong>{{ venta.producto_nombre }}</strong></td>
+                            <td class="td-categoria">{{ venta.categoria }}</td>
+                            <td>{{ venta.cantidad }}</td>
+                            <td>${{ "{:,.3f}".format(venta.precio_unitario) }} COP</td>
+                            <td class="td-iva">${{ "{:,.3f}".format(venta.iva_total or 0) }} COP</td>
+                            <td>{{ "{:.3f}".format(venta.porcentaje_ganancia or 0) }}%</td>
+                            <td class="td-ganancia">${{ "{:,.3f}".format(venta.ganancia_unitaria or 0) }} COP</td>
+                            <td class="td-ganancia">${{ "{:,.3f}".format(venta.ganancia_total or 0) }} COP</td>
+                            <td class="td-total">${{ "{:,.3f}".format(venta.total) }} COP</td>
+                            <td>{{ venta.usuario_nombre }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('eliminar_venta', id=venta.id) }}" style="display:inline;" 
+                                      onsubmit="return confirm('⚠️ ¿Eliminar esta venta?\n\nADVERTENCIA: El stock NO se restaurará.');">
+                                    <button type="submit" class="btn-eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="14" class="no-ventas">
+                                <i class="bi bi-inbox"></i>
+                                <p>No hay ventas registradas</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
