@@ -1111,7 +1111,153 @@ def nueva_venta():
     return render_template("crear_venta.html", productos=productos)
 
 
+# ========== CORRECCIÓN FUNCIÓN HISTORIAL DE VENTAS ==========
+# Reemplaza tu función historial_ventas() en app.py con esta:
 
+@app.route('/ventas/historial')
+@login_required
+def historial_ventas():
+    """Muestra el historial de ventas con filtros - CORREGIDO"""
+    fecha_desde = request.args.get('fecha_desde', '')
+    fecha_hasta = request.args.get('fecha_hasta', '')
+    
+    # Query corregida con todos los campos necesarios
+    query = """
+        SELECT 
+            v.id,
+            v.fecha,
+            v.hora,
+            v.producto_id,
+            v.producto_nombre,
+            v.categoria,
+            v.cantidad,
+            v.precio_unitario,
+            v.total,
+            v.iva_total,
+            v.ganancia_unitaria,
+            v.ganancia_total,
+            v.porcentaje_ganancia,
+            v.usuario_id,
+            v.usuario_nombre,
+            v.fecha_registro
+        FROM ventas v
+        WHERE 1=1
+    """
+    
+    params = []
+    
+    # Filtros opcionales
+    if fecha_desde:
+        query += " AND v.fecha >= %s"
+        params.append(fecha_desde)
+    
+    if fecha_hasta:
+        query += " AND v.fecha <= %s"
+        params.append(fecha_hasta)
+    
+    query += " ORDER BY v.fecha DESC, v.hora DESC"
+    
+    # Ejecutar query
+    ventas = ejecutar_query(query, tuple(params) if params else None, fetch_all=True)
+    
+    if not ventas:
+        ventas = []
+    
+    # Calcular totales
+    total_vendido = sum(v.get('total', 0) for v in ventas)
+    total_iva = sum(v.get('iva_total', 0) for v in ventas)
+    total_ganancias = sum(v.get('ganancia_total', 0) for v in ventas)
+    num_ventas = len(ventas)
+    
+    # IMPORTANTE: Usar 'total_general' para compatibilidad con el template
+    return render_template(
+        'historial_ventas.html',
+        ventas=ventas,
+        total_vendido=total_vendido,
+        total_general=total_vendido,  # Alias para compatibilidad
+        total_iva=total_iva,
+        total_ganancias=total_ganancias,
+        num_ventas=num_ventas
+    )
+
+
+# ========== FUNCIÓN PARA ELIMINAR VENTAS ==========
+@app.route('/ventas/eliminar/<int:id>', methods=['POST'])
+@login_required
+@role_required('admin')
+def eliminar_venta(id):
+    """Elimina una venta del historial"""
+    try:
+        # Obtener la venta antes de eliminarla
+        query_venta = "SELECT * FROM ventas WHERE id = %s"
+        venta = ejecutar_query(query_venta, (id,), fetch_one=True)
+        
+        if not venta:
+            flash('Venta no encontrada.', 'error')
+            return redirect(url_for('historial_ventas'))
+        
+        # Eliminar la venta
+        query_eliminar = "DELETE FROM ventas WHERE id = %s"
+        ejecutar_query(query_eliminar, (id,), commit=True)
+        
+        registrar_log('Venta eliminada', f"ID: {id}, Producto: {venta.get('producto_nombre')}, Total: ${venta.get('total')}")
+        
+        flash('✅ Venta eliminada correctamente.', 'success')
+        return redirect(url_for('historial_ventas'))
+        
+    except Exception as e:
+        print(f"❌ Error al eliminar venta: {e}")
+        flash(f'Error al eliminar la venta: {str(e)}', 'error')
+        return redirect(url_for('historial_ventas'))
+
+
+# ========== CORRECCIÓN FUNCIÓN ELIMINAR PRODUCTO ==========
+@app.route("/productos/eliminar/<int:id>", methods=['POST'])
+@login_required
+@role_required('admin')
+def eliminar_producto(id):
+    """Elimina un producto - CON VALIDACIÓN DE VENTAS"""
+    
+    try:
+        # Buscar el producto
+        producto = obtener_producto_por_id(id)
+        
+        if not producto:
+            return jsonify({
+                'success': False, 
+                'error': 'Producto no encontrado'
+            }), 404
+        
+        # Verificar si tiene ventas asociadas
+        query_ventas = "SELECT COUNT(*) as total FROM ventas WHERE producto_id = %s"
+        resultado = ejecutar_query(query_ventas, (id,), fetch_one=True)
+        
+        ventas_asociadas = resultado['total'] if resultado else 0
+        
+        if ventas_asociadas > 0:
+            return jsonify({
+                'success': False,
+                'error': f'No se puede eliminar. Tiene {ventas_asociadas} venta(s) asociada(s).\n\nPrimero elimina las ventas desde el Historial de Ventas.',
+                'ventas_asociadas': ventas_asociadas
+            }), 400
+        
+        # Eliminar el producto
+        query_eliminar = "DELETE FROM productos WHERE id = %s"
+        ejecutar_query(query_eliminar, (id,), commit=True)
+        
+        registrar_log('Producto eliminado', f"Producto: {producto['nombre']} (ID: {id})")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Producto eliminado exitosamente'
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error al eliminar producto: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 
 @app.route('/ventas/eliminar/<int:id>', methods=['POST'])
