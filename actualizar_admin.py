@@ -42,5 +42,7 @@ try:
     cursor.close()
     connection.close()
 
+    
+
 except Exception as e:
     print(f"❌ Error: {e}")
