@@ -285,8 +285,14 @@
                             <td class="text-purple" style="text-align: right; font-size: 1.1rem;">${{ venta.total|formato_colombiano(3) }} COP</td>
                             <td><strong>{{ venta.usuario_nombre or 'N/A' }}</strong></td>
                             <td style="text-align: center;">
+                                <a href="{{ url_for('detalle_venta', id=venta.id) }}" class="btn btn-sm btn-info" title="Ver detalles">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('editar_venta', id=venta.id) }}" class="btn btn-sm btn-warning" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
                                 <form method="POST" action="{{ url_for('eliminar_venta', id=venta.id) }}" style="display: inline;" onsubmit="return confirm('¿Estás seguro de eliminar esta venta?');">
-                                    <button type="submit" class="btn btn-sm btn-danger">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
