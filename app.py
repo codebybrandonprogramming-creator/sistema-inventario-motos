@@ -998,7 +998,111 @@ def eliminar_producto(id):
 # ---------------------------------------------------------------------------------
 # RUTAS DE VENTAS (🔥 ACTUALIZADO - PASO 7B)
 # ---------------------------------------------------------------------------------
+@app.route('/ventas/nueva', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'vendedor')
+def nueva_venta():
+    """Registra una nueva venta"""
+    productos = cargar_productos()
 
+    if request.method == "POST":
+        try:
+            producto_id = int(request.form['producto_id'])
+            cantidad = int(request.form['cantidad'])
+            
+            # Obtener ganancia general si fue ingresada (opcional)
+            ganancia_general = request.form.get('porcentaje_ganancia_general', '').strip()
+            ganancia_general = float(ganancia_general) if ganancia_general else 0
+
+            if cantidad <= 0:
+                flash("La cantidad debe ser mayor a 0.", "error")
+                return redirect(url_for('nueva_venta'))
+
+        except (ValueError, KeyError):
+            flash("Datos inválidos en el formulario.", "error")
+            return redirect(url_for('nueva_venta'))
+
+        producto = obtener_producto_por_id(producto_id)
+
+        if not producto:
+            flash("Producto no encontrado.", "error")
+            return redirect(url_for('nueva_venta'))
+
+        # Validación de stock
+        if cantidad > producto['stock']:
+            flash(f"No puedes vender {cantidad} unidades. Stock disponible: {producto['stock']}.", "error")
+            return redirect(url_for('nueva_venta'))
+
+        # ========================================================================
+        # CÁLCULO CORRECTO DE LA VENTA
+        # ========================================================================
+        precio_base = producto['precio_unitario']  # Precio de costo
+        
+        # 1. Calcular IVA sobre el precio base (19%)
+        iva_unitario = precio_base * 0.19
+        precio_con_iva = precio_base + iva_unitario  # Precio base + IVA
+        
+        # 2. Determinar qué % de ganancia usar
+        if ganancia_general > 0:
+            # Si hay ganancia general, usarla (sobrescribe la del producto)
+            porcentaje_ganancia = ganancia_general
+        else:
+            # Si no hay ganancia general, usar la del producto
+            porcentaje_ganancia = producto.get('porcentaje_ganancia', 0)
+        
+        # 3. Calcular ganancia unitaria
+        ganancia_unitaria = precio_con_iva * (porcentaje_ganancia / 100)
+        
+        # 4. Calcular precio de venta unitario final
+        precio_venta_unitario = precio_con_iva + ganancia_unitaria
+        
+        # 5. Calcular totales
+        subtotal = precio_base * cantidad                    # Subtotal sin IVA
+        iva_total = iva_unitario * cantidad                  # IVA total
+        ganancia_total = ganancia_unitaria * cantidad        # Ganancia total
+        total_venta = precio_venta_unitario * cantidad       # TOTAL FINAL
+        
+        # ========================================================================
+        # GUARDAR VENTA EN HISTORIAL CON TODOS LOS DATOS
+        # ========================================================================
+        venta = {
+            'fecha': datetime.now().strftime('%Y-%m-%d'),
+            'hora': datetime.now().strftime('%H:%M:%S'),
+            'producto_id': producto['id'],
+            'producto_nombre': producto['nombre'],
+            'categoria': producto['categoria'],
+            'cantidad': cantidad,
+            'precio_unitario': precio_base,           # Precio de costo
+            'iva_unitario': round(iva_unitario, 3),   # IVA por unidad
+            'precio_con_iva': round(precio_con_iva, 3),  # Precio + IVA
+            'porcentaje_ganancia': porcentaje_ganancia,  # % de ganancia usado
+            'ganancia_unitaria': round(ganancia_unitaria, 3),  # Ganancia por unidad
+            'precio_venta_unitario': round(precio_venta_unitario, 3),  # Precio de venta final
+            'subtotal': round(subtotal, 3),           # Subtotal sin IVA
+            'iva_total': round(iva_total, 3),         # IVA total
+            'ganancia_total': round(ganancia_total, 3),  # Ganancia total
+            'total': round(total_venta, 3),           # TOTAL DE LA VENTA
+            'usuario_id': session.get('user_id'),
+            'usuario_nombre': session.get('nombre_completo')
+        }
+        guardar_venta(venta)
+
+        registrar_log(
+            'Venta registrada', 
+            f"{cantidad} unidades de '{producto['nombre']}' - Total: ${total_venta:,.3f} COP (IVA: ${iva_total:,.3f}, Ganancia: ${ganancia_total:,.3f})"
+        )
+
+        # Actualizar stock
+        nuevo_stock = producto['stock'] - cantidad
+        actualizar_stock_producto(producto_id, nuevo_stock)
+
+        flash(
+            f"✅ Venta registrada: {cantidad} unidades de '{producto['nombre']}' por ${total_venta:,.0f} COP", 
+            "success"
+        )
+        return redirect(url_for('lista_productos'))
+
+    return render_template("crear_venta.html", productos=productos)
 
 
 @app.route('/ventas/historial')
