@@ -2113,6 +2113,57 @@ def exportar_rentabilidad_excel():
     )
 
 
+@app.route('/reportes/iva')
+@login_required
+def reporte_iva():
+    """Reporte de IVA"""
+    ventas = cargar_ventas()
+    
+    total_ventas = sum(v.get('total', 0) for v in ventas)
+    iva_19 = total_ventas * 0.19
+    
+    return render_template(
+        'reportes/reporte_iva.html',
+        ventas=ventas,
+        total_ventas=total_ventas,
+        iva_19=iva_19
+    )
+
+@app.route('/reportes/rentabilidad')
+@login_required
+def reporte_rentabilidad():
+    """Reporte de rentabilidad"""
+    productos = cargar_productos()
+    ventas = cargar_ventas()
+    
+    # Calcular rentabilidad por producto
+    rentabilidad_productos = []
+    
+    for p in productos:
+        ventas_producto = [v for v in ventas if v.get('producto_id') == p.get('id')]
+        total_vendido = sum(v.get('total', 0) for v in ventas_producto)
+        cantidad_vendida = sum(v.get('cantidad', 0) for v in ventas_producto)
+        
+        if cantidad_vendida > 0:
+            rentabilidad_productos.append({
+                'producto': p.get('nombre'),
+                'cantidad_vendida': cantidad_vendida,
+                'ingresos': total_vendido,
+                'stock_actual': p.get('stock'),
+                'valor_inventario': p.get('valor_total')
+            })
+    
+    # Ordenar por ingresos
+    rentabilidad_productos = sorted(
+        rentabilidad_productos,
+        key=lambda x: x['ingresos'],
+        reverse=True
+    )
+    
+    return render_template(
+        'reportes/reporte_rentabilidad.html',
+        rentabilidad=rentabilidad_productos
+    )
 
 
 # ---------------------------------------------------------------------------------
