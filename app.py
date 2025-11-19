@@ -1176,9 +1176,8 @@ def historial_ventas():
             
             porcentaje_ganancia = round(((precio_venta - precio_real) / precio_real) * 100)
             
-            else:
-        
-        porcentaje_ganancia = 0
+        else:
+            porcentaje_ganancia = 0
         
         # Acumular totales
         total_general += total_venta
