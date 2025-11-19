@@ -1182,33 +1182,7 @@ def historial_ventas():
 
 
 # ========== FUNCIÓN PARA ELIMINAR VENTAS ==========
-@app.route('/ventas/eliminar/<int:id>', methods=['POST'])
-@login_required
-@role_required('admin')
-def eliminar_venta(id):
-    """Elimina una venta del historial"""
-    try:
-        # Obtener la venta antes de eliminarla
-        query_venta = "SELECT * FROM ventas WHERE id = %s"
-        venta = ejecutar_query(query_venta, (id,), fetch_one=True)
-        
-        if not venta:
-            flash('Venta no encontrada.', 'error')
-            return redirect(url_for('historial_ventas'))
-        
-        # Eliminar la venta
-        query_eliminar = "DELETE FROM ventas WHERE id = %s"
-        ejecutar_query(query_eliminar, (id,), commit=True)
-        
-        registrar_log('Venta eliminada', f"ID: {id}, Producto: {venta.get('producto_nombre')}, Total: ${venta.get('total')}")
-        
-        flash('✅ Venta eliminada correctamente.', 'success')
-        return redirect(url_for('historial_ventas'))
-        
-    except Exception as e:
-        print(f"❌ Error al eliminar venta: {e}")
-        flash(f'Error al eliminar la venta: {str(e)}', 'error')
-        return redirect(url_for('historial_ventas'))
+)
 
 
 # ========== CORRECCIÓN FUNCIÓN ELIMINAR PRODUCTO ==========
