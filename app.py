@@ -1163,10 +1163,7 @@ def historial_ventas():
         ganancia_unitaria = round(precio_venta - precio_real, 3)
         ganancia_total = round(ganancia_unitaria * cantidad, 3)
         
-        # 🔥 USAR EL PORCENTAJE GUARDADO (no recalcular)
-        porcentaje_ganancia = v.get('porcentaje_ganancia_aplicado', 0) or 0
-        # Asegurar que sea número entero
-        porcentaje_ganancia = round(porcentaje_ganancia)
+        
         
         # Acumular totales
         total_general += total_venta
