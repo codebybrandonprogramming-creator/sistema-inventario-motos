@@ -79,7 +79,15 @@ app.secret_key = "dev_secret_key_change_in_production"
 # ---------------------------------------------------------------------------------
 # CONFIGURACIÓN Y CONEXIÓN A MYSQL
 # ---------------------------------------------------------------------------------
-
+def get_db_connection():
+    """Crea y retorna una conexión a MySQL"""
+    return pymysql.connect(
+        host='127.0.0.1',
+        user='root',
+        password='',  # XAMPP no tiene contraseña por defecto
+        database='inventario_repuestos',
+        cursorclass=pymysql.cursors.DictCursor
+    )
 
 
 def ejecutar_query(query, params=None, commit=False, fetch_one=False, fetch_all=False):
