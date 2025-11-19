@@ -127,11 +127,7 @@ def ejecutar_query(query, params=None, commit=False, fetch_one=False, fetch_all=
         
         return None
         
-    except Exception as e:
-        print(f"❌ Error en la base de datos: {e}")
-        if commit and connection:
-            connection.rollback()
-        return None
+    
     finally:
         if cursor:
             cursor.close()
