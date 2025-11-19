@@ -1,372 +1,94 @@
-/* =========================================================
-   TEMA PREMIUM — DASHBOARD OSCURO
-   Compatible con Bootstrap 5.3
-   Creado para tu sistema de Inventario
-   ========================================================= */
-
-/* ------------------ */
-/*  COLORES BASE      */
-/* ------------------ */
-:root {
-    --bg-dark: #121212;
-    --bg-darker: #0c0c0c;
-    --bg-card: #1e1e1e;
-    --bg-hover: #2b2b2b;
-
-    --text-light: #e5e5e5;
-    --text-muted: #a1a1a1;
-
-    --primary: #4c8bff;
-    --primary-hover: #3a6bd6;
-
-    --success: #4cd964;
-    --danger: #ff4d4d;
-    --warning: #ffd058;
-
-    --border-color: #2d2d2d;
-}
-
-/* ------------------ */
-/*  BODY GLOBAL       */
-/* ------------------ */
+/* ======== GLASSMORPHISM GENERAL ======== */
 body {
-    background: var(--bg-dark) !important;
-    color: var(--text-light) !important;
-    font-family: "Segoe UI", Roboto, sans-serif;
+    background: #0d0d0d;
+    background-size: cover;
+    background-position: center;
+    font-family: 'Poppins', sans-serif;
 }
 
-/* ------------------ */
-/*  NAVBAR            */
-/* ------------------ */
+/* Contenedor principal tipo vidrio */
+.glass-container {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+    padding: 25px;
+    transition: transform .3s ease;
+}
+
+/* Efecto 3D al pasar el mouse */
+.glass-container:hover {
+    transform: translateY(-8px) scale(1.02);
+}
+
+/* ======== NAVBAR ======== */
 .navbar {
-    background: var(--bg-darker) !important;
+    background: rgba(255, 255, 255, 0.07) !important;
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }
 
-.navbar-brand {
-    color: white !important;
-    font-size: 1.4rem;
+.navbar-brand, 
+.nav-link, 
+.navbar-text {
+    color: #fff !important;
+    font-weight: 500;
 }
 
-/* ------------------ */
-/*  TÍTULOS           */
-/* ------------------ */
-h1, h2, h3, h4, h5 {
-    color: var(--text-light);
+.nav-link:hover {
+    color: #b6ffe7 !important;
+    text-shadow: 0 0 8px #b6ffe7;
 }
 
-/* ------------------ */
-/*  TARJETAS / CARDS  */
-/* ------------------ */
+/* ======== CARD ======== */
 .card {
-    background: var(--bg-card) !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: 14px !important;
-    color: var(--text-light) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: none !important;
+    backdrop-filter: blur(12px);
+    border-radius: 22px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    transition: transform .3s ease;
 }
 
-.card p, .card label {
-    color: var(--text-light);
+.card:hover {
+    transform: scale(1.015);
 }
 
-/* ------------------ */
-/* TABLAS             */
-/* ------------------ */
-.table {
-    color: var(--text-light) !important;
-}
-
-.table thead {
-    background: var(--bg-darker) !important;
-    color: var(--text-light) !important;
-}
-
-.table-hover tbody tr:hover {
-    background: var(--bg-hover) !important;
-}
-
-/* Bordes de tabla */
-.table td, .table th {
-    border-color: var(--border-color) !important;
-}
-
-/* ------------------ */
-/*  FORMULARIOS       */
-/* ------------------ */
-.form-control {
-    background: #2a2a2a !important;
-    border: 1px solid var(--border-color) !important;
-    color: var(--text-light) !important;
-    border-radius: 10px;
-}
-
-.form-control:focus {
-    background: #333 !important;
-    color: var(--text-light) !important;
-    border: 1px solid var(--primary) !important;
-    box-shadow: none !important;
-}
-
-/* Textarea */
+/* ======== INPUTS ======== */
+input, 
+select, 
 textarea {
-    background: #2a2a2a !important;
-    color: var(--text-light) !important;
-}
-
-/* ------------------ */
-/*  BOTONES           */
-/* ------------------ */
-.btn {
-    font-weight: 600 !important;
-    border-radius: 10px !important;
-}
-
-.btn-primary {
-    background: var(--primary) !important;
-    border-color: var(--primary) !important;
-}
-.btn-primary:hover {
-    background: var(--primary-hover) !important;
-}
-
-.btn-success {
-    background: var(--success) !important;
-    border: none !important;
-}
-
-.btn-warning {
-    background: var(--warning) !important;
-    color: black !important;
-    border: none !important;
-}
-
-.btn-danger {
-    background: var(--danger) !important;
-    border: none !important;
-}
-
-.btn-secondary {
-    background: #3b3b3b !important;
-    border: none !important;
-}
-
-/* ------------------ */
-/*  ALERTAS           */
-/* ------------------ */
-.alert {
-    border-radius: 10px !important;
-    border: 1px solid var(--border-color) !important;
+    background: rgba(255, 255, 255, 0.10) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
     color: white !important;
+    border-radius: 12px !important;
+    backdrop-filter: blur(10px);
+    box-shadow: inset 0 0 12px rgba(0,0,0,0.4);
 }
 
-.alert-success {
-    background: rgba(76, 217, 100, 0.2) !important;
+input::placeholder {
+    color: #e0e0e0 !important;
 }
 
-.alert-danger {
-    background: rgba(255, 77, 77, 0.2) !important;
+/* ======== BOTONES ======== */
+.btn-primary {
+    background: linear-gradient(135deg, #00ffc6, #008cff);
+    border: none;
+    box-shadow: 0 4px 14px rgba(0, 255, 198, 0.5);
+    font-weight: 600;
+    border-radius: 12px;
 }
 
-.alert-warning {
-    background: rgba(255, 208, 88, 0.2) !important;
+.btn-primary:hover {
+    transform: scale(1.04);
+    box-shadow: 0 6px 20px rgba(0, 255, 198, 0.8);
 }
 
-/* ------------------ */
-/*  TABLAS ACCIONES   */
-/* ------------------ */
-.table .btn-sm i {
-    font-size: 1rem;
-}
-
-/* ------------------ */
-/*  TRANSICIONES      */
-/* ------------------ */
-.btn, .card, .form-control, .table tbody tr {
-    transition: 0.18s ease-in-out;
-}
-
-.table-danger {
-    --bs-table-bg: #ffe6e6 !important;
-}
-
-.badge {
-    font-size: 0.85rem;
-    padding: 6px 10px;
-    border-radius: 8px;
-}
-
-/* =========================================================
-   MODO CLARO — DASHBOARD DAY MODE
-   ========================================================= */
-
-.light-mode {
-    --bg-dark: #f4f4f8;
-    --bg-darker: #ffffff;
-    --bg-card: #ffffff;
-    --bg-hover: #ececec;
-
-    --text-light: #1a1a1a;
-    --text-muted: #555;
-
-    --primary: #4c8bff;
-    --primary-hover: #3a6bd6;
-
-    --success: #2ecc71;
-    --danger: #e74c3c;
-    --warning: #f1c40f;
-
-    --border-color: #d0d0d0;
-}
-
-/* Aplicación del modo claro */
-.light-mode body {
-    background: var(--bg-dark) !important;
-    color: var(--text-light) !important;
-}
-
-/* Navbar claro */
-.light-mode .navbar {
-    background: #ffffff !important;
-    color: #1a1a1a !important;
-}
-.light-mode .navbar-brand {
-    color: #1a1a1a !important;
-}
-
-/* Titles */
-.light-mode h1,
-.light-mode h2,
-.light-mode h3,
-.light-mode h4,
-.light-mode h5 {
-    color: #1a1a1a !important;
-}
-
-/* Cards */
-.light-mode .card {
-    background: var(--bg-card) !important;
-    color: var(--text-light) !important;
-    border: 1px solid var(--border-color) !important;
-}
-.light-mode .card p,
-.light-mode .card label {
-    color: #1a1a1a !important;
-}
-
-/* Tablas modo claro */
-.light-mode .table {
-    color: #1a1a1a !important;
-}
-
-.light-mode .table thead {
-    background: #f0f0f0 !important;
-    color: #1a1a1a !important;
-}
-
-.light-mode .table td,
-.light-mode .table th {
-    border-color: #c8c8c8 !important;
-}
-
-/* Formularios */
-.light-mode .form-control {
-    background: #ffffff !important;
-    border: 1px solid #d0d0d0 !important;
-    color: #1a1a1a !important;
-}
-.light-mode textarea {
-    background: #ffffff !important;
-    color: #1a1a1a !important;
-}
-
-/* Alertas */
-.light-mode .alert {
-    color: #1a1a1a !important;
-    border-color: #d0d0d0 !important;
-}
-
-/* Acciones tabla */
-.light-mode .btn-secondary {
-    background: #dcdcdc !important;
-    color: #1a1a1a !important;
-}
-
-/* =========================================================
-   ENGRANAJE A LA IZQUIERDA — GIRO ANIMADO
-   ========================================================= */
-
-/* Contenedor del título + engranaje */
-.titulo-con-engranaje {
-    display: flex;
-    align-items: center;
-    gap: 12px; /* espacio entre engranaje y texto */
-}
-
-/* Engranaje giratorio */
-.gear-left {
-    font-size: 45px;
-    color: #58b7ff;
-    animation: spin 2.5s linear infinite;
-    filter: drop-shadow(0 0 8px #4ac0ff);
-}
-
-/* Animación */
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-/* Responsive */
-@media (max-width: 600px) {
-    .titulo-con-engranaje {
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .gear-left {
-        font-size: 38px;
-    }
-}
-
-/* 🔧 Asegura que el engranaje gire SIEMPRE correctamente */
-.gear-icon {
-    font-size: 4rem;
-    color: #64c8ff;
-    animation: rotate-simple 3s linear infinite;
-    filter: drop-shadow(0 0 15px rgba(100, 200, 255, 0.5));
-}
-
-/* Compatibilidad con el texto y centrado */
-.titulo-con-engranaje {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.3rem;
-}
-
-/* Mantener responsive y estilos antes de la modificación */
-@media (max-width: 768px) {
-    .gear-icon {
-        font-size: 2.5rem;
-    }
-}
-
-/* ENGRANAJE A LA IZQUIERDA DEL TÍTULO */
-.navbar-title {
-    display: flex;
-    align-items: center;
-    gap: 18px;             /* separación entre engranaje y título */
-}
-
-/* engranaje giratorio */
-.gear-icon {
-    font-size: 48px;
-    color: #64c8ff;
-    animation: spin 2.6s linear infinite;
-    filter: drop-shadow(0 0 12px rgba(90, 200, 255, 0.6));
-}
-
-/* animación */
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+/* ICONOS (NO ELIMINADOS) */
+i {
+    color: #ffffff !important;
+    text-shadow: 0 0 10px rgba(255,255,255,0.5);
 }
