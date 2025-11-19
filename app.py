@@ -1111,7 +1111,91 @@ def nueva_venta():
     return render_template("crear_venta.html", productos=productos)
 
 
-
+@app.route('/ventas/historial')
+@login_required
+def historial_ventas():
+    """Muestra el historial de ventas con datos corregidos"""
+    
+    # Consulta que trae TODOS los datos incluyendo el porcentaje guardado
+    query = """
+        SELECT 
+            v.id,
+            v.fecha,
+            v.hora,
+            v.producto_id,
+            v.producto_nombre,
+            v.categoria,
+            v.cantidad,
+            p.precio_unitario AS precio_unitario_real,
+            v.precio_unitario AS precio_venta_unitario,
+            v.total,
+            v.usuario_id,
+            v.usuario_nombre,
+            v.fecha_registro,
+            v.porcentaje_ganancia_aplicado
+        FROM ventas v
+        LEFT JOIN productos p ON v.producto_id = p.id
+        ORDER BY v.fecha DESC, v.hora DESC
+    """
+    
+    ventas_raw = ejecutar_query(query, fetch_all=True)
+    
+    if not ventas_raw:
+        ventas_raw = []
+    
+    # Procesar cada venta
+    ventas_procesadas = []
+    total_general = 0
+    total_ganancias = 0
+    total_iva = 0
+    
+    for v in ventas_raw:
+        precio_real = v.get('precio_unitario_real', 0) or 0
+        precio_venta = v.get('precio_venta_unitario', 0) or 0
+        cantidad = v.get('cantidad', 0) or 0
+        total_venta = v.get('total', 0) or 0
+        
+        # Calcular IVA (extraer el 19% que ya está incluido)
+        iva_total = round(total_venta * (0.19 / 1.19), 3)
+        
+        # Calcular ganancia
+        ganancia_unitaria = round(precio_venta - precio_real, 3)
+        ganancia_total = round(ganancia_unitaria * cantidad, 3)
+        
+        # 🔥 USAR EL PORCENTAJE GUARDADO (no recalcular)
+        porcentaje_ganancia = v.get('porcentaje_ganancia_aplicado', 0) or 0
+        # Asegurar que sea número entero
+        porcentaje_ganancia = round(porcentaje_ganancia)
+        
+        # Acumular totales
+        total_general += total_venta
+        total_ganancias += ganancia_total
+        total_iva += iva_total
+        
+        # Crear diccionario
+        ventas_procesadas.append({
+            'id': v.get('id'),
+            'fecha': v.get('fecha'),
+            'hora': v.get('hora'),
+            'producto_nombre': v.get('producto_nombre'),
+            'categoria': v.get('categoria'),
+            'cantidad': cantidad,
+            'precio_unitario': precio_real,
+            'iva_total': iva_total,
+            'porcentaje_ganancia_aplicado': porcentaje_ganancia,  # 🔥 DEL REGISTRO
+            'ganancia_unitaria': ganancia_unitaria,
+            'ganancia_total': ganancia_total,
+            'total': total_venta,
+            'usuario_nombre': v.get('usuario_nombre')
+        })
+    
+    return render_template(
+        "historial_ventas.html",
+        ventas=ventas_procesadas,
+        total_general=total_general,
+        total_ganancias=total_ganancias,
+        total_iva=total_iva
+    )
 
 
 @app.route('/ventas/eliminar/<int:id>', methods=['POST'])
