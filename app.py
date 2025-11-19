@@ -129,7 +129,7 @@ def ejecutar_query(query, params=None, commit=False, fetch_one=False, fetch_all=
         
     except Exception as e:
         print(f" Error en la base de datos: {e}")
-    # Registrar en archivo de log
+        # Registrar en archivo de log
     import logging
     logging.error(f"Error DB: {e}")
     if commit and connection:
