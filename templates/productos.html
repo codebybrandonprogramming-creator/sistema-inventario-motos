@@ -424,6 +424,9 @@
                         <th>PRECIO UNIT.</th>
                         <th>IVA (19%)</th>
                         <th>PRECIO + IVA</th>
+                        <th>% GANANCIA</th>
+                        <th>PRECIO VENTA</th>
+                        <th>GANANCIA UNIT.</th>
                         <th>VALOR TOTAL<br>CON IVA</th>
                         <th>ACCIONES</th>
                     </tr>
@@ -434,6 +437,9 @@
                         {% set precio_base = p.precio_unitario|float %}
                         {% set iva = (precio_base * 0.19) %}
                         {% set precio_con_iva = (precio_base * 1.19) %}
+                        {% set porcentaje_ganancia = (p.porcentaje_ganancia|float) if p.porcentaje_ganancia else 0.0 %}
+                        {% set precio_venta = (p.precio_venta|float) if p.precio_venta else precio_con_iva %}
+                        {% set ganancia_unitaria = (precio_venta - precio_con_iva) %}
                         {% set valor_total_con_iva = (p.stock * precio_con_iva) %}
                         
                         <tr data-producto-id="{{ p.id }}">
@@ -459,6 +465,15 @@
                             <td class="money-text">${{ "{:,.3f}".format(precio_base) }} COP</td>
                             <td class="money-text">${{ "{:,.3f}".format(iva) }} COP</td>
                             <td class="money-text"><strong>${{ "{:,.3f}".format(precio_con_iva) }} COP</strong></td>
+                            <td>
+                                {% if porcentaje_ganancia > 0 %}
+                                    <span class="badge bg-warning">{{ "{:.3f}".format(porcentaje_ganancia) }}%</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">0.000%</span>
+                                {% endif %}
+                            </td>
+                            <td class="money-text"><strong>${{ "{:,.3f}".format(precio_venta) }} COP</strong></td>
+                            <td class="money-text">${{ "{:,.3f}".format(ganancia_unitaria) }} COP</td>
                             <td class="money-text"><strong>${{ "{:,.3f}".format(valor_total_con_iva) }} COP</strong></td>
                             <td style="white-space: nowrap;">
                                 <a href="{{ url_for('detalle_producto', id=p.id) }}" 
@@ -479,7 +494,7 @@
                         {% endfor %}
                     {% else %}
                         <tr>
-                            <td colspan="10" class="text-center" style="padding: 40px;">
+                            <td colspan="13" class="text-center" style="padding: 40px;">
                                 <h5 style="color: #6c757d;">📭 No hay productos registrados</h5>
                                 <p>Comienza agregando tu primer producto</p>
                             </td>
