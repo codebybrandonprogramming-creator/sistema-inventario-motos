@@ -1200,21 +1200,7 @@ def historial_ventas():
     )
 
 
-@app.route('/ventas/eliminar/<int:id>', methods=['POST'])
-@login_required
-@role_required('admin')
-def eliminar_venta(id):
-    """Elimina una venta del historial"""
-    try:
-        query = "DELETE FROM ventas WHERE id = %s"
-        ejecutar_query(query, (id,), commit=True)
-        
-        registrar_log('Venta eliminada', f'ID de venta eliminada: {id}')
-        flash('Venta eliminada correctamente.', 'success')
-    except Exception as e:
-        flash(f'Error al eliminar la venta: {str(e)}', 'error')
-    
-    return redirect(url_for('historial_ventas'))
+
 
 
 
