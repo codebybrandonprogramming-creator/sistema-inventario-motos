@@ -185,7 +185,7 @@ def actualizar_producto(producto_id, nombre, categoria, marca, stock, precio_uni
     
     # Calcular precio_venta basado en precio_unitario + IVA + ganancia
     precio_con_iva = round(precio_unitario * 1.19, 3)
-precio_venta = round(precio_con_iva * (1 + porcentaje_ganancia / 100), 3)
+    precio_venta = round(precio_con_iva * (1 + porcentaje_ganancia / 100), 3)
     
     query = """
         UPDATE productos 
