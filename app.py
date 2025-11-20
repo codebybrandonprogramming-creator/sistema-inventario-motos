@@ -13,6 +13,7 @@ from flask_wtf import CSRFProtect
 import openpyxl
 
 
+
 app = Flask(__name__)
 
 # Filtro personalizado para formato colombiano
