@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Importar Productos desde Excel{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Importar Productos desde Excel</h2>
+    <p>Sube un archivo .xlsx con los productos.</p>
+
+    <form action="{{ url_for('importar_excel') }}" method="POST" enctype="multipart/form-data">
+        <input type="file" name="excel_file" accept=".xlsx" class="form-control mb-3" required>
+        <button class="btn btn-primary">Importar</button>
+    </form>
+</div>
+{% endblock %}
