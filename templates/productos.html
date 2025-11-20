@@ -228,40 +228,38 @@
         }
     }
 
-    /* ===== ENCABEZADOS FIJOS ===== */
+    /* ===== ENCABEZADOS FIJOS - VERSIÓN MEJORADA ===== */
     .table-wrapper {
         position: relative;
         max-height: 600px;
         overflow-y: auto;
+        overflow-x: auto;
         border-radius: 15px;
         box-shadow: 
             10px 10px 30px #d1d1d1,
             -10px -10px 30px #ffffff;
-    }
-
-    .table-scroll-container {
-        overflow-x: auto;
-        overflow-y: visible;
-        position: relative;
+        background: white;
     }
 
     .table-fixed-header {
         width: 100%;
         border-collapse: separate;
         border-spacing: 0;
+        margin: 0;
     }
 
+    /* Encabezado fijo */
     .table-fixed-header thead {
         position: sticky;
         top: 0;
-        z-index: 100;
+        z-index: 10;
         background: linear-gradient(145deg, #343a40, #23272b);
     }
 
     .table-fixed-header thead th {
         position: sticky;
         top: 0;
-        z-index: 100;
+        z-index: 10;
         background: linear-gradient(145deg, #343a40, #23272b);
         color: #FFD700;
         font-weight: bold;
@@ -271,40 +269,18 @@
         box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         font-size: 13px;
         white-space: nowrap;
+        vertical-align: middle;
     }
 
-    .scroll-top-container {
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        background: white;
-        padding: 10px 0;
-        margin-bottom: -10px;
-        border-radius: 15px 15px 0 0;
-    }
-
-    .scroll-top-bar {
-        overflow-x: auto;
-        overflow-y: hidden;
-        height: 20px;
-    }
-
-    .scroll-top-content {
-        height: 1px;
-    }
-
-    .sync-scroll {
-        overflow-x: auto;
-        overflow-y: visible;
-    }
-
+    /* Filas del cuerpo */
     .table-fixed-header tbody tr {
         transition: all 0.2s ease;
+        background: white;
     }
 
     .table-fixed-header tbody tr:hover {
         background: linear-gradient(145deg, #f8f9fa, #e9ecef);
-        transform: scale(1.01);
+        transform: scale(1.005);
         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
 
@@ -313,8 +289,10 @@
         border-bottom: 1px solid #dee2e6;
         text-align: center;
         font-size: 14px;
+        background: inherit;
     }
 
+    /* Badges de stock */
     .badge-stock-ok {
         background: linear-gradient(145deg, #28a745, #1e7e34);
         color: white;
@@ -322,6 +300,7 @@
         border-radius: 10px;
         font-weight: bold;
         box-shadow: 3px 3px 8px rgba(0,0,0,0.2);
+        display: inline-block;
     }
 
     .badge-stock-low {
@@ -332,6 +311,7 @@
         font-weight: bold;
         box-shadow: 3px 3px 8px rgba(0,0,0,0.2);
         animation: pulse 2s infinite;
+        display: inline-block;
     }
 
     @keyframes pulse {
@@ -339,6 +319,30 @@
         50% { opacity: 0.7; }
     }
 
+    /* Botones de acción */
+    .btn-action-3d {
+        border: none;
+        border-radius: 8px;
+        padding: 6px 12px;
+        margin: 2px;
+        box-shadow: 3px 3px 8px rgba(0,0,0,0.2);
+        transition: all 0.2s ease;
+        font-size: 13px;
+        display: inline-block;
+    }
+
+    .btn-action-3d:hover {
+        transform: translateY(-2px);
+        box-shadow: 4px 4px 12px rgba(0,0,0,0.3);
+    }
+
+    /* Texto monetario */
+    .money-text {
+        color: #28a745;
+        font-weight: bold;
+    }
+
+    /* Alerta 3D */
     .alert-3d {
         background: linear-gradient(145deg, #fff3cd, #f0e6b8);
         border: none;
@@ -348,26 +352,6 @@
             8px 8px 20px #d4c9a0,
             -8px -8px 20px #fffffa;
         margin-bottom: 20px;
-    }
-
-    .btn-action-3d {
-        border: none;
-        border-radius: 8px;
-        padding: 6px 12px;
-        margin: 2px;
-        box-shadow: 3px 3px 8px rgba(0,0,0,0.2);
-        transition: all 0.2s ease;
-        font-size: 13px;
-    }
-
-    .btn-action-3d:hover {
-        transform: translateY(-2px);
-        box-shadow: 4px 4px 12px rgba(0,0,0,0.3);
-    }
-
-    .money-text {
-        color: #28a745;
-        font-weight: bold;
     }
 
     /* Modal de confirmación */
@@ -451,6 +435,23 @@
         box-shadow: 
             8px 8px 20px #721118,
             -8px -8px 20px #ff5969;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .table-wrapper {
+            max-height: 500px;
+        }
+        
+        .table-fixed-header thead th {
+            font-size: 11px;
+            padding: 10px 5px;
+        }
+        
+        .table-fixed-header tbody td {
+            font-size: 12px;
+            padding: 10px 5px;
+        }
     }
 </style>
 
@@ -575,88 +576,80 @@
         <!-- TABLA DE PRODUCTOS -->
         <div>
             <div class="table-wrapper">
-                <div class="scroll-top-container">
-                    <div class="scroll-top-bar" id="scrollTop">
-                        <div class="scroll-top-content" id="scrollTopContent"></div>
-                    </div>
-                </div>
-
-                <div class="table-scroll-container sync-scroll" id="tableScroll">
-                    <table class="table table-fixed-header">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>CÓDIGO SKU</th>
-                                <th>PRODUCTO</th>
-                                <th>CATEGORÍA</th>
-                                <th>STOCK</th>
-                                <th>PRECIO UNIT.</th>
-                                <th>IVA (19%)</th>
-                                <th>PRECIO + IVA</th>
-                                <th>VALOR TOTAL<br>CON IVA</th>
-                                <th>ACCIONES</th>
+                <table class="table table-fixed-header">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>CÓDIGO SKU</th>
+                            <th>PRODUCTO</th>
+                            <th>CATEGORÍA</th>
+                            <th>STOCK</th>
+                            <th>PRECIO UNIT.</th>
+                            <th>IVA (19%)</th>
+                            <th>PRECIO + IVA</th>
+                            <th>VALOR TOTAL<br>CON IVA</th>
+                            <th>ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if productos %}
+                            {% for p in productos %}
+                            {% set precio_base = p.precio_unitario|float %}
+                            {% set iva = (precio_base * 0.19) %}
+                            {% set precio_con_iva = (precio_base * 1.19) %}
+                            {% set valor_total_con_iva = (p.stock * precio_con_iva) %}
+                            
+                            <tr data-producto-id="{{ p.id }}">
+                                <td><strong>{{ p.id }}</strong></td>
+                                <td>
+                                    {% if p.codigo_sku %}
+                                        <span class="badge bg-info">{{ p.codigo_sku }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: left; max-width: 200px;">
+                                    <strong>{{ p.nombre }}</strong>
+                                </td>
+                                <td>{{ p.categoria }}</td>
+                                <td>
+                                    {% if p.stock < STOCK_MINIMO %}
+                                        <span class="badge-stock-low">⚠️ {{ p.stock }}</span>
+                                    {% else %}
+                                        <span class="badge-stock-ok">✅ {{ p.stock }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="money-text">${{ "{:,.3f}".format(precio_base) }} COP</td>
+                                <td class="money-text">${{ "{:,.3f}".format(iva) }} COP</td>
+                                <td class="money-text"><strong>${{ "{:,.3f}".format(precio_con_iva) }} COP</strong></td>
+                                <td class="money-text"><strong>${{ "{:,.3f}".format(valor_total_con_iva) }} COP</strong></td>
+                                <td style="white-space: nowrap;">
+                                    <a href="{{ url_for('detalle_producto', id=p.id) }}" 
+                                       class="btn btn-info btn-sm btn-action-3d">👁️</a>
+                                    <a href="{{ url_for('editar_producto', id=p.id) }}" 
+                                       class="btn btn-warning btn-sm btn-action-3d">✏️</a>
+                                    {% if session.get('rol') == 'admin' %}
+                                    <button
+                                    data-id="{{ p.id }}"
+                                    data-nombre="{{ p.nombre }}"
+                                    onclick="confirmarEliminar(this.dataset.id, this.dataset.nombre)"
+                                    class="btn btn-danger btn-sm btn-action-3d"
+                                    type="button">
+                                    🗑</button>
+                                    {% endif %}
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {% if productos %}
-                                {% for p in productos %}
-                                {% set precio_base = p.precio_unitario|float %}
-                                {% set iva = (precio_base * 0.19) %}
-                                {% set precio_con_iva = (precio_base * 1.19) %}
-                                {% set valor_total_con_iva = (p.stock * precio_con_iva) %}
-                                
-                                <tr data-producto-id="{{ p.id }}">
-                                    <td><strong>{{ p.id }}</strong></td>
-                                    <td>
-                                        {% if p.codigo_sku %}
-                                            <span class="badge bg-info">{{ p.codigo_sku }}</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">N/A</span>
-                                        {% endif %}
-                                    </td>
-                                    <td style="text-align: left; max-width: 200px;">
-                                        <strong>{{ p.nombre }}</strong>
-                                    </td>
-                                    <td>{{ p.categoria }}</td>
-                                    <td>
-                                        {% if p.stock < STOCK_MINIMO %}
-                                            <span class="badge-stock-low">⚠️ {{ p.stock }}</span>
-                                        {% else %}
-                                            <span class="badge-stock-ok">✅ {{ p.stock }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td class="money-text">${{ "{:,.3f}".format(precio_base) }} COP</td>
-                                    <td class="money-text">${{ "{:,.3f}".format(iva) }} COP</td>
-                                    <td class="money-text"><strong>${{ "{:,.3f}".format(precio_con_iva) }} COP</strong></td>
-                                    <td class="money-text"><strong>${{ "{:,.3f}".format(valor_total_con_iva) }} COP</strong></td>
-                                    <td style="white-space: nowrap;">
-                                        <a href="{{ url_for('detalle_producto', id=p.id) }}" 
-                                           class="btn btn-info btn-sm btn-action-3d">👁️</a>
-                                        <a href="{{ url_for('editar_producto', id=p.id) }}" 
-                                           class="btn btn-warning btn-sm btn-action-3d">✏️</a>
-                                        {% if session.get('rol') == 'admin' %}
-                                        <button
-                                        data-id="{{ p.id }}"
-                                        data-nombre="{{ p.nombre }}"
-                                        onclick="confirmarEliminar(this.dataset.id, this.dataset.nombre)"
-                                        class="btn btn-danger btn-sm btn-action-3d"
-                                        type="button">
-                                        🗑</button>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="10" class="text-center" style="padding: 40px;">
-                                        <h5 style="color: #6c757d;">📭 No hay productos registrados</h5>
-                                        <p>Comienza agregando tu primer producto</p>
-                                    </td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="10" class="text-center" style="padding: 40px;">
+                                    <h5 style="color: #6c757d;">📭 No hay productos registrados</h5>
+                                    <p>Comienza agregando tu primer producto</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -676,28 +669,6 @@
 </div>
 
 <script>
-// Scroll sincronizado
-const tableScroll = document.getElementById('tableScroll');
-const scrollTop = document.getElementById('scrollTop');
-const scrollTopContent = document.getElementById('scrollTopContent');
-
-function updateScrollWidth() {
-    const tableWidth = tableScroll.scrollWidth;
-    scrollTopContent.style.width = tableWidth + 'px';
-}
-
-tableScroll.addEventListener('scroll', function() {
-    scrollTop.scrollLeft = tableScroll.scrollLeft;
-});
-
-scrollTop.addEventListener('scroll', function() {
-    tableScroll.scrollLeft = scrollTop.scrollLeft;
-});
-
-window.addEventListener('load', updateScrollWidth);
-window.addEventListener('resize', updateScrollWidth);
-updateScrollWidth();
-
 // Funcionalidad de eliminación
 let productoAEliminar = null;
 
