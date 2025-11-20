@@ -103,38 +103,45 @@
         font-size: 14px;
     }
 
-    /* NUEVO: Contenedor horizontal del personaje */
+    /* NUEVO: Contenedor con personaje y tabla */
+    .main-layout {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 25px;
+        align-items: start;
+    }
+
+    /* NUEVO: Card del personaje */
     .character-helper-card {
         background: linear-gradient(145deg, #ffffff, #f5f5f5);
         border-radius: 20px;
         box-shadow: 
             12px 12px 30px #d1d1d1,
             -12px -12px 30px #ffffff;
-        padding: 25px;
-        margin-bottom: 30px;
-        display: flex;
-        align-items: center;
-        gap: 30px;
-        animation: slideInDown 0.6s ease;
+        padding: 20px;
+        position: sticky;
+        top: 20px;
+        animation: slideInLeft 0.6s ease;
     }
 
-    @keyframes slideInDown {
+    @keyframes slideInLeft {
         from {
             opacity: 0;
-            transform: translateY(-50px);
+            transform: translateX(-50px);
         }
         to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateX(0);
         }
     }
 
     .character-image-container {
-        flex-shrink: 0;
+        text-align: center;
+        margin-bottom: 15px;
     }
 
     .character-img {
-        width: 200px;
+        width: 220px;
         height: auto;
         filter: drop-shadow(0 8px 16px rgba(0,0,0,0.2));
         animation: float 3s ease-in-out infinite;
@@ -152,26 +159,26 @@
     .character-message {
         background: linear-gradient(145deg, #e3f2fd, #bbdefb);
         border-radius: 15px;
-        padding: 20px;
+        padding: 18px;
         box-shadow: 
             inset 3px 3px 8px #a8c9e6,
             inset -3px -3px 8px #ffffff;
         position: relative;
-        flex: 1;
+        margin-top: 10px;
     }
 
     .character-message::before {
         content: '';
         position: absolute;
-        left: -15px;
-        top: 50%;
-        transform: translateY(-50%);
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
         width: 0;
         height: 0;
-        border-top: 15px solid transparent;
-        border-bottom: 15px solid transparent;
-        border-right: 15px solid #e3f2fd;
-        filter: drop-shadow(-2px 0 3px rgba(0,0,0,0.1));
+        border-left: 15px solid transparent;
+        border-right: 15px solid transparent;
+        border-bottom: 15px solid #e3f2fd;
+        filter: drop-shadow(0 -2px 3px rgba(0,0,0,0.1));
     }
 
     .character-message h4 {
@@ -210,25 +217,14 @@
     }
 
     /* Responsive */
-    @media (max-width: 768px) {
+    @media (max-width: 1200px) {
+        .main-layout {
+            grid-template-columns: 1fr;
+        }
+
         .character-helper-card {
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .character-message::before {
-            left: 50%;
-            top: -15px;
-            transform: translateX(-50%);
-            border-right: none;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-bottom: 15px solid #e3f2fd;
-            border-top: none;
-        }
-
-        .character-img {
-            width: 180px;
+            position: relative;
+            top: 0;
         }
     }
 
@@ -534,46 +530,51 @@
         </a>
     </div>
 
-    <!-- PERSONAJE AYUDANTE - ARRIBA DE LA TABLA -->
-    <div class="character-helper-card">
-        <div class="character-image-container">
-            <img src="{{ url_for('static', filename='img/character3.jpeg') }}" 
-                 alt="Asistente de Inventario" 
-                 class="character-img">
-        </div>
+    <!-- LAYOUT PRINCIPAL: PERSONAJE + TABLA -->
+    <div class="main-layout">
         
-        <div class="character-message">
-            <h4>
-                💬 ¡Hola! Soy tu asistente
-            </h4>
-            <p>
-                👋 <strong>Hola de nuevo</strong>. Desde aquí controlas todo el inventario de <strong>Moto Repuestos H&D</strong>: cada producto, cada precio, cada unidad disponible. Todo organizado y listo para consultar cuando lo necesites.
-            </p>
-            <p><strong>📋 Columnas de la tabla:</strong></p>
-            <ul>
-                <li><strong>ID:</strong> Identificador único</li>
-                <li><strong>CÓDIGO SKU:</strong> Código de producto</li>
-                <li><strong>PRODUCTO:</strong> Nombre del artículo</li>
-                <li><strong>CATEGORÍA:</strong> Tipo de repuesto</li>
-                <li><strong>STOCK:</strong> Unidades disponibles</li>
-                <li><strong>PRECIO UNIT.:</strong> Precio base</li>
-                <li><strong>IVA (19%):</strong> Impuesto calculado</li>
-                <li><strong>PRECIO + IVA:</strong> Precio con impuesto</li>
-                <li><strong>VALOR TOTAL:</strong> Stock × Precio con IVA</li>
-                <li><strong>ACCIONES:</strong> Ver, Editar, Eliminar</li>
-            </ul>
-            <p style="margin-top: 12px;"><strong>💡 Tips útiles:</strong></p>
-            <ul>
-                <li><strong>🔍:</strong> Usa filtros para buscar rápido</li>
-                <li><strong>⚠️:</strong> Los productos en rojo tienen bajo stock</li>
-                <li><strong>🏦:</strong> El IVA se calcula automáticamente</li>
-                <li><strong>➕:</strong> Agrega productos fácilmente</li>
-            </ul>
+        <!-- PERSONAJE AYUDANTE -->
+        <div class="character-helper-card">
+            <div class="character-image-container">
+                <img src="{{ url_for('static', filename='img/character3.jpeg') }}" 
+                     alt="Asistente de Inventario" 
+                     class="character-img">
+            </div>
+            
+            <div class="character-message">
+                <h4>
+                    💬 ¡Hola! Soy tu asistente
+                </h4>
+                <p>
+                    👋 <strong>Bienvenido al inventario</strong> de <strong>Moto Repuestos H&D</strong>. 
+                    Aquí podrás gestionar todos tus productos de manera profesional.
+                </p>
+                <p><strong>📋 Columnas de la tabla:</strong></p>
+                <ul>
+                    <li><strong>ID:</strong> Identificador único</li>
+                    <li><strong>CÓDIGO SKU:</strong> Código de producto</li>
+                    <li><strong>PRODUCTO:</strong> Nombre del artículo</li>
+                    <li><strong>CATEGORÍA:</strong> Tipo de repuesto</li>
+                    <li><strong>STOCK:</strong> Unidades disponibles</li>
+                    <li><strong>PRECIO UNIT.:</strong> Precio base</li>
+                    <li><strong>IVA (19%):</strong> Impuesto calculado</li>
+                    <li><strong>PRECIO + IVA:</strong> Precio con impuesto</li>
+                    <li><strong>VALOR TOTAL:</strong> Stock × Precio con IVA</li>
+                    <li><strong>ACCIONES:</strong> Ver, Editar, Eliminar</li>
+                </ul>
+                <p style="margin-top: 12px;"><strong>💡 Tips útiles:</strong></p>
+                <ul>
+                    <li><strong>🔍:</strong> Usa filtros para buscar rápido</li>
+                    <li><strong>⚠️:</strong> Los productos en rojo tienen bajo stock</li>
+                    <li><strong>🏦:</strong> El IVA se calcula automáticamente</li>
+                    <li><strong>➕:</strong> Agrega productos fácilmente</li>
+                </ul>
+            </div>
         </div>
-    </div>
 
-    <!-- TABLA DE PRODUCTOS -->
-    <div class="table-wrapper">
+        <!-- TABLA DE PRODUCTOS -->
+        <div>
+            <div class="table-wrapper">
                 <div class="scroll-top-container">
                     <div class="scroll-top-bar" id="scrollTop">
                         <div class="scroll-top-content" id="scrollTopContent"></div>
@@ -658,6 +659,8 @@
                 </div>
             </div>
         </div>
+
+    </div>
 </div>
 
 <!-- Modal de confirmación -->
