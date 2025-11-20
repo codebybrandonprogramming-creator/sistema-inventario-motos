@@ -12,6 +12,7 @@ import pymysql
 from flask_wtf import CSRFProtect
 
 
+
 app = Flask(__name__)
 
 # Filtro personalizado para formato colombiano
