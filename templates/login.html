@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Inventario H&D</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #5b6fe8 0%, #764ba2 50%, #e94ca5 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .login-wrapper {
+            display: flex;
+            max-width: 1400px;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            gap: 60px;
+            animation: slideIn 0.8s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* PERSONAJE CON MENSAJE DE BIENVENIDA */
+        .character-container {
+            position: relative;
+            animation: floatCharacter 3s ease-in-out infinite;
+        }
+
+        @keyframes floatCharacter {
+            0%, 100% {
+                transform: translateY(0px) rotate(-2deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(2deg);
+            }
+        }
+
+        .character-image {
+            width: 450px;
+            height: 450px;
+            border-radius: 30px;
+            box-shadow: 
+                0 30px 80px rgba(0, 0, 0, 0.5),
+                0 0 0 10px rgba(255, 255, 255, 0.1),
+                inset 0 0 50px rgba(255, 255, 255, 0.05);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            object-fit: cover;
+            transition: all 0.4s ease;
+        }
+
+        .character-image:hover {
+            transform: scale(1.05) rotate(0deg);
+            box-shadow: 
+                0 40px 100px rgba(0, 0, 0, 0.6),
+                0 0 0 15px rgba(255, 255, 255, 0.15),
+                inset 0 0 50px rgba(255, 255, 255, 0.1);
+        }
+
+        /* BOCADILLO DE DIÁLOGO 3D */
+        .speech-bubble {
+            position: absolute;
+            top: -80px;
+            right: -100px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 25px 30px;
+            border-radius: 25px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.4),
+                inset 0 -5px 20px rgba(0, 0, 0, 0.05),
+                inset 0 5px 20px rgba(255, 255, 255, 0.8);
+            max-width: 320px;
+            border: 3px solid rgba(124, 92, 230, 0.3);
+            animation: bounce 2s ease-in-out infinite;
+            transform-origin: bottom left;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-10px) scale(1.02);
+            }
+        }
+
+        .speech-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: 40px;
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 35px solid #ffffff;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+        }
+
+        .bubble-text {
+            color: #2c3e50;
+            font-size: 1.1rem;
+            font-weight: 700;
+            line-height: 1.5;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .bubble-highlight {
+            color: #7c5ce6;
+            font-weight: 900;
+        }
+
+        .bubble-icon {
+            font-size: 1.5rem;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        /* TARJETA DE LOGIN */
+        .login-card {
+            background: #1a1d2e;
+            border-radius: 30px;
+            padding: 50px 45px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 
+                0 30px 100px rgba(0, 0, 0, 0.6),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+            animation: slideInRight 0.8s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .back-arrow {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .back-arrow:hover {
+            color: #ffffff;
+            transform: translateX(-5px);
+        }
+
+        .login-header {
+            margin-bottom: 35px;
+        }
+
+        .login-title {
+            color: #ffffff;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .login-subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .login-subtitle strong {
+            color: #9d7ce8;
+            font-weight: 700;
+        }
+
+        /* ALERTS */
+        .alert-custom {
+            background: rgba(255, 82, 82, 0.15);
+            border-left: 4px solid #ff5252;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 25px;
+            color: #ff8a8a;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideDown 0.5s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: rgba(0, 255, 136, 0.15);
+            border-left-color: #00ff88;
+            color: #66ffaa;
+        }
+
+        /* FORMULARIO */
+        .form-group-modern {
+            margin-bottom: 25px;
+        }
+
+        .form-label-modern {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .form-control-modern {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            padding: 16px 18px;
+            font-size: 1.05rem;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .form-control-modern::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .form-control-modern:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.12);
+            border-color: #7c5ce6;
+            box-shadow: 0 0 0 4px rgba(124, 92, 230, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 28px;
+        }
+
+        .checkbox-modern {
+            width: 20px;
+            height: 20px;
+            accent-color: #7c5ce6;
+            cursor: pointer;
+        }
+
+        .remember-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .btn-login-modern {
+            width: 100%;
+            background: linear-gradient(135deg, #7c5ce6 0%, #9d7ce8 100%);
+            border: none;
+            border-radius: 14px;
+            padding: 18px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 10px 30px rgba(124, 92, 230, 0.5),
+                inset 0 -3px 10px rgba(0, 0, 0, 0.2),
+                inset 0 3px 10px rgba(255, 255, 255, 0.2);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .btn-login-modern:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 15px 40px rgba(124, 92, 230, 0.7),
+                inset 0 -3px 10px rgba(0, 0, 0, 0.3),
+                inset 0 3px 10px rgba(255, 255, 255, 0.3);
+            background: linear-gradient(135deg, #9d7ce8 0%, #7c5ce6 100%);
+        }
+
+        .btn-login-modern:active {
+            transform: translateY(0);
+        }
+
+        /* INFO DE CREDENCIALES */
+        .credentials-info {
+            margin-top: 30px;
+            padding: 18px;
+            background: rgba(124, 92, 230, 0.12);
+            border-radius: 12px;
+            border: 2px solid rgba(124, 92, 230, 0.25);
+            text-align: center;
+        }
+
+        .credentials-info p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            line-height: 1.5;
+        }
+
+        .credentials-info strong {
+            color: #9d7ce8;
+            font-weight: 800;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .login-wrapper {
+                flex-direction: column;
+                gap: 40px;
+            }
+
+            .character-container {
+                order: -1;
+            }
+
+            .character-image {
+                width: 350px;
+                height: 350px;
+            }
+
+            .speech-bubble {
+                top: auto;
+                bottom: -90px;
+                right: 20px;
+                left: 20px;
+                max-width: 100%;
+            }
+
+            .speech-bubble::before {
+                bottom: auto;
+                top: -25px;
+                left: 50%;
+                transform: translateX(-50%) rotate(180deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .character-image {
+                width: 280px;
+                height: 280px;
+            }
+
+            .login-card {
+                padding: 35px 25px;
+            }
+
+            .login-title {
+                font-size: 2rem;
+            }
+
+            .speech-bubble {
+                padding: 18px 22px;
+            }
+
+            .bubble-text {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-wrapper">
+    <!-- PERSONAJE CON MENSAJE DE BIENVENIDA -->
+    <div class="character-container">
+        <img src="https://raw.githubusercontent.com/codebybrandonprogramming-creator/sistema-inventario-motos/main/static/images/character.jpg" 
+             alt="Moto Repuestos H&D" 
+             class="character-image"
+             onerror="this.style.display='none'">
+        
+        <div class="speech-bubble">
+            <p class="bubble-text">
+                <span class="bubble-icon">👋</span>
+                ¡Bienvenido a <span class="bubble-highlight">Moto Repuestos H&D</span>! 
+                Inicia sesión para gestionar tu inventario de manera profesional.
+            </p>
+        </div>
+    </div>
+
+    <!-- TARJETA DE LOGIN -->
+    <div class="login-card">
+        <i class="bi bi-arrow-left back-arrow"></i>
+
+        <div class="login-header">
+            <h1 class="login-title">Login to system</h1>
+            <p class="login-subtitle">
+                Please enter your login information<br>
+                or <strong>create new account</strong>
+            </p>
+        </div>
+
+        <!-- ALERTS -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert-custom {% if category == 'success' %}alert-success{% endif %}">
+                        <i class="bi bi-{% if category == 'error' or category == 'danger' %}exclamation-circle{% else %}check-circle{% endif %}-fill"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- FORMULARIO -->
+        <form method="POST">
+            <div class="form-group-modern">
+                <label class="form-label-modern">Username</label>
+                <input type="text" 
+                       name="username" 
+                       class="form-control-modern" 
+                       placeholder="Username"
+                       autocomplete="username"
+                       required
+                       autofocus>
+            </div>
+
+            <div class="form-group-modern">
+                <label class="form-label-modern">Password</label>
+                <input type="password" 
+                       name="password" 
+                       class="form-control-modern" 
+                       placeholder="Password"
+                       autocomplete="current-password"
+                       required>
+            </div>
+
+            <div class="remember-me">
+                <input type="checkbox" id="remember" class="checkbox-modern">
+                <label for="remember" class="remember-label">Remember me</label>
+            </div>
+
+            <button type="submit" class="btn-login-modern">
+                Log In
+            </button>
+        </form>
+
+        <!-- INFO DE CREDENCIALES -->
+        <div class="credentials-info">
+            <p><i class="bi bi-info-circle"></i> <strong>Credenciales por defecto</strong></p>
+            <p>Usuario: <strong>admin</strong> | Contraseña: <strong>admin123</strong></p>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
