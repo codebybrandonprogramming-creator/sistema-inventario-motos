@@ -14,459 +14,29 @@
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-5-theme/1.3.0/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
+    <!-- CSS Custom -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 
     <style>
-        /* ========== SELECTOR DE TEMA (3 OPCIONES) ========== */
-        .theme-selector {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50px;
-            padding: 10px 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .theme-selector:hover {
-            transform: scale(1.02);
-        }
-
-        .theme-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid transparent;
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 1.3rem;
-        }
-
-        .theme-btn:hover {
-            transform: scale(1.15);
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .theme-btn.active {
-            background: rgba(255, 255, 255, 0.4);
-            border-color: rgba(255, 215, 0, 0.8);
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
-            transform: scale(1.1);
-        }
-
-        .theme-btn-premium { color: #ffd700; }
-        .theme-btn-trabajo { color: #667eea; }
-        .theme-btn-oscuro { color: #1a1a2e; }
-
-        .theme-divider {
-            width: 2px;
-            height: 30px;
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        /* ========== MODO PREMIUM (Colorido) ========== */
-        body.tema-premium {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            min-height: 100vh;
-        }
-
-        /* ========== MODO TRABAJO (Claro) ========== */
-        body.tema-trabajo {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
-            min-height: 100vh;
-        }
-
-        .tema-trabajo .theme-selector {
-            background: rgba(102, 126, 234, 0.15);
-            border-color: rgba(102, 126, 234, 0.3);
-        }
-
-        .tema-trabajo .theme-btn {
-            background: rgba(102, 126, 234, 0.1);
-        }
-
-        .tema-trabajo .glass-card {
-            background: rgba(255, 255, 255, 0.95) !important;
-            backdrop-filter: blur(5px) !important;
-            border: 1px solid rgba(0, 0, 0, 0.1) !important;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
-        }
-
-        .tema-trabajo .form-label-custom,
-        .tema-trabajo .lista-title,
-        .tema-trabajo .venta-header h2,
-        .tema-trabajo .producto-header h2,
-        .tema-trabajo .editar-header h2,
-        .tema-trabajo .detalle-header h2 {
-            color: #2c3e50 !important;
-            text-shadow: none !important;
-        }
-
-        .tema-trabajo .form-label-custom i {
-            color: #667eea !important;
-        }
-
-        .tema-trabajo .form-control-custom,
-        .tema-trabajo .search-input,
-        .tema-trabajo .select-productos,
-        .tema-trabajo .cantidad-input,
-        .tema-trabajo .filtro-input {
-            background: #ffffff !important;
-            border: 2px solid #e0e0e0 !important;
-            color: #2c3e50 !important;
-        }
-
-        .tema-trabajo .form-control-custom:focus,
-        .tema-trabajo .search-input:focus,
-        .tema-trabajo .select-productos:focus,
-        .tema-trabajo .cantidad-input:focus,
-        .tema-trabajo .filtro-input:focus {
-            border-color: #667eea !important;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
-        }
-
-        .tema-trabajo .total-display {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
-            border: 2px solid #28a745 !important;
-        }
-
-        .tema-trabajo .help-text,
-        .tema-trabajo .checkbox-glass {
-            color: #6c757d !important;
-            text-shadow: none !important;
-        }
-
-        .tema-trabajo .alert-glass {
-            background: #fff3cd !important;
-            border: 2px solid #ffc107 !important;
-            color: #856404 !important;
-            backdrop-filter: none !important;
-        }
-
-        .tema-trabajo .filtros-glass {
-            background: rgba(255, 255, 255, 0.95) !important;
-            border: 1px solid rgba(0, 0, 0, 0.1) !important;
-        }
-
-        .tema-trabajo .tabla-glass {
-            background: rgba(255, 255, 255, 0.95) !important;
-            border: 1px solid rgba(0, 0, 0, 0.1) !important;
-        }
-
-        .tema-trabajo .table-premium {
-            color: #2c3e50 !important;
-        }
-
-        .tema-trabajo .table-premium thead {
-            background: #e9ecef !important;
-        }
-
-        .tema-trabajo .table-premium thead th {
-            color: #2c3e50 !important;
-            font-weight: 800 !important;
-            text-shadow: none !important;
-        }
-
-        .tema-trabajo .table-premium tbody tr {
-            background: #ffffff !important;
-            border-bottom: 1px solid #dee2e6 !important;
-        }
-
-        .tema-trabajo .table-premium tbody tr:hover {
-            background: #f8f9fa !important;
-        }
-
-        .tema-trabajo .table-premium tbody td {
-            color: #2c3e50 !important;
-        }
-
-        .tema-trabajo .producto-nombre {
-            color: #667eea !important;
-            border-bottom: 3px solid #667eea !important;
-        }
-
-        .tema-trabajo .info-item {
-            background: #f8f9fa !important;
-            border: 1px solid #e0e0e0 !important;
-        }
-
-        .tema-trabajo .info-item:hover {
-            background: #e9ecef !important;
-        }
-
-        .tema-trabajo .info-label {
-            color: #667eea !important;
-        }
-
-        .tema-trabajo .info-value {
-            color: #2c3e50 !important;
-            text-shadow: none !important;
-        }
-
-        .tema-trabajo .descripcion-box {
-            background: #f8f9fa !important;
-            border: 1px solid #e0e0e0 !important;
-        }
-
-        .tema-trabajo .descripcion-label {
-            color: #667eea !important;
-        }
-
-        .tema-trabajo .descripcion-text {
-            color: #2c3e50 !important;
-        }
-
-        .tema-trabajo .badge-premium {
-            background: rgba(102, 126, 234, 0.1) !important;
-            color: #667eea !important;
-            border: 1px solid rgba(102, 126, 234, 0.3) !important;
-        }
-
-        .tema-trabajo .badge-stock-bajo {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
-            color: #ffffff !important;
-        }
-
-        .tema-trabajo .bajo-stock-row {
-            background: rgba(255, 193, 7, 0.15) !important;
-            border-left: 4px solid #ffc107 !important;
-        }
-
-        .tema-trabajo .navbar-top {
-            background: #2c3e50 !important;
-        }
-
-        /* ========== MODO OSCURO (Para la noche) ========== */
-        body.tema-oscuro {
-            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%) !important;
-            min-height: 100vh;
-        }
-
-        .tema-oscuro .theme-selector {
-            background: rgba(26, 26, 46, 0.6);
-            border-color: rgba(139, 92, 246, 0.5);
-        }
-
-        .tema-oscuro .theme-btn {
-            background: rgba(139, 92, 246, 0.1);
-        }
-
-        .tema-oscuro .theme-btn:hover {
-            background: rgba(139, 92, 246, 0.2);
-        }
-
-        .tema-oscuro .glass-card {
-            background: rgba(26, 26, 46, 0.7) !important;
-            backdrop-filter: blur(20px) !important;
-            border: 1px solid rgba(139, 92, 246, 0.3) !important;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
-        }
-
-        .tema-oscuro .form-label-custom,
-        .tema-oscuro .lista-title,
-        .tema-oscuro .venta-header h2,
-        .tema-oscuro .producto-header h2,
-        .tema-oscuro .editar-header h2,
-        .tema-oscuro .detalle-header h2 {
-            color: #a78bfa !important;
-            text-shadow: 0 2px 10px rgba(167, 139, 250, 0.3) !important;
-        }
-
-        .tema-oscuro .form-label-custom i {
-            color: #c4b5fd !important;
-        }
-
-        .tema-oscuro .form-control-custom,
-        .tema-oscuro .search-input,
-        .tema-oscuro .select-productos,
-        .tema-oscuro .cantidad-input,
-        .tema-oscuro .filtro-input {
-            background: rgba(30, 30, 60, 0.8) !important;
-            border: 2px solid rgba(139, 92, 246, 0.3) !important;
-            color: #e0e7ff !important;
-        }
-
-        .tema-oscuro .form-control-custom::placeholder,
-        .tema-oscuro .search-input::placeholder,
-        .tema-oscuro .cantidad-input::placeholder,
-        .tema-oscuro .filtro-input::placeholder {
-            color: rgba(224, 231, 255, 0.6) !important;
-        }
-
-       /* MODO PREMIUM - Placeholders */
-       body.tema-premium .form-control-custom::placeholder,
-       body.tema-premium .search-input::placeholder,
-       body.tema-premium .cantidad-input::placeholder,
-       body.tema-premium .filtro-input::placeholder {
-            color: rgba(0, 0, 0, 0.5) !important;
-        }
-
-        /* MODO PREMIUM - Texto de los inputs */
-        body.tema-premium .form-control-custom,
-        body.tema-premium .search-input,
-        body.tema-premium .select-productos,
-        body.tema-premium .cantidad-input,
-        body.tema-premium .filtro-input {
-            color: #2c3e50 !important;
-        }
-
-        .tema-oscuro .form-control-custom:focus,
-        .tema-oscuro .search-input:focus,
-        .tema-oscuro .select-productos:focus,
-        .tema-oscuro .cantidad-input:focus,
-        .tema-oscuro .filtro-input:focus {
-            border-color: #8b5cf6 !important;
-            box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.5) !important;
-            background: rgba(30, 30, 60, 0.95) !important;
-        }
-
-        .tema-oscuro .total-display {
-            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%) !important;
-            border: 2px solid #a78bfa !important;
-            color: #ffffff !important;
-        }
-
-        .tema-oscuro .help-text,
-        .tema-oscuro .checkbox-glass {
-            color: #c4b5fd !important;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
-        }
-
-        .tema-oscuro .alert-glass {
-            background: rgba(251, 191, 36, 0.2) !important;
-            border: 2px solid rgba(251, 191, 36, 0.5) !important;
-            color: #fcd34d !important;
-            backdrop-filter: blur(10px) !important;
-        }
-
-        .tema-oscuro .filtros-glass {
-            background: rgba(26, 26, 46, 0.7) !important;
-            border: 1px solid rgba(139, 92, 246, 0.3) !important;
-        }
-
-        .tema-oscuro .tabla-glass {
-            background: rgba(26, 26, 46, 0.7) !important;
-            border: 1px solid rgba(139, 92, 246, 0.3) !important;
-        }
-
-        .tema-oscuro .table-premium {
-            color: #e0e7ff !important;
-        }
-
-        .tema-oscuro .table-premium thead {
-            background: rgba(139, 92, 246, 0.3) !important;
-        }
-
-        .tema-oscuro .table-premium thead th {
-            color: #c4b5fd !important;
-        }
-
-        .tema-oscuro .table-premium tbody tr {
-            background: rgba(30, 30, 60, 0.5) !important;
-            border-bottom: 1px solid rgba(139, 92, 246, 0.2) !important;
-        }
-
-        .tema-oscuro .table-premium tbody tr:hover {
-            background: rgba(139, 92, 246, 0.2) !important;
-        }
-
-        .tema-oscuro .producto-nombre {
-            color: #c4b5fd !important;
-            border-bottom: 3px solid rgba(139, 92, 246, 0.5) !important;
-        }
-
-        .tema-oscuro .info-item {
-            background: rgba(30, 30, 60, 0.6) !important;
-            border: 1px solid rgba(139, 92, 246, 0.3) !important;
-        }
-
-        .tema-oscuro .info-item:hover {
-            background: rgba(139, 92, 246, 0.2) !important;
-        }
-
-        .tema-oscuro .info-label {
-            color: #c4b5fd !important;
-        }
-
-        .tema-oscuro .info-value {
-            color: #e0e7ff !important;
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5) !important;
-        }
-
-        .tema-oscuro .descripcion-box {
-            background: rgba(30, 30, 60, 0.6) !important;
-            border: 1px solid rgba(139, 92, 246, 0.3) !important;
-        }
-
-        .tema-oscuro .descripcion-label {
-            color: #c4b5fd !important;
-        }
-
-        .tema-oscuro .descripcion-text {
-            color: #e0e7ff !important;
-        }
-
-        .tema-oscuro .badge-premium {
-            background: rgba(139, 92, 246, 0.2) !important;
-            color: #c4b5fd !important;
-            border: 1px solid rgba(139, 92, 246, 0.4) !important;
-        }
-
-        .tema-oscuro .badge-stock-bajo {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
-        }
-
-        .tema-oscuro .bajo-stock-row {
-            background: rgba(239, 68, 68, 0.15) !important;
-            border-left: 4px solid #ef4444 !important;
-        }
-
-        .tema-oscuro .navbar-top {
-            background: #1a1a2e !important;
-            border-bottom: 1px solid rgba(139, 92, 246, 0.2) !important;
-        }
-
-        .tema-oscuro .btn-table {
-            border: 1px solid rgba(139, 92, 246, 0.3) !important;
-        }
-
-        /* Select2 en modo oscuro */
-        .tema-oscuro .select2-container--bootstrap-5 .select2-dropdown {
-            background-color: #1a1a2e !important;
-            border: 1px solid rgba(139, 92, 246, 0.3) !important;
-        }
-
-        .tema-oscuro .select2-container--bootstrap-5 .select2-results__option {
-            color: #e0e7ff !important;
-        }
-
-        .tema-oscuro .select2-container--bootstrap-5 .select2-results__option--highlighted {
-            background-color: rgba(139, 92, 246, 0.3) !important;
-        }
-
-        /* ========== HEADER PROFESIONAL CON TÍTULO 3D ========== */
+        /* ========== HEADER GLASSMORPHISM TRANSPARENTE 3D ========== */
         .navbar-top {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            padding: 2.5rem 2rem 1.5rem;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(35px) saturate(150%);
+            -webkit-backdrop-filter: blur(35px) saturate(150%);
+            padding: 2rem 2rem 1.5rem;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15),
+                        0 2px 12px 0 rgba(255, 255, 255, 0.6) inset;
             position: relative;
             overflow: hidden;
-            border-bottom: 3px solid rgba(100, 200, 255, 0.3);
+            border-bottom: 1.5px solid rgba(255, 255, 255, 0.4);
+            border-radius: 0 0 30px 30px;
         }
 
+        /* Efecto de brillo suave */
         .navbar-top::before {
             content: '';
             position: absolute;
@@ -476,9 +46,9 @@
             height: 100%;
             background: linear-gradient(90deg, 
                 transparent, 
-                rgba(100, 200, 255, 0.08), 
+                rgba(255, 255, 255, 0.15), 
                 transparent);
-            animation: shine 5s infinite;
+            animation: shine 8s infinite;
         }
 
         @keyframes shine {
@@ -486,10 +56,11 @@
             100% { left: 100%; }
         }
 
+        /* ========== CONTENEDOR PRINCIPAL DEL TÍTULO ========== */
         .navbar-title {
             position: relative;
             z-index: 2;
-            color: #ffffff;
+            color: rgba(0, 0, 0, 0.85);
             font-size: 3.5rem;
             font-weight: 900;
             margin-bottom: 1.5rem;
@@ -505,21 +76,28 @@
             margin-right: auto;
         }
 
-        /* ========== LOGO MOTOREPUESTOS SVG (IZQUIERDA) - MÁS GRANDE ========== */
+        /* ========== LOGO MOTOREPUESTOS SVG (IZQUIERDA) ========== */
         .logo-container {
             position: relative;
-            width: 150px;
-            height: 150px;
+            width: 140px;
+            height: 140px;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            padding: 15px;
+            box-shadow: 0 8px 24px rgba(31, 38, 135, 0.15),
+                        0 2px 8px rgba(255, 255, 255, 0.6) inset;
         }
 
         .logo-motorepuestos {
-            width: 150px;
-            height: 150px;
-            filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.8))
-                    drop-shadow(0 0 30px rgba(255, 60, 60, 0.5));
+            width: 120px;
+            height: 120px;
+            filter: drop-shadow(0 8px 16px rgba(31, 38, 135, 0.2));
             animation: float-logo 4s ease-in-out infinite;
             transform-style: preserve-3d;
         }
@@ -528,14 +106,8 @@
             0%, 100% { 
                 transform: translateY(0px) rotateY(0deg);
             }
-            25% {
-                transform: translateY(-10px) rotateY(5deg);
-            }
             50% { 
-                transform: translateY(-12px) rotateY(0deg);
-            }
-            75% {
-                transform: translateY(-10px) rotateY(-5deg);
+                transform: translateY(-10px) rotateY(5deg);
             }
         }
 
@@ -543,16 +115,16 @@
         .logo-container::before {
             content: '';
             position: absolute;
-            width: 170px;
-            height: 170px;
-            background: radial-gradient(circle, rgba(255, 60, 60, 0.3) 0%, transparent 70%);
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
             animation: pulse-glow-logo 2.5s ease-in-out infinite;
             border-radius: 50%;
         }
 
         @keyframes pulse-glow-logo {
-            0%, 100% { transform: scale(1); opacity: 0.5; }
-            50% { transform: scale(1.3); opacity: 0.8; }
+            0%, 100% { transform: scale(1); opacity: 0.4; }
+            50% { transform: scale(1.2); opacity: 0.7; }
         }
 
         /* ========== CONTENEDOR DEL TEXTO ========== */
@@ -560,94 +132,84 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.8rem;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 2rem 3rem;
+            border-radius: 28px;
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 24px rgba(31, 38, 135, 0.12),
+                        0 2px 8px rgba(255, 255, 255, 0.5) inset;
         }
 
-        /* ========== TÍTULO 3D "INVENTARIO" ========== */
+        /* ========== TÍTULO 3D "INVENTARIO" TRANSPARENTE ========== */
         .titulo-3d {
-            font-size: 5rem;
+            font-size: 4.5rem;
             font-weight: 900;
-            letter-spacing: 14px;
+            letter-spacing: 12px;
             text-transform: uppercase;
             position: relative;
             
             background: linear-gradient(135deg, 
-                #64c8ff 0%, 
-                #00aaff 30%,
-                #0088dd 60%,
-                #64c8ff 100%);
+                rgba(0, 0, 0, 0.85) 0%, 
+                rgba(0, 0, 0, 0.7) 50%,
+                rgba(0, 0, 0, 0.6) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             
-            filter: drop-shadow(0 1px 0 #0066aa)
-                    drop-shadow(0 2px 0 #0055aa)
-                    drop-shadow(0 3px 0 #004499)
-                    drop-shadow(0 4px 0 #003388)
-                    drop-shadow(0 5px 0 #002277)
-                    drop-shadow(0 6px 0 #001166)
-                    drop-shadow(0 8px 15px rgba(0, 0, 0, 0.6))
-                    drop-shadow(0 0 30px rgba(100, 200, 255, 0.5));
+            filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.8))
+                    drop-shadow(0 4px 8px rgba(31, 38, 135, 0.15));
             
             animation: float-title 3s ease-in-out infinite;
         }
 
         @keyframes float-title {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
-        }
-
-        .titulo-3d::before {
-            content: 'INVENTARIO';
-            position: absolute;
-            left: 4px;
-            top: 4px;
-            z-index: -1;
-            background: linear-gradient(135deg, #003366, #001144);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            opacity: 0.6;
+            50% { transform: translateY(-6px); }
         }
 
         /* ========== SUBTÍTULO 3D "MOTO REPUESTO H & D" ========== */
         .subtitulo-3d {
-            font-size: 2.2rem;
+            font-size: 1.8rem;
             font-weight: 800;
-            letter-spacing: 4px;
+            letter-spacing: 3px;
             text-transform: uppercase;
             position: relative;
             
             background: linear-gradient(135deg, 
-                #ff0000 0%, 
-                #cc0000 50%, 
-                #ff0000 100%);
+                rgba(0, 0, 0, 0.75) 0%, 
+                rgba(0, 0, 0, 0.6) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             
-            filter: drop-shadow(0 2px 0 #990000)
-                    drop-shadow(0 3px 0 #770000)
-                    drop-shadow(0 4px 0 #550000)
-                    drop-shadow(0 6px 12px rgba(0, 0, 0, 0.6))
-                    drop-shadow(0 0 25px rgba(255, 0, 0, 0.5));
+            filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.6));
         }
 
         /* ========== ENGRANAJE SVG GIRATORIO (DERECHA) ========== */
         .gear-container {
             position: relative;
-            width: 100px;
-            height: 100px;
+            width: 110px;
+            height: 110px;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            padding: 10px;
+            box-shadow: 0 8px 24px rgba(31, 38, 135, 0.15),
+                        0 2px 8px rgba(255, 255, 255, 0.6) inset;
         }
 
         .gear-rotating {
-            width: 100px;
-            height: 100px;
-            filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.8))
-                    drop-shadow(0 0 30px rgba(100, 200, 255, 0.6));
+            width: 90px;
+            height: 90px;
+            filter: drop-shadow(0 8px 16px rgba(31, 38, 135, 0.2));
             animation: rotate-gear-smooth 6s linear infinite;
             transform-style: preserve-3d;
         }
@@ -660,95 +222,46 @@
         .gear-container::before {
             content: '';
             position: absolute;
-            width: 120px;
-            height: 120px;
-            background: radial-gradient(circle, rgba(100, 200, 255, 0.4) 0%, transparent 70%);
+            width: 130px;
+            height: 130px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
             animation: pulse-glow 2s ease-in-out infinite;
             border-radius: 50%;
         }
 
         @keyframes pulse-glow {
-            0%, 100% { transform: scale(1); opacity: 0.6; }
-            50% { transform: scale(1.2); opacity: 1; }
+            0%, 100% { transform: scale(1); opacity: 0.4; }
+            50% { transform: scale(1.2); opacity: 0.7; }
         }
 
-        /* ========== RESPONSIVE ========== */
-        @media (max-width: 1024px) {
-            .navbar-title {
-                flex-direction: column;
-                gap: 1.5rem;
-            }
-
-            .logo-motorepuestos {
-                width: 120px;
-                height: 120px;
-            }
-
-            .titulo-3d {
-                font-size: 3.5rem;
-                letter-spacing: 8px;
-            }
-
-            .subtitulo-3d {
-                font-size: 1.8rem;
-                letter-spacing: 3px;
-            }
-
-            .gear-rotating {
-                width: 80px;
-                height: 80px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .navbar-title {
-                font-size: 2rem;
-            }
-
-            .logo-motorepuestos {
-                width: 90px;
-                height: 90px;
-            }
-
-            .titulo-3d {
-                font-size: 2.5rem;
-                letter-spacing: 4px;
-            }
-
-            .subtitulo-3d {
-                font-size: 1.3rem;
-                letter-spacing: 2px;
-            }
-
-            .gear-rotating {
-                width: 60px;
-                height: 60px;
-            }
-        }
-
-        /* ========== NAVEGACIÓN HORIZONTAL ELEGANTE ========== */
+        /* ========== NAVEGACIÓN HORIZONTAL GLASSMORPHISM ========== */
         .nav-horizontal {
             display: flex;
             justify-content: center;
-            gap: 1rem;
+            gap: 0.8rem;
             flex-wrap: wrap;
+            margin-top: 1.5rem;
         }
 
         .nav-link-premium {
             display: inline-flex;
             align-items: center;
             gap: 0.7rem;
-            padding: 0.9rem 2rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid transparent;
-            border-radius: 15px;
-            color: #ecf0f1 !important;
+            padding: 0.8rem 1.5rem;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            border-radius: 16px;
+            color: rgba(0, 0, 0, 0.85) !important;
             text-decoration: none;
-            font-weight: 700;
-            font-size: 1.05rem;
-            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 12px rgba(31, 38, 135, 0.12),
+                        0 1px 4px rgba(255, 255, 255, 0.5) inset;
         }
 
         .nav-link-premium::before {
@@ -758,7 +271,7 @@
             left: 0;
             width: 100%;
             height: 3px;
-            background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+            background: linear-gradient(135deg, rgba(100, 150, 255, 0.6) 0%, rgba(80, 120, 200, 0.4) 100%);
             transform: scaleX(0);
             transition: transform 0.3s ease;
         }
@@ -768,27 +281,150 @@
         }
 
         .nav-link-premium i {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             transition: all 0.3s ease;
         }
 
         .nav-link-premium:hover {
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 170, 0, 0.15) 100%);
-            border-color: rgba(255, 215, 0, 0.5);
+            background: rgba(255, 255, 255, 0.4);
+            border-color: rgba(100, 150, 255, 0.5);
             transform: translateY(-3px);
-            color: #ffd700 !important;
-            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.3);
+            color: rgba(0, 0, 100, 0.9) !important;
+            box-shadow: 0 8px 24px rgba(31, 38, 135, 0.2),
+                        0 2px 8px rgba(255, 255, 255, 0.6) inset;
         }
 
         .nav-link-premium:hover i {
             transform: scale(1.15) rotate(5deg);
-            color: #ffd700;
         }
 
         .nav-link-premium:active {
             transform: translateY(-1px) scale(0.98);
         }
 
+        /* Badge del rol */
+        .badge-rol {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 0.3rem 0.7rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        /* Botón de logout */
+        .nav-link-logout {
+            background: rgba(255, 150, 150, 0.25) !important;
+            border: 1.5px solid rgba(255, 100, 100, 0.4) !important;
+        }
+
+        .nav-link-logout:hover {
+            background: rgba(255, 150, 150, 0.4) !important;
+            border-color: rgba(255, 100, 100, 0.6) !important;
+            color: rgba(120, 0, 0, 0.9) !important;
+        }
+
+        /* Usuario info */
+        .nav-link-user {
+            background: rgba(200, 200, 210, 0.25) !important;
+            cursor: default !important;
+            border: 1.5px solid rgba(150, 150, 160, 0.4) !important;
+        }
+
+        .nav-link-user:hover {
+            transform: none !important;
+            background: rgba(200, 200, 210, 0.35) !important;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1024px) {
+            .navbar-title {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .logo-container {
+                width: 110px;
+                height: 110px;
+            }
+
+            .logo-motorepuestos {
+                width: 90px;
+                height: 90px;
+            }
+
+            .titulo-3d {
+                font-size: 3rem;
+                letter-spacing: 8px;
+            }
+
+            .subtitulo-3d {
+                font-size: 1.5rem;
+                letter-spacing: 2px;
+            }
+
+            .gear-container {
+                width: 90px;
+                height: 90px;
+            }
+
+            .gear-rotating {
+                width: 70px;
+                height: 70px;
+            }
+
+            .nav-link-premium {
+                font-size: 0.85rem;
+                padding: 0.6rem 1.2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar-title {
+                font-size: 2rem;
+            }
+
+            .logo-container {
+                width: 90px;
+                height: 90px;
+            }
+
+            .logo-motorepuestos {
+                width: 70px;
+                height: 70px;
+            }
+
+            .titulo-3d {
+                font-size: 2.2rem;
+                letter-spacing: 4px;
+            }
+
+            .subtitulo-3d {
+                font-size: 1.1rem;
+                letter-spacing: 1px;
+            }
+
+            .gear-container {
+                width: 70px;
+                height: 70px;
+            }
+
+            .gear-rotating {
+                width: 55px;
+                height: 55px;
+            }
+
+            .nav-link-premium {
+                font-size: 0.8rem;
+                padding: 0.5rem 1rem;
+            }
+
+            .texto-container {
+                padding: 1.5rem 2rem;
+            }
+        }
+
+        /* Animación de entrada */
         @keyframes fadeInDown {
             from {
                 opacity: 0;
@@ -806,310 +442,11 @@
         .nav-link-premium:nth-child(4) { animation: fadeInDown 0.4s ease 0.4s both; }
         .nav-link-premium:nth-child(5) { animation: fadeInDown 0.4s ease 0.5s both; }
         .nav-link-premium:nth-child(6) { animation: fadeInDown 0.4s ease 0.6s both; }
+        .nav-link-premium:nth-child(7) { animation: fadeInDown 0.4s ease 0.7s both; }
+        .nav-link-premium:nth-child(8) { animation: fadeInDown 0.4s ease 0.8s both; }
+        .nav-link-premium:nth-child(9) { animation: fadeInDown 0.4s ease 0.9s both; }
+        .nav-link-premium:nth-child(10) { animation: fadeInDown 0.4s ease 1.0s both; }
     </style>
 </head>
 
-<body class="tema-premium">
-
-<!-- SELECTOR DE TEMA CON 3 OPCIONES -->
-<div class="theme-selector">
-    <div class="theme-btn theme-btn-premium active" onclick="cambiarTema('premium')" id="btnPremium" title="Modo Premium">
-        <i class="bi bi-stars"></i>
-    </div>
-    <div class="theme-divider"></div>
-    <div class="theme-btn theme-btn-trabajo" onclick="cambiarTema('trabajo')" id="btnTrabajo" title="Modo Trabajo">
-        <i class="bi bi-brightness-high-fill"></i>
-    </div>
-    <div class="theme-divider"></div>
-    <div class="theme-btn theme-btn-oscuro" onclick="cambiarTema('oscuro')" id="btnOscuro" title="Modo Oscuro">
-        <i class="bi bi-moon-stars-fill"></i>
-    </div>
-</div>
-
-<!-- HEADER CON NAVEGACIÓN HORIZONTAL -->
-<nav class="navbar-top">
-
-    <div class="navbar-title">
-        <!-- LOGO MOTOREPUESTOS SVG (IZQUIERDA) - MÁS GRANDE -->
-        <div class="logo-container">
-            <svg class="logo-motorepuestos" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <linearGradient id="red-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#e53935;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#b71c1c;stop-opacity:1" />
-                    </linearGradient>
-                    <linearGradient id="orange-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#ff9800;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#f57c00;stop-opacity:1" />
-                    </linearGradient>
-                    <filter id="inner-shadow">
-                        <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
-                        <feOffset dx="2" dy="2" result="offsetblur"/>
-                        <feFlood flood-color="rgba(0,0,0,0.5)"/>
-                        <feComposite in2="offsetblur" operator="in"/>
-                        <feMerge>
-                            <feMergeNode/>
-                            <feMergeNode in="SourceGraphic"/>
-                        </feMerge>
-                    </filter>
-                </defs>
-                
-                <circle cx="100" cy="100" r="95" fill="#1a1a1a" stroke="#0d0d0d" stroke-width="3"/>
-                <circle cx="100" cy="100" r="88" fill="#1e3a3a" stroke="#0f2020" stroke-width="2"/>
-                
-                <g transform="translate(35, 50)">
-                    <rect x="0" y="8" width="8" height="35" rx="2" fill="#ffffff" filter="url(#inner-shadow)"/>
-                    <circle cx="4" cy="8" r="8" fill="#ffffff" stroke="#cccccc" stroke-width="1"/>
-                    <path d="M -3 2 L -5 0 L -5 6 L -3 4 Z" fill="#ffffff"/>
-                </g>
-                
-                <g transform="translate(20, 95)">
-                    <rect x="0" y="0" width="18" height="28" rx="2" fill="#e0e0e0" stroke="#999" stroke-width="1.5"/>
-                    <rect x="3" y="5" width="12" height="3" fill="#666"/>
-                    <rect x="3" y="12" width="12" height="3" fill="#666"/>
-                    <rect x="3" y="19" width="12" height="3" fill="#666"/>
-                    <circle cx="9" cy="28" r="3" fill="#999"/>
-                </g>
-                
-                <g transform="translate(100, 55)">
-                    <circle cx="0" cy="0" r="32" fill="#2a2a2a" stroke="#ffffff" stroke-width="3"/>
-                    <line x1="0" y1="-25" x2="0" y2="25" stroke="#ffffff" stroke-width="2"/>
-                    <line x1="-25" y1="0" x2="25" y2="0" stroke="#ffffff" stroke-width="2"/>
-                    <line x1="-18" y1="-18" x2="18" y2="18" stroke="#ffffff" stroke-width="2"/>
-                    <line x1="-18" y1="18" x2="18" y2="-18" stroke="#ffffff" stroke-width="2"/>
-                    <line x1="-12" y1="-22" x2="12" y2="22" stroke="#ffffff" stroke-width="1.5"/>
-                    <line x1="-22" y1="-12" x2="22" y2="12" stroke="#ffffff" stroke-width="1.5"/>
-                    <line x1="-12" y1="22" x2="12" y2="-22" stroke="#ffffff" stroke-width="1.5"/>
-                    <line x1="-22" y1="12" x2="22" y2="-12" stroke="#ffffff" stroke-width="1.5"/>
-                    <circle cx="0" cy="0" r="8" fill="#1a1a1a" stroke="#ffffff" stroke-width="2"/>
-                    <circle cx="0" cy="0" r="4" fill="#666"/>
-                </g>
-                
-                <g transform="translate(155, 52)">
-                    <rect x="0" y="0" width="6" height="35" rx="1" fill="#ffffff" filter="url(#inner-shadow)"/>
-                    <rect x="-2" y="8" width="10" height="8" rx="1" fill="#e0e0e0" stroke="#999" stroke-width="1"/>
-                    <line x1="3" y1="35" x2="3" y2="40" stroke="#ffeb3b" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="1" y1="37" x2="5" y2="37" stroke="#ffeb3b" stroke-width="1.5" stroke-linecap="round"/>
-                </g>
-                
-                <g transform="translate(165, 95)">
-                    <circle cx="0" cy="0" r="5" fill="none" stroke="#ffffff" stroke-width="2"/>
-                    <circle cx="0" cy="12" r="5" fill="none" stroke="#ffffff" stroke-width="2"/>
-                    <circle cx="0" cy="24" r="5" fill="none" stroke="#ffffff" stroke-width="2"/>
-                </g>
-                
-                <rect x="35" y="115" width="130" height="28" rx="4" fill="url(#red-gradient)" stroke="#8b0000" stroke-width="2" filter="url(#inner-shadow)"/>
-                <text x="100" y="135" font-family="Arial Black, sans-serif" font-size="16" font-weight="900" fill="#ffffff" text-anchor="middle">MOTOREPUESTOS</text>
-                
-                <rect x="50" y="148" width="100" height="28" rx="4" fill="url(#orange-gradient)" stroke="#cc5500" stroke-width="2" filter="url(#inner-shadow)"/>
-                <text x="100" y="169" font-family="Arial Black, sans-serif" font-size="22" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="2">HID</text>
-            </svg>
-        </div>
-        
-        <div class="texto-container">
-            <h1 class="titulo-3d">INVENTARIO</h1>
-            <h2 class="subtitulo-3d">MOTO REPUESTO H & D</h2>
-        </div>
-
-        <!-- ENGRANAJE SVG GIRATORIO (DERECHA) -->
-        <div class="gear-container">
-            <svg class="gear-rotating" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <linearGradient id="gear-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#64c8ff;stop-opacity:1" />
-                        <stop offset="50%" style="stop-color:#2196f3;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#1976d2;stop-opacity:1" />
-                    </linearGradient>
-                    <radialGradient id="gear-center">
-                        <stop offset="0%" style="stop-color:#e0e0e0;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#666;stop-opacity:1" />
-                    </radialGradient>
-                </defs>
-                
-                <g transform="translate(100, 100)">
-                    <g id="teeth">
-                        <rect x="-8" y="-75" width="16" height="20" rx="2" fill="url(#gear-gradient)" stroke="#0d47a1" stroke-width="2"/>
-                        <g transform="rotate(30)">
-                            <rect x="-8" y="-75" width="16" height="20" rx="2" fill="url(#gear-gradient)" stroke="#0d47a1" stroke-width="2"/>
-                        </g>
-                        <g transform="rotate(60)">
-                            <rect x="-8" y="-75" width="16" height="20" rx="2" fill="url(#gear-gradient)" stroke="#0d47a1" stroke-width="2"/>
-                        </g>
-                        <g transform="rotate(90)">
-                            <rect x="-8" y="-75" width="16" height="20" rx="2" fill="url(#gear-gradient)" stroke="#0d47a1" stroke-width="2"/>
-                        </g>
-                        <g transform="rotate(120)">
-                            <rect x="-8" y="-75" width="16" height="20" rx="2" fill="url(#gear-gradient)" stroke="#0d47a1" stroke-width="2"/>
-                        </g>
-                        <g transform="rotate(150)">
-                            <rect x="-8" y="-75" width="16" height="20" rx="2" fill="url(#gear-gradient)" stroke="#0d47a1" stroke-width="2"/>
-                        </g>
-                        <g transform="rotate(180)">
-                            <rect x="-8" y="-75" width="16" height="20" rx="2" fill="url(#gear-gradient)" stroke="#0d47a1" stroke-width="2"/>
-                        </g>
-                        <g transform="rotate(210)">
-                            <rect x="-8" y="-75" width="16" height="20" rx="2" fill="url(#gear-gradient)" stroke="#0d47a1" stroke-width="2"/>
-                        </g>
-                        <g transform="rotate(240)">
-                            <rect x="-8" y="-75" width="16" height="20" rx="2" fill="url(#gear-gradient)" stroke="#0d47a1" stroke-width="2"/>
-                        </g>
-                        <g transform="rotate(270)">
-                            <rect x="-8" y="-75" width="16" height="20" rx="2" fill="url(#gear-gradient)" stroke="#0d47a1" stroke-width="2"/>
-                        </g>
-                        <g transform="rotate(300)">
-                            <rect x="-8" y="-75" width="16" height="20" rx="2" fill="url(#gear-gradient)" stroke="#0d47a1" stroke-width="2"/>
-                        </g>
-                        <g transform="rotate(330)">
-                            <rect x="-8" y="-75" width="16" height="20" rx="2" fill="url(#gear-gradient)" stroke="#0d47a1" stroke-width="2"/>
-                        </g>
-                    </g>
-                    
-                    <circle cx="0" cy="0" r="60" fill="url(#gear-gradient)" stroke="#0d47a1" stroke-width="3"/>
-                    <circle cx="0" cy="0" r="35" fill="url(#gear-center)" stroke="#444" stroke-width="2"/>
-                    <circle cx="0" cy="0" r="15" fill="#1a1a1a" stroke="#0d47a1" stroke-width="2"/>
-                    <circle cx="0" cy="0" r="45" fill="none" stroke="rgba(255, 255, 255, 0.3)" stroke-width="1"/>
-                    <circle cx="0" cy="0" r="50" fill="none" stroke="rgba(255, 255, 255, 0.2)" stroke-width="1"/>
-                </g>
-            </svg>
-        </div>
-    </div>
-
-    <div class="nav-horizontal">
-    <a href="{{ url_for('lista_productos') }}" class="nav-link-premium">
-        <i class="bi bi-box-seam"></i>
-        Productos
-    </a>
-
-    <a href="{{ url_for('dashboard') }}" class="nav-link-premium">
-        <i class="bi bi-graph-up-arrow"></i>
-        Dashboard
-    </a>
-
-    {% if session.get('rol') in ['admin', 'vendedor'] %}
-    <a href="{{ url_for('nuevo_producto') }}" class="nav-link-premium">
-        <i class="bi bi-plus-circle"></i>
-        Nuevo producto
-    </a>
-    {% endif %}
-
-    {% if session.get('rol') in ['admin', 'vendedor'] %}
-    <a href="{{ url_for('nueva_venta') }}" class="nav-link-premium">
-        <i class="bi bi-cart-plus"></i>
-        Registrar Venta
-    </a>
-    {% endif %}
-
-    <a href="{{ url_for('historial_ventas') }}" class="nav-link-premium">
-        <i class="bi bi-clock-history"></i>
-        Historial de Ventas
-    </a>
-
-    <a href="{{ url_for('reporte_inventario_total') }}" class="nav-link-premium">
-        <i class="bi bi-file-earmark-bar-graph"></i>
-        Inventario Total
-    </a>
-
-    {% if session.get('rol') == 'admin' %}
-    <a href="{{ url_for('lista_usuarios') }}" class="nav-link-premium">
-        <i class="bi bi-people-fill"></i>
-        Usuarios
-    </a>
-    {% endif %}
-
-    {% if session.get('rol') in ['admin', 'auditor'] %}
-    <a href="{{ url_for('ver_logs') }}" class="nav-link-premium">
-        <i class="bi bi-journal-text"></i>
-        Logs
-    </a>
-    {% endif %}
-
-    <a href="{{ url_for('cambiar_password') }}" class="nav-link-premium">
-        <i class="bi bi-key"></i>
-        Cambiar Contraseña
-    </a>
-
-    <!-- USUARIO LOGUEADO Y LOGOUT -->
-    <div class="nav-link-premium" style="background: rgba(0, 0, 0, 0.2); cursor: default;">
-        <i class="bi bi-person-circle"></i>
-        {{ session.get('nombre_completo', 'Usuario') }}
-        <span style="background: rgba(255, 215, 0, 0.3); padding: 0.2rem 0.6rem; border-radius: 8px; font-size: 0.8rem; margin-left: 0.5rem;">
-            {% if session.get('rol') == 'admin' %}
-                <i class="bi bi-shield-fill-check"></i> Admin
-            {% elif session.get('rol') == 'vendedor' %}
-                <i class="bi bi-cart-fill"></i> Vendedor
-            {% else %}
-                <i class="bi bi-eye-fill"></i> Auditor
-            {% endif %}
-        </span>
-    </div>
-
-    <a href="{{ url_for('logout') }}" class="nav-link-premium" style="background: rgba(255, 82, 82, 0.2); border: 2px solid rgba(255, 82, 82, 0.5);">
-        <i class="bi bi-box-arrow-right"></i>
-        Cerrar Sesión
-    </a>
-</div>
-
-</nav>
-
-<!-- CONTENIDO PRINCIPAL -->
-<div class="container py-4">
-
-    <!-- FLASH MESSAGES -->
-    {% with messages = get_flashed_messages(with_categories=True) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
-    {% block content %}{% endblock %}
-</div>
-
-<!-- Scripts -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
-
-<!-- Script para cambio de tema -->
-<script>
-// Cargar tema guardado al iniciar
-document.addEventListener('DOMContentLoaded', function() {
-    const temaGuardado = localStorage.getItem('tema') || 'premium';
-    cambiarTema(temaGuardado);
-});
-
-function cambiarTema(tema) {
-    const body = document.body;
-    const btnPremium = document.getElementById('btnPremium');
-    const btnTrabajo = document.getElementById('btnTrabajo');
-    const btnOscuro = document.getElementById('btnOscuro');
-
-    body.classList.remove('tema-premium', 'tema-trabajo', 'tema-oscuro');
-
-    btnPremium.classList.remove('active');
-    btnTrabajo.classList.remove('active');
-    btnOscuro.classList.remove('active');
-
-    if (tema === 'trabajo') {
-        body.classList.add('tema-trabajo');
-        btnTrabajo.classList.add('active');
-    } else if (tema === 'oscuro') {
-        body.classList.add('tema-oscuro');
-        btnOscuro.classList.add('active');
-    } else {
-        body.classList.add('tema-premium');
-        btnPremium.classList.add('active');
-    }
-
-    localStorage.setItem('tema', tema);
-}
-</script>
-
-{% block scripts %}{% endblock %}
-
-</body>
-</html>
+<body>
