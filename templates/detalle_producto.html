@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle del Producto{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header-section">
+        <h1>📦 Detalle del Producto</h1>
+        <div class="button-group">
+            <a href="{{ url_for('editar_producto', id=producto.id) }}" class="btn btn-warning">
+                ✏️ Editar
+            </a>
+            <a href="{{ url_for('lista_productos') }}" class="btn btn-secondary">
+                ← Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="detail-card">
+        <div class="detail-row">
+            <span class="detail-label">ID:</span>
+            <span class="detail-value">{{ producto.id }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Código SKU:</span>
+            <span class="detail-value">{{ producto.codigo_sku or 'N/A' }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Nombre del Producto:</span>
+            <span class="detail-value">{{ producto.nombre }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Categoría:</span>
+            <span class="detail-value">{{ producto.categoria }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Stock Actual:</span>
+            <span class="detail-value stock-badge 
+                {% if producto.stock <= 5 %}stock-low
+                {% elif producto.stock <= 10 %}stock-medium
+                {% else %}stock-high{% endif %}">
+                {{ producto.stock }} unidades
+            </span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Precio Unitario (sin IVA):</span>
+            <span class="detail-value">${{ "{:,.3f}".format(producto.precio_unitario) }} COP</span>
+        </div>
+
+        {% set iva = producto.precio_unitario * 0.19 %}
+        <div class="detail-row">
+            <span class="detail-label">IVA 19%:</span>
+            <span class="detail-value text-warning">${{ "{:,.3f}".format(iva) }} COP</span>
+        </div>
+
+        {% set precio_con_iva = producto.precio_unitario * 1.19 %}
+        <div class="detail-row">
+            <span class="detail-label">Precio + IVA:</span>
+            <span class="detail-value text-success">${{ "{:,.3f}".format(precio_con_iva) }} COP</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">% Ganancia:</span>
+            <span class="detail-value text-info">{{ "{:.3f}".format(producto.porcentaje_ganancia or 0) }}%</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Precio de Venta:</span>
+            <span class="detail-value text-primary">${{ "{:,.3f}".format(producto.precio_venta or 0) }} COP</span>
+        </div>
+
+        {% set ganancia_unitaria = (producto.precio_venta or 0) - precio_con_iva %}
+        <div class="detail-row">
+            <span class="detail-label">Ganancia Unitaria:</span>
+            <span class="detail-value text-success">${{ "{:,.3f}".format(ganancia_unitaria) }} COP</span>
+        </div>
+
+        {% set valor_total_con_iva = producto.stock * precio_con_iva %}
+        <div class="detail-row">
+            <span class="detail-label">Valor Total con IVA:</span>
+            <span class="detail-value total-value">${{ "{:,.3f}".format(valor_total_con_iva) }} COP</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Ubicación:</span>
+            <span class="detail-value">{{ producto.ubicacion or 'Sin ubicación' }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Proveedor:</span>
+            <span class="detail-value">{{ producto.proveedor or 'Sin proveedor' }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Descripción:</span>
+            <span class="detail-value">{{ producto.descripcion or 'Sin descripción' }}</span>
+        </div>
+
+        <div class="detail-row">
+            <span class="detail-label">Fecha de Registro:</span>
+            <span class="detail-value">{{ producto.fecha_creacion.strftime('%d/%m/%Y %H:%M') if producto.fecha_creacion else 'N/A' }}</span>
+        </div>
+    </div>
+</div>
+
+<style>
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.header-section h1 {
+    color: #2c3e50;
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.detail-card {
+    background: linear-gradient(145deg, #ffffff, #f8f9fa);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 
+        10px 10px 30px rgba(0,0,0,0.1),
+        -10px -10px 30px rgba(255,255,255,0.9);
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 0;
+    border-bottom: 2px solid #e8e8e8;
+    transition: all 0.3s ease;
+}
+
+.detail-row:hover {
+    background: rgba(102, 126, 234, 0.05);
+    padding-left: 15px;
+    padding-right: 15px;
+    border-radius: 10px;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 700;
+    color: #495057;
+    flex: 0 0 280px;
+    font-size: 1rem;
+}
+
+.detail-value {
+    font-size: 1.05rem;
+    color: #333;
+    flex: 1;
+    text-align: right;
+    font-weight: 600;
+}
+
+.stock-badge {
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-weight: bold;
+    display: inline-block;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+}
+
+.stock-low {
+    background: linear-gradient(145deg, #dc3545, #c82333);
+    color: white;
+}
+
+.stock-medium {
+    background: linear-gradient(145deg, #ffc107, #e0a800);
+    color: #333;
+}
+
+.stock-high {
+    background: linear-gradient(145deg, #28a745, #218838);
+    color: white;
+}
+
+.text-warning {
+    color: #f39c12 !important;
+    font-weight: 700;
+}
+
+.text-success {
+    color: #27ae60 !important;
+    font-weight: 700;
+}
+
+.text-info {
+    color: #3498db !important;
+    font-weight: 700;
+}
+
+.text-primary {
+    color: #667eea !important;
+    font-weight: 800;
+    font-size: 1.2rem;
+}
+
+.total-value {
+    color: #8e44ad !important;
+    font-weight: 800;
+    font-size: 1.2rem;
+}
+
+.button-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 12px 25px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.btn-warning {
+    background: linear-gradient(145deg, #ffc107, #e0a800);
+    color: #333;
+    border: none;
+}
+
+.btn-warning:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+    color: #333;
+}
+
+.btn-secondary {
+    background: linear-gradient(145deg, #6c757d, #5a6268);
+    color: white;
+    border: none;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .header-section {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .detail-label {
+        flex: none;
+    }
+    
+    .detail-value {
+        text-align: left;
+    }
+}
+</style>
+{% endblock %}
