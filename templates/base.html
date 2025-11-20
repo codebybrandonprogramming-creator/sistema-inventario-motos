@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Inventario de Repuestos{% endblock %}</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-5-theme/1.3.0/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- CSS Custom con link al archivo styles.css -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+    <style>
+        /* ========== HEADER GLASSMORPHISM CON LOGO Y ENGRANAJE ========== */
+        .navbar-top {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            padding: 2rem 2rem 1.5rem;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        /* Efecto de brillo suave */
+        .navbar-top::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.08), 
+                transparent);
+            animation: shine 6s infinite;
+        }
+
+        @keyframes shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* ========== CONTENEDOR PRINCIPAL DEL TÍTULO ========== */
+        .navbar-title {
+            position: relative;
+            z-index: 2;
+            color: #ffffff;
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ========== LOGO MOTOREPUESTOS SVG (IZQUIERDA) ========== */
+        .logo-container {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 15px;
+        }
+
+        .logo-motorepuestos {
+            width: 120px;
+            height: 120px;
+            filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.3));
+            animation: float-logo 4s ease-in-out infinite;
+            transform-style: preserve-3d;
+        }
+
+        @keyframes float-logo {
+            0%, 100% { 
+                transform: translateY(0px) rotateY(0deg);
+            }
+            50% { 
+                transform: translateY(-10px) rotateY(5deg);
+            }
+        }
+
+        /* Resplandor detrás del logo */
+        .logo-container::before {
+            content: '';
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            animation: pulse-glow-logo 2.5s ease-in-out infinite;
+            border-radius: 50%;
+        }
+
+        @keyframes pulse-glow-logo {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.6; }
+        }
+
+        /* ========== CONTENEDOR DEL TEXTO ========== */
+        .texto-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 2rem 3rem;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        /* ========== TÍTULO 3D "INVENTARIO" CON GLASSMORPHISM ========== */
+        .titulo-3d {
+            font-size: 4.5rem;
+            font-weight: 900;
+            letter-spacing: 12px;
+            text-transform: uppercase;
+            position: relative;
+            
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 1) 0%, 
+                rgba(255, 255, 255, 0.9) 50%,
+                rgba(255, 255, 255, 0.8) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3))
+                    drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
+            
+            animation: float-title 3s ease-in-out infinite;
+        }
+
+        @keyframes float-title {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+
+        /* ========== SUBTÍTULO 3D "MOTO REPUESTO H & D" ========== */
+        .subtitulo-3d {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            position: relative;
+            
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.95) 0%, 
+                rgba(255, 255, 255, 0.8) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            
+            filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
+        }
+
+        /* ========== ENGRANAJE SVG GIRATORIO (DERECHA) ========== */
+        .gear-container {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 10px;
+        }
+
+        .gear-rotating {
+            width: 90px;
+            height: 90px;
+            filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.3));
+            animation: rotate-gear-smooth 6s linear infinite;
+            transform-style: preserve-3d;
+        }
+
+        @keyframes rotate-gear-smooth {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .gear-container::before {
+            content: '';
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            animation: pulse-glow 2s ease-in-out infinite;
+            border-radius: 50%;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.6; }
+        }
+
+        /* ========== NAVEGACIÓN HORIZONTAL GLASSMORPHISM ========== */
+        .nav-horizontal {
+            display: flex;
+            justify-content: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .nav-link-premium {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.8rem 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            color: rgba(255, 255, 255, 0.95) !important;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link-premium::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.3) 100%);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-link-premium:hover::before {
+            transform: scaleX(1);
+        }
+
+        .nav-link-premium i {
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link-premium:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-3px);
+            color: rgba(255, 255, 255, 1) !important;
+            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-link-premium:hover i {
+            transform: scale(1.15) rotate(5deg);
+        }
+
+        .nav-link-premium:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        /* Badge del rol */
+        .badge-rol {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 0.3rem 0.7rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        /* Botón de logout */
+        .nav-link-logout {
+            background: rgba(239, 68, 68, 0.2) !important;
+            border: 1px solid rgba(239, 68, 68, 0.4) !important;
+        }
+
+        .nav-link-logout:hover {
+            background: rgba(239, 68, 68, 0.3) !important;
+            border-color: rgba(239, 68, 68, 0.6) !important;
+        }
+
+        /* Usuario info */
+        .nav-link-user {
+            background: rgba(0, 0, 0, 0.15) !important;
+            cursor: default !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        }
+
+        .nav-link-user:hover {
+            transform: none !important;
+            background: rgba(0, 0, 0, 0.2) !important;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1024px) {
+            .navbar-title {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .logo-motorepuestos {
+                width: 100px;
+                height: 100px;
+            }
+
+            .titulo-3d {
+                font-size: 3rem;
+                letter-spacing: 8px;
+            }
+
+            .subtitulo-3d {
+                font-size: 1.5rem;
+                letter-spacing: 2px;
+            }
+
+            .gear-rotating {
+                width: 70px;
+                height: 70px;
+            }
+
+            .nav-link-premium {
+                font-size: 0.85rem;
+                padding: 0.6rem 1.2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar-title {
+                font-size: 2rem;
+            }
+
+            .logo-container {
+                width: 100px;
+                height: 100px;
+            }
+
+            .logo-motorepuestos {
+                width: 80px;
+                height: 80px;
+            }
+
+            .titulo-3d {
+                font-size: 2.2rem;
+                letter-spacing: 4px;
+            }
+
+            .subtitulo-3d {
+                font-size: 1.1rem;
+                letter-spacing: 1px;
+            }
+
+            .gear-container {
+                width: 80px;
+                height: 80px;
+            }
+
+            .gear-rotating {
+                width: 60px;
+                height: 60px;
+            }
+
+            .nav-link-premium {
+                font-size: 0.8rem;
+                padding: 0.5rem 1rem;
+            }
+
+            .texto-container {
+                padding: 1.5rem 2rem;
+            }
+        }
+
+        /* Animación de entrada */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .nav-link-premium:nth-child(1) { animation: fadeInDown 0.4s ease 0.1s both; }
+        .nav-link-premium:nth-child(2) { animation: fadeInDown 0.4s ease 0.2s both; }
+        .nav-link-premium:nth-child(3) { animation: fadeInDown 0.4s ease 0.3s both; }
+        .nav-link-premium:nth-child(4) { animation: fadeInDown 0.4s ease 0.4s both; }
+        .nav-link-premium:nth-child(5) { animation: fadeInDown 0.4s ease 0.5s both; }
+        .nav-link-premium:nth-child(6) { animation: fadeInDown 0.4s ease 0.6s both; }
+        .nav-link-premium:nth-child(7) { animation: fadeInDown 0.4s ease 0.7s both; }
+        .nav-link-premium:nth-child(8) { animation: fadeInDown 0.4s ease 0.8s both; }
+        .nav-link-premium:nth-child(9) { animation: fadeInDown 0.4s ease 0.9s both; }
+        .nav-link-premium:nth-child(10) { animation: fadeInDown 0.4s ease 1.0s both; }
+    </style>
+</head>
+
+<body>
+
