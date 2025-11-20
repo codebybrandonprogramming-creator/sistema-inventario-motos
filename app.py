@@ -2231,7 +2231,9 @@ def internal_server_error(e):
     return render_template('500.html'), 500
 
 
-
+@app.route("/cargar_excel")
+def cargar_excel():
+    return render_template("cargar_excel.html")
 
 
 # ---------------------------------------------------------------------------------
