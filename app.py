@@ -2240,7 +2240,50 @@ def cargar_excel():
 
 import openpyxl
 
+@app.route("/importar_excel", methods=["POST"])
+def importar_excel():
+    if "excel_file" not in request.files:
+        flash("No se subió ningún archivo", "danger")
+        return redirect(url_for("cargar_excel"))
 
+    file = request.files["excel_file"]
+
+    # ========== CREAR RUTA uploads ==========
+    import os
+    UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads")
+
+    # si no existe la carpeta, crearla
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
+
+    # ruta final del archivo
+    filepath = os.path.join(UPLOAD_FOLDER, "productos.xlsx")
+
+    # guardar archivo
+    file.save(filepath)
+
+    # leer excel
+    wb = openpyxl.load_workbook(filepath)
+    sheet = wb.active
+
+    # recorrer filas
+    for row in sheet.iter_rows(min_row=2, values_only=True):
+        nombre, categoria, marca, stock, precio_unitario, sku, descripcion = row
+
+        if not nombre:
+            continue
+
+        query = """
+            INSERT INTO productos (nombre, categoria, marca, stock, precio_unitario, sku, descripcion)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+
+        params = (nombre, categoria, marca, stock, precio_unitario, sku, descripcion)
+
+        ejecutar_query(query, params, commit=True)
+
+    flash("Productos importados correctamente desde Excel", "success")
+    return redirect(url_for("cargar_excel"))
 
 # ---------------------------------------------------------------------------------
 # RUN
