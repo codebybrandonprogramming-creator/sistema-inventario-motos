@@ -52,13 +52,13 @@
             <span class="detail-value">${{ "{:,.3f}".format(producto.precio_unitario) }} COP</span>
         </div>
 
-        {% set iva = producto.precio_unitario * 0.19 %}
+        {% set iva = producto.precio_unitario|float * 0.19 %}
         <div class="detail-row">
             <span class="detail-label">IVA 19%:</span>
             <span class="detail-value text-warning">${{ "{:,.3f}".format(iva) }} COP</span>
         </div>
 
-        {% set precio_con_iva = producto.precio_unitario * 1.19 %}
+        {% set precio_con_iva = producto.precio_unitario|float * 1.19 %}
         <div class="detail-row">
             <span class="detail-label">Precio + IVA:</span>
             <span class="detail-value text-success">${{ "{:,.3f}".format(precio_con_iva) }} COP</span>
@@ -66,15 +66,15 @@
 
         <div class="detail-row">
             <span class="detail-label">% Ganancia:</span>
-            <span class="detail-value text-info">{{ "{:.3f}".format(producto.porcentaje_ganancia or 0) }}%</span>
+            <span class="detail-value text-info">{{ "{:.3f}".format((producto.porcentaje_ganancia or 0)|float) }}%</span>
         </div>
 
         <div class="detail-row">
             <span class="detail-label">Precio de Venta:</span>
-            <span class="detail-value text-primary">${{ "{:,.3f}".format(producto.precio_venta or 0) }} COP</span>
+            <span class="detail-value text-primary">${{ "{:,.3f}".format((producto.precio_venta or 0)|float) }} COP</span>
         </div>
 
-        {% set ganancia_unitaria = (producto.precio_venta or 0) - precio_con_iva %}
+        {% set ganancia_unitaria = ((producto.precio_venta or 0)|float) - precio_con_iva %}
         <div class="detail-row">
             <span class="detail-label">Ganancia Unitaria:</span>
             <span class="detail-value text-success">${{ "{:,.3f}".format(ganancia_unitaria) }} COP</span>
