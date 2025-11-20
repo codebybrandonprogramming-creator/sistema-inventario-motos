@@ -2239,7 +2239,72 @@ def cargar_excel():
 
 import openpyxl
 
+@app.route('/importar_excel', methods=['POST'])
+def importar_excel():
+    # 1) Validaciones iniciales
+    if 'excel_file' not in request.files:
+        flash("No se ha subido ningún archivo.", "danger")
+        return redirect(url_for('cargar_excel'))
 
+    file = request.files['excel_file']
+    if file.filename == "":
+        flash("Selecciona un archivo válido.", "danger")
+        return redirect(url_for('cargar_excel'))
+
+    try:
+        # 2) Leer Excel con pandas
+        df = pd.read_excel(file)
+
+        # 3) Comprobar columnas obligatorias
+        expected = {'nombre','categoria','marca','stock','precio_unitario','codigo_sku','descripcion'}
+        missing = expected - set(df.columns.str.lower())
+        # normalizamos nombres a minúsculas por seguridad
+        df.columns = [c.lower() for c in df.columns]
+
+        if missing:
+            flash(f'Columnas faltantes en el Excel: {", ".join(missing)}', 'danger')
+            return redirect(url_for('cargar_excel'))
+
+        # 4) Conexión DB y loop de inserción
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        insert_sql = """
+            INSERT INTO productos
+            (codigo_sku, nombre, categoria, marca, stock, precio_unitario, descripcion)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+
+        for _, row in df.iterrows():
+            # conversiones y valores por defecto seguros
+            codigo = row.get('codigo_sku') if pd.notna(row.get('codigo_sku')) else None
+            nombre = row.get('nombre', '')
+            categoria = row.get('categoria', '')
+            marca = row.get('marca', '')
+            try:
+                stock = int(row.get('stock', 0))
+            except:
+                stock = 0
+            try:
+                precio = float(row.get('precio_unitario', 0))
+            except:
+                precio = 0.0
+            descripcion = row.get('descripcion', '')
+
+            cur.execute(insert_sql, (codigo, nombre, categoria, marca, stock, precio, descripcion))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        flash("Productos importados correctamente.", "success")
+        return redirect(url_for('productos'))  # ruta hacia la vista de productos
+
+    except Exception as e:
+        # muestra el error en consola y avisa al usuario
+        print("Error importando Excel:", e)
+        flash("Error al procesar el archivo: " + str(e), "danger")
+        return redirect(url_for('cargar_excel'))
 
 
 # ---------------------------------------------------------------------------------
