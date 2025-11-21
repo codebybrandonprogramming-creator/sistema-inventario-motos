@@ -64,12 +64,6 @@
             <span class="detail-value text-success">${{ "{:,.3f}".format(precio_con_iva) }} COP</span>
         </div>
 
-        
-
-        <div class="detail-row">
-            <span class="detail-label">Precio de Venta:</span>
-            <span class="detail-value text-primary">${{ "{:,.3f}".format((producto.precio_venta or 0)|float) }} COP</span>
-        </div>
 
         {% set ganancia_unitaria = ((producto.precio_venta or 0)|float) - precio_con_iva %}
         <div class="detail-row">
