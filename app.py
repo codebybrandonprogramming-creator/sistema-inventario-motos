@@ -126,16 +126,7 @@ def cargar_productos():
 
 
 
-def obtener_producto_por_id(producto_id):
-    """Obtiene un producto específico por su ID"""
-    query = """
-        SELECT id, codigo_sku, nombre, categoria, marca, stock, precio_unitario, 
-               porcentaje_ganancia, precio_venta, descripcion, valor_total, 
-               fecha_creacion, fecha_actualizacion
-        FROM productos
-        WHERE id = %s
-    """
-    return ejecutar_query(query, (producto_id,), fetch_one=True)
+
 
 def actualizar_producto(producto_id, nombre, categoria, marca, stock, precio_unitario, descripcion, codigo_sku=None, porcentaje_ganancia=0):
     """Actualiza un producto existente en MySQL"""
