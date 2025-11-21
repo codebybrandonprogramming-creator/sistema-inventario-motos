@@ -164,20 +164,6 @@ def eliminar_producto_db(producto_id):
     return ejecutar_query(query, (producto_id,), commit=True)
 
 
-def actualizar_stock_producto(producto_id, nuevo_stock):
-    """Actualiza solo el stock de un producto"""
-    producto = obtener_producto_por_id(producto_id)
-    if not producto:
-        return False
-    
-    valor_total = round(nuevo_stock * producto['precio_unitario'], 3)
-    
-    query = """
-        UPDATE productos 
-        SET stock = %s, valor_total = %s, fecha_actualizacion = NOW()
-        WHERE id = %s
-    """
-    return ejecutar_query(query, (nuevo_stock, valor_total, producto_id), commit=True)
 
 def reiniciar_autoincrement_productos():
     """Reinicia el AUTO_INCREMENT de la tabla productos si está vacía"""
