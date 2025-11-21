@@ -711,7 +711,59 @@ def lista_productos():
     )
 
 
+@app.route('/productos/nuevo', methods=["GET", "POST"])
+@login_required
+@role_required('admin', 'vendedor')
+def nuevo_producto():
+    """Crea un nuevo producto"""
+    if request.method == "POST":
+        try:
+            nombre = request.form['nombre'].strip()
+            categoria = request.form['categoria'].strip()
+            marca = request.form.get('marca', '').strip()
+            stock = int(request.form['stock'])
+            precio_unitario = round(float(request.form['precio_unitario']), 3)
+            descripcion = request.form.get('descripcion', '').strip()
+            codigo_sku = request.form.get('codigo_sku', '').strip()
 
+            if not nombre or not categoria:
+                flash("El nombre y la categoría son obligatorios.", "error")
+                return redirect(url_for('nuevo_producto'))
+
+            if stock < 0 or precio_unitario < 0:
+                flash("El stock y el precio no pueden ser negativos.", "error")
+                return redirect(url_for('nuevo_producto'))
+
+            # 🔥 CALCULAR VALOR TOTAL (precio con IVA * cantidad)
+            precio_con_iva = round(precio_unitario * 1.19, 3)
+            valor_total = round(precio_con_iva * stock, 3)
+
+        except ValueError:
+            flash("Error en los datos del formulario. Verifica los valores numéricos.", "error")
+            return redirect(url_for('nuevo_producto'))
+        except KeyError:
+            flash("Faltan campos obligatorios en el formulario.", "error")
+            return redirect(url_for('nuevo_producto'))
+
+        # 🔥 INCLUIR valor_total EN EL INSERT
+        query = """
+            INSERT INTO productos (nombre, categoria, marca, stock, precio_unitario, 
+                                   descripcion, codigo_sku, valor_total)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        params = (nombre, categoria, marca, stock, precio_unitario, 
+                  descripcion, codigo_sku, valor_total)
+        producto_id = ejecutar_query(query, params, commit=True)
+
+        if producto_id:
+            registrar_log('Producto creado', f"Producto: {nombre} (ID: {producto_id})")
+            flash(f"El producto '{nombre}' ha sido registrado con éxito.", "success")
+            return redirect(url_for('lista_productos'))
+        else:
+            flash("Error al guardar el producto en la base de datos.", "error")
+            return redirect(url_for('nuevo_producto'))
+
+    return render_template("crear_producto.html")
 
 @app.route('/productos/<int:id>', methods=["GET"])
 @login_required
