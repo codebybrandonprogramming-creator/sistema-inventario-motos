@@ -1,0 +1,759 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Productos{% endblock %}
+
+{% block content %}
+<style>
+    /* EFECTOS 3D PARA BOTONES Y FILTROS */
+    .filter-container-3d {
+        background: linear-gradient(145deg, #ffffff, #f0f0f0);
+        border-radius: 20px;
+        box-shadow: 
+            15px 15px 40px #d1d1d1,
+            -15px -15px 40px #ffffff;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+
+    .search-input-3d {
+        background: #ffffff;
+        border: none;
+        border-radius: 15px;
+        padding: 12px 20px;
+        box-shadow: 
+            inset 5px 5px 12px #d1d1d1,
+            inset -5px -5px 12px #ffffff;
+        transition: all 0.3s ease;
+        width: 100%;
+        font-size: 15px;
+    }
+
+    .search-input-3d:focus {
+        outline: none;
+        box-shadow: 
+            inset 7px 7px 16px #b8b8b8,
+            inset -7px -7px 16px #ffffff;
+        transform: scale(1.01);
+    }
+
+    .select-3d {
+        background: #ffffff;
+        border: none;
+        border-radius: 15px;
+        padding: 12px 20px;
+        box-shadow: 
+            6px 6px 16px #d1d1d1,
+            -6px -6px 16px #ffffff;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        width: 100%;
+        font-size: 15px;
+    }
+
+    .select-3d:hover {
+        box-shadow: 
+            8px 8px 20px #bebebe,
+            -8px -8px 20px #ffffff;
+        transform: translateY(-2px);
+    }
+
+    .btn-3d-primary {
+        background: linear-gradient(145deg, #007bff, #0056b3);
+        border: none;
+        border-radius: 15px;
+        padding: 12px 30px;
+        color: white;
+        font-weight: bold;
+        font-size: 15px;
+        box-shadow: 
+            8px 8px 20px #004494,
+            -8px -8px 20px #0092ff;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .btn-3d-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 
+            10px 10px 25px #003d7a,
+            -10px -10px 25px #00a3ff;
+        color: white;
+    }
+
+    .btn-3d-primary:active {
+        transform: translateY(0px);
+        box-shadow: 
+            5px 5px 15px #004494,
+            -5px -5px 15px #0092ff;
+    }
+
+    .checkbox-3d {
+        transform: scale(1.3);
+        cursor: pointer;
+        margin-right: 10px;
+    }
+
+    .label-3d {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+        display: block;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        font-size: 14px;
+    }
+
+    /* LAYOUT PRINCIPAL: PERSONAJE AL LADO + TABLA */
+    .main-layout {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 20px;
+        align-items: start;
+    }
+
+    /* PERSONAJE AL LADO IZQUIERDO */
+    .character-helper-card {
+        background: linear-gradient(145deg, #ffffff, #f5f5f5);
+        border-radius: 20px;
+        box-shadow: 
+            12px 12px 30px #d1d1d1,
+            -12px -12px 30px #ffffff;
+        padding: 20px;
+        position: sticky;
+        top: 20px;
+        animation: slideInLeft 0.6s ease;
+    }
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .character-image-container {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    .character-img {
+        width: 180px;
+        height: auto;
+        filter: drop-shadow(0 8px 16px rgba(0,0,0,0.2));
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { 
+            transform: translateY(0px);
+        }
+        50% { 
+            transform: translateY(-12px);
+        }
+    }
+
+    .character-message {
+        background: linear-gradient(145deg, #e3f2fd, #bbdefb);
+        border-radius: 15px;
+        padding: 16px;
+        box-shadow: 
+            inset 3px 3px 8px #a8c9e6,
+            inset -3px -3px 8px #ffffff;
+        position: relative;
+    }
+
+    .character-message::before {
+        content: '';
+        position: absolute;
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 15px solid transparent;
+        border-right: 15px solid transparent;
+        border-bottom: 15px solid #e3f2fd;
+        filter: drop-shadow(0 -2px 3px rgba(0,0,0,0.1));
+    }
+
+    .character-message h4 {
+        color: #1565c0;
+        font-weight: 800;
+        font-size: 15px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .character-message p {
+        color: #424242;
+        font-size: 12px;
+        line-height: 1.5;
+        margin-bottom: 12px;
+        font-weight: 600;
+    }
+
+    .character-message ul {
+        color: #616161;
+        font-size: 11px;
+        line-height: 1.6;
+        padding-left: 16px;
+        margin: 0;
+        list-style: none;
+    }
+
+    .character-message li {
+        margin-bottom: 6px;
+        font-weight: 600;
+        position: relative;
+        padding-left: 4px;
+    }
+
+    .character-message li strong {
+        color: #1976d2;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .main-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .character-helper-card {
+            position: relative;
+            top: 0;
+            margin-bottom: 20px;
+        }
+
+        .character-img {
+            width: 150px;
+        }
+    }
+
+    /* ===== ENCABEZADOS FIJOS ===== */
+    .table-wrapper {
+        position: relative;
+        max-height: 600px;
+        overflow-y: auto;
+        border-radius: 15px;
+        box-shadow: 
+            10px 10px 30px #d1d1d1,
+            -10px -10px 30px #ffffff;
+    }
+
+    .table-scroll-container {
+        overflow-x: auto;
+        overflow-y: visible;
+        position: relative;
+    }
+
+    .table-fixed-header {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .table-fixed-header thead {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: linear-gradient(145deg, #343a40, #23272b);
+    }
+
+    .table-fixed-header thead th {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: linear-gradient(145deg, #343a40, #23272b);
+        color: #FFD700;
+        font-weight: bold;
+        padding: 15px 10px;
+        text-align: center;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .scroll-top-container {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: white;
+        padding: 10px 0;
+        margin-bottom: -10px;
+        border-radius: 15px 15px 0 0;
+    }
+
+    .scroll-top-bar {
+        overflow-x: auto;
+        overflow-y: hidden;
+        height: 20px;
+    }
+
+    .scroll-top-content {
+        height: 1px;
+    }
+
+    .sync-scroll {
+        overflow-x: auto;
+        overflow-y: visible;
+    }
+
+    .table-fixed-header tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .table-fixed-header tbody tr:hover {
+        background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+        transform: scale(1.01);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .table-fixed-header tbody td {
+        padding: 12px 10px;
+        border-bottom: 1px solid #dee2e6;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .badge-stock-ok {
+        background: linear-gradient(145deg, #28a745, #1e7e34);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 10px;
+        font-weight: bold;
+        box-shadow: 3px 3px 8px rgba(0,0,0,0.2);
+    }
+
+    .badge-stock-low {
+        background: linear-gradient(145deg, #dc3545, #a71d2a);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 10px;
+        font-weight: bold;
+        box-shadow: 3px 3px 8px rgba(0,0,0,0.2);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    .alert-3d {
+        background: linear-gradient(145deg, #fff3cd, #f0e6b8);
+        border: none;
+        border-radius: 15px;
+        padding: 15px 20px;
+        box-shadow: 
+            8px 8px 20px #d4c9a0,
+            -8px -8px 20px #fffffa;
+        margin-bottom: 20px;
+    }
+
+    .btn-action-3d {
+        border: none;
+        border-radius: 8px;
+        padding: 6px 12px;
+        margin: 2px;
+        box-shadow: 3px 3px 8px rgba(0,0,0,0.2);
+        transition: all 0.2s ease;
+        font-size: 13px;
+    }
+
+    .btn-action-3d:hover {
+        transform: translateY(-2px);
+        box-shadow: 4px 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .money-text {
+        color: #28a745;
+        font-weight: bold;
+    }
+
+    /* Modal de confirmación */
+    .modal-eliminar {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-eliminar-contenido {
+        background: linear-gradient(145deg, #ffffff, #f0f0f0);
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 
+            15px 15px 40px #d1d1d1,
+            -15px -15px 40px #ffffff;
+        max-width: 500px;
+        text-align: center;
+    }
+
+    .modal-eliminar-contenido h3 {
+        color: #dc3545;
+        margin-bottom: 20px;
+        font-weight: 800;
+    }
+
+    .modal-eliminar-contenido p {
+        margin-bottom: 25px;
+        font-size: 1.1rem;
+        color: #495057;
+    }
+
+    .modal-eliminar-acciones {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+
+    .btn-modal {
+        padding: 12px 30px;
+        border-radius: 15px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 15px;
+    }
+
+    .btn-modal-cancelar {
+        background: linear-gradient(145deg, #6c757d, #545b62);
+        color: white;
+        box-shadow: 
+            6px 6px 16px #4a4f54,
+            -6px -6px 16px #8e959c;
+    }
+
+    .btn-modal-cancelar:hover {
+        transform: translateY(-2px);
+        box-shadow: 
+            8px 8px 20px #3d4247,
+            -8px -8px 20px #9ba3ab;
+    }
+
+    .btn-modal-eliminar {
+        background: linear-gradient(145deg, #dc3545, #a71d2a);
+        color: white;
+        box-shadow: 
+            6px 6px 16px #8c1622,
+            -6px -6px 16px #ff4757;
+    }
+
+    .btn-modal-eliminar:hover {
+        transform: translateY(-2px);
+        box-shadow: 
+            8px 8px 20px #721118,
+            -8px -8px 20px #ff5969;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    {% if bajo_stock_total > 0 %}
+    <div class="alert-3d">
+        <strong>⚠️ Alerta:</strong> Hay {{ bajo_stock_total }} productos con stock menor a {{ STOCK_MINIMO }} unidades.
+    </div>
+    {% endif %}
+
+    <h2 class="mb-4" style="color: #495057; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">
+        📦 Lista de Productos
+    </h2>
+
+    <div class="filter-container-3d">
+        <form method="GET" action="{{ url_for('lista_productos') }}" id="formFiltros">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="label-3d">🔍 Buscar por nombre</label>
+                    <input type="text" name="q" class="search-input-3d" 
+                           placeholder="Ej: Filtro" value="{{ request.args.get('q', '') }}">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="label-3d">📁 Todas las categorías</label>
+                    <select name="categoria" class="select-3d">
+                        <option value="">-- Todas las categorías --</option>
+                        {% for cat in categorias %}
+                        <option value="{{ cat }}" {% if request.args.get('categoria') == cat %}selected{% endif %}>
+                            {{ cat }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="label-3d">📊 Ordenar por...</label>
+                    <select name="ordenar" class="select-3d">
+                        <option value="">-- Sin ordenar --</option>
+                        <option value="precio_asc" {% if request.args.get('ordenar') == 'precio_asc' %}selected{% endif %}>
+                            Precio: Menor a Mayor
+                        </option>
+                        <option value="precio_desc" {% if request.args.get('ordenar') == 'precio_desc' %}selected{% endif %}>
+                            Precio: Mayor a Menor
+                        </option>
+                        <option value="stock_asc" {% if request.args.get('ordenar') == 'stock_asc' %}selected{% endif %}>
+                            Stock: Menor a Mayor
+                        </option>
+                        <option value="stock_desc" {% if request.args.get('ordenar') == 'stock_desc' %}selected{% endif %}>
+                            Stock: Mayor a Menor
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn-3d-primary">
+                        🔍 Aplicar
+                    </button>
+                </div>
+
+                <div class="col-md-2">
+                    <div style="margin-top: 30px;">
+                        <label style="cursor: pointer; display: flex; align-items: center;">
+                            <input type="checkbox" name="solo_bajo_stock" value="1" class="checkbox-3d"
+                                   {% if solo_bajo_stock %}checked{% endif %} onchange="this.form.submit()">
+                            <span class="label-3d" style="margin: 0;">⚠️ Solo bajo stock</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="mb-3">
+        <a href="{{ url_for('nuevo_producto') }}" class="btn-3d-primary" style="display: inline-block; width: auto; padding: 12px 30px;">
+            ➕ Agregar Nuevo Producto
+        </a>
+    </div>
+
+    <!-- LAYOUT: PERSONAJE AL LADO IZQUIERDO + TABLA A LA DERECHA -->
+    <div class="main-layout">
+        
+        <!-- PERSONAJE AL LADO IZQUIERDO (STICKY) -->
+        <div class="character-helper-card">
+            <div class="character-image-container">
+                <img src="{{ url_for('static', filename='img/character3.jpeg') }}" 
+                     alt="Asistente de Inventario" 
+                     class="character-img">
+            </div>
+            
+            <div class="character-message">
+                <h4>
+                    💬 ¡Hola! Soy tu asistente
+                </h4>
+                <p>
+                    👋 Aquí controlas todo el inventario de <strong>Moto Repuestos H&D</strong>.
+                </p>
+                <p><strong>💡 Tips rápidos:</strong></p>
+                <ul>
+                    <li>🔍 Usa los filtros arriba</li>
+                    <li>⚠️ Rojo = bajo stock</li>
+                    <li>🏦 IVA calculado automático</li>
+                    <li>➕ Agrega productos fácil</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- TABLA DE PRODUCTOS A LA DERECHA -->
+        <div>
+            <div class="table-wrapper">
+                <div class="scroll-top-container">
+                    <div class="scroll-top-bar" id="scrollTop">
+                        <div class="scroll-top-content" id="scrollTopContent"></div>
+                    </div>
+                </div>
+
+                <div class="table-scroll-container sync-scroll" id="tableScroll">
+                    <table class="table table-fixed-header">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>CÓDIGO SKU</th>
+                                <th>PRODUCTO</th>
+                                <th>CATEGORÍA</th>
+                                <th>STOCK</th>
+                                <th>PRECIO UNIT.</th>
+                                <th>IVA (19%)</th>
+                                <th>PRECIO + IVA</th>
+                                <th>VALOR TOTAL<br>CON IVA</th>
+                                <th>ACCIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if productos %}
+                                {% for p in productos %}
+                                {% set precio_base = p.precio_unitario|float %}
+                                {% set iva = (precio_base * 0.19) %}
+                                {% set precio_con_iva = (precio_base * 1.19) %}
+                                {% set valor_total_con_iva = (p.stock * precio_con_iva) %}
+                                
+                                <tr data-producto-id="{{ p.id }}">
+                                    <td><strong>{{ p.id }}</strong></td>
+                                    <td>
+                                        {% if p.codigo_sku %}
+                                            <span class="badge bg-info">{{ p.codigo_sku }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td style="text-align: left; max-width: 200px;">
+                                        <strong>{{ p.nombre }}</strong>
+                                    </td>
+                                    <td>{{ p.categoria }}</td>
+                                    <td>
+                                        {% if p.stock < STOCK_MINIMO %}
+                                            <span class="badge-stock-low">⚠️ {{ p.stock }}</span>
+                                        {% else %}
+                                            <span class="badge-stock-ok">✅ {{ p.stock }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="money-text">${{ "{:,.3f}".format(precio_base) }} COP</td>
+                                    <td class="money-text">${{ "{:,.3f}".format(iva) }} COP</td>
+                                    <td class="money-text"><strong>${{ "{:,.3f}".format(precio_con_iva) }} COP</strong></td>
+                                    <td class="money-text" style="background: rgba(40, 167, 69, 0.1);"><strong>${{ "{:,.3f}".format(valor_total_con_iva) }} COP</strong></td>
+                                    <td style="white-space: nowrap;">
+                                        <a href="{{ url_for('detalle_producto', id=p.id) }}" 
+                                           class="btn btn-info btn-sm btn-action-3d">👁️</a>
+                                        <a href="{{ url_for('editar_producto', id=p.id) }}" 
+                                           class="btn btn-warning btn-sm btn-action-3d">✏️</a>
+                                        {% if session.get('rol') == 'admin' %}
+                                        <button
+                                        data-id="{{ p.id }}"
+                                        data-nombre="{{ p.nombre }}"
+                                        onclick="confirmarEliminar(this.dataset.id, this.dataset.nombre)"
+                                        class="btn btn-danger btn-sm btn-action-3d"
+                                        type="button">
+                                        🗑</button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="10" class="text-center" style="padding: 40px;">
+                                        <h5 style="color: #6c757d;">📭 No hay productos registrados</h5>
+                                        <p>Comienza agregando tu primer producto</p>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div id="modalEliminar" class="modal-eliminar">
+    <div class="modal-eliminar-contenido">
+        <h3>⚠️ Confirmar Eliminación</h3>
+        <p id="mensajeEliminar"></p>
+        <div class="modal-eliminar-acciones">
+            <button onclick="cerrarModal()" class="btn-modal btn-modal-cancelar">Cancelar</button>
+            <button onclick="eliminarProducto()" class="btn-modal btn-modal-eliminar">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Scroll sincronizado
+const tableScroll = document.getElementById('tableScroll');
+const scrollTop = document.getElementById('scrollTop');
+const scrollTopContent = document.getElementById('scrollTopContent');
+
+function updateScrollWidth() {
+    const tableWidth = tableScroll.scrollWidth;
+    scrollTopContent.style.width = tableWidth + 'px';
+}
+
+tableScroll.addEventListener('scroll', function() {
+    scrollTop.scrollLeft = tableScroll.scrollLeft;
+});
+
+scrollTop.addEventListener('scroll', function() {
+    tableScroll.scrollLeft = scrollTop.scrollLeft;
+});
+
+window.addEventListener('load', updateScrollWidth);
+window.addEventListener('resize', updateScrollWidth);
+updateScrollWidth();
+
+// Funcionalidad de eliminación
+let productoAEliminar = null;
+
+function confirmarEliminar(id, nombre) {
+    console.log('Confirmar eliminar ID:', id, 'Nombre:', nombre);
+    productoAEliminar = id;
+    document.getElementById('mensajeEliminar').textContent = 
+        `¿Estás seguro de que deseas eliminar el producto "${nombre}"?`;
+    document.getElementById('modalEliminar').style.display = 'flex';
+}
+
+function cerrarModal() {
+    document.getElementById('modalEliminar').style.display = 'none';
+    productoAEliminar = null;
+}
+
+function eliminarProducto() {
+    if (!productoAEliminar) {
+        alert('❌ No hay producto seleccionado');
+        return;
+    }
+    
+    console.log('Eliminando producto ID:', productoAEliminar);
+    
+    fetch('/productos/eliminar/' + productoAEliminar, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        
+        if (data.success) {
+            const fila = document.querySelector(`tr[data-producto-id="${productoAEliminar}"]`);
+            if (fila) {
+                fila.remove();
+            }
+            cerrarModal();
+            alert('✅ Producto eliminado exitosamente');
+        } else {
+            alert('❌ Error: ' + (data.error || 'No se pudo eliminar el producto'));
+            cerrarModal();
+        }
+    })
+    .catch(error => {
+        console.error('Error en fetch:', error);
+        alert('❌ Error al eliminar el producto: ' + error);
+        cerrarModal();
+    });
+}
+
+// Cerrar modal al hacer clic fuera
+window.onclick = function(event) {
+    const modal = document.getElementById('modalEliminar');
+    if (event.target === modal) {
+        cerrarModal();
+    }
+}
+</script>
+{% endblock %}
