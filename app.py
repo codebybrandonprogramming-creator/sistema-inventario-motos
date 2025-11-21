@@ -774,6 +774,44 @@ def detalle_producto(id):
     return render_template("detalle_producto.html", producto=producto)
 
 
+@app.route('/productos/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
+@role_required('admin', 'vendedor')
+def editar_producto(id):
+    """Edita un producto existente"""
+    producto = obtener_producto_por_id(id)
+
+    if not producto:
+        flash(f"El producto con el ID {id} no pudo ser encontrado.", "error")
+        return redirect(url_for('lista_productos'))
+
+    if request.method == 'POST':
+        try:
+            nombre = request.form['nombre'].strip()
+            categoria = request.form['categoria'].strip()
+            marca = request.form.get('marca', '').strip()
+            stock = int(request.form['stock'])
+            precio_unitario = round(float(request.form['precio_unitario']), 3)
+            descripcion = request.form.get('descripcion', '').strip()
+            codigo_sku = request.form.get('codigo_sku', '').strip()
+
+            if stock < 0 or precio_unitario < 0:
+                flash("El stock y el precio no pueden ser negativos.", "error")
+                return redirect(url_for('editar_producto', id=id))
+
+            actualizar_producto(id, nombre, categoria, marca, stock, precio_unitario, 
+                              descripcion, codigo_sku)
+
+            registrar_log('Producto actualizado', f"Producto: {nombre} (ID: {id})")
+
+            flash(f"El producto '{nombre}' fue actualizado con éxito.", "success")
+            return redirect(url_for('lista_productos'))
+
+        except ValueError:
+            flash("Error en los datos del formulario.", "error")
+            return redirect(url_for('editar_producto', id=id))
+
+    return render_template("editar_producto.html", producto=producto)
 
 
 @app.route("/productos/eliminar/<int:id>", methods=['POST'])
