@@ -113,6 +113,16 @@ ROLES = {
 # ---------------------------------------------------------------------------------
 # FUNCIONES DE CARGA Y GUARDADO (MYSQL)
 # ---------------------------------------------------------------------------------
+def cargar_productos():
+    """Carga todos los productos desde MySQL"""
+    query = """
+        SELECT id, codigo_sku, nombre, categoria, marca, stock, precio_unitario, 
+               descripcion, valor_total, fecha_creacion, fecha_actualizacion
+        FROM productos
+        ORDER BY id
+    """
+    productos = ejecutar_query(query, fetch_all=True)
+    return productos if productos else []
 
 
 
