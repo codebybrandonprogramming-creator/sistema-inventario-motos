@@ -136,6 +136,25 @@ def obtener_producto_por_id(producto_id):
     """
     return ejecutar_query(query, (producto_id,), fetch_one=True)
 
+def actualizar_producto(producto_id, nombre, categoria, marca, stock, precio_unitario, descripcion, codigo_sku=None):
+    """Actualiza un producto existente en MySQL"""
+    valor_total = round(stock * precio_unitario, 3)
+
+    if stock < 0 or precio_unitario < 0:
+        flash("El stock y el precio no pueden ser negativos.", "error")
+        return redirect(url_for('editar_producto', id=producto_id))
+    
+    query = """
+        UPDATE productos 
+        SET nombre = %s, categoria = %s, marca = %s, stock = %s, 
+            precio_unitario = %s, descripcion = %s, valor_total = %s, codigo_sku = %s,
+            fecha_actualizacion = NOW()
+        WHERE id = %s
+    """
+    params = (nombre, categoria, marca, stock, precio_unitario, 
+              descripcion, valor_total, codigo_sku, producto_id)
+    return ejecutar_query(query, params, commit=True)
+
 
 
 def eliminar_producto_db(producto_id):
