@@ -1,36 +1,84 @@
-# Python
-_pycache_/
+# ---------------------------------------
+# PYTHON
+# ---------------------------------------
+__pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-venv/
-ENV/
-env/
-*.egg-info/
 
-# Flask
+# Entornos virtuales
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Paquetes
+*.egg-info/
+*.egg
+
+# ---------------------------------------
+# FLASK
+# ---------------------------------------
 instance/
 .webassets-cache
+*.pid
 
-# Base de datos
-*.db
-*.sqlite
-*.sql
-
-# Configuración
+# ---------------------------------------
+# CONFIGURACIÓN / CREDENCIALES
+# ---------------------------------------
 .env
 config.py
+usuarios.json
+secret.json
+*.key
+*.pem
+*.crt
 
-# IDEs
+# ---------------------------------------
+# BASES DE DATOS
+# ---------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+
+# ---------------------------------------
+# REPORTES / EXPORTS
+# ---------------------------------------
+*.pdf
+*.xlsx
+*.xls
+exports/
+reports/
+uploads/
+
+# ---------------------------------------
+# LOGS
+# ---------------------------------------
+*.log
+
+# ---------------------------------------
+# IDEs / WORKSPACE
+# ---------------------------------------
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Logs
-*.log
-
-# OS
+# ---------------------------------------
+# SISTEMA / OS
+# ---------------------------------------
 .DS_Store
 Thumbs.db
+
+# ---------------------------------------
+# COMPRESIONES / ARCHIVOS TEMPORALES
+# ---------------------------------------
+*.zip
+*.tar
+*.tar.gz
+*.tmp
+*.bak
